@@ -420,6 +420,25 @@ blockquote { margin: 0; padding-left: 0.9rem; border-left: 2px solid var(--steel
 
 .top { display: block; }
 
+/* ===== v7: sound panel ===== */
+.panel { gap: 1.1rem; }
+.psec { display: grid; gap: 0.7rem; }
+.psec + .psec { border-top: 1px solid var(--rule); padding-top: 1.1rem; }
+.psec-h { display: flex; align-items: center; gap: 0.5rem; font-size: 1.15rem; }
+.psec .row { justify-content: flex-start; }
+.vbox { display: grid; gap: 0.7rem; }
+.voices { display: grid; gap: 0.4rem; }
+.vbtn { display: grid; grid-template-columns: 1.3rem minmax(0, 1fr) auto; align-items: center; gap: 0.65rem; width: 100%; text-align: left; background: var(--bg); color: var(--ink); border: 1px solid var(--rule); border-radius: 6px; padding: 0.6rem 0.75rem; min-height: 3.1rem; transition: border-color 0.2s, background 0.2s; }
+.vbtn .ck { width: 1.1rem; height: 1.1rem; border-radius: 50%; border: 1.5px solid var(--muted); display: grid; place-items: center; }
+.vbtn[aria-pressed="true"] { border-color: var(--steel); background: var(--steel-soft); }
+.vbtn[aria-pressed="true"] .ck { border-color: var(--steel); background: var(--steel); box-shadow: inset 0 0 0 3px var(--steel-soft); }
+.vbtn .vname { display: grid; min-width: 0; }
+.vbtn .vname small { color: var(--muted); font-size: 0.8rem; }
+.vbtn .hear { font-size: 0.78rem; color: var(--steel); white-space: nowrap; }
+.vstatus:empty { display: none; }
+.devbox { display: grid; gap: 0.8rem; padding-left: 0.8rem; border-left: 2px solid var(--rule); }
+.howto ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.35rem; font-size: 0.92rem; color: var(--muted); }
+
 /* ===== v6: phone layout fixes + a little flair ===== */
 /* grid children may shrink below their content, so a wide table can't push the page sideways */
 .app > *, .prose > *, .prose section > * { min-width: 0; }
@@ -600,19 +619,120 @@ function pickVoice() {
   return (voicePick = vs[0] || null);
 }
 var voiceListeners = [];
-try { if (window.speechSynthesis) speechSynthesis.onvoiceschanged = function () { voicePick = null; voiceListeners.forEach(function (f) { f(); }); }; } catch (e) {}
-function say(text, force) {
-  if (guide !== "voice" && !force) return;
+function voicesChanged() { voicePick = null; voiceListeners.forEach(function (f) { try { f(); } catch (e) {} }); }
+try {
+  if (window.speechSynthesis) {
+    if (speechSynthesis.addEventListener) speechSynthesis.addEventListener("voiceschanged", voicesChanged);
+    else speechSynthesis.onvoiceschanged = voicesChanged;
+    speechSynthesis.getVoices(); // asks the device to start loading its list
+  }
+} catch (e) {}
+// iPhones hand over their voice list late, and sometimes never announce it: keep asking for a few seconds
+function waitForDeviceVoices(done) {
+  var tries = 0;
+  (function again() {
+    var n = englishVoices().length;
+    if (n || tries++ > 16) { voicesChanged(); if (done) done(n); return; }
+    setTimeout(again, 300);
+  })();
+}
+
+/* ---------- built-in voices: recordings that ship with the app ---------- */
+// Each spoken line was recorded once with Kokoro (an open-source voice, Apache 2.0)
+// and packed into one file per voice. Lines not in the pack use the device's own voice.
+var VOICES = {
+  heart: { name: "Heart", desc: "Warm and steady", file: "voices/heart-1.bin" },
+  michael: { name: "Michael", desc: "Low and calm", file: "voices/michael-1.bin" }
+};
+var voiceKind = store.get("vkind", "heart");
+if (voiceKind !== "device" && !VOICES[voiceKind]) voiceKind = "heart";
+var packs = {}, packLoads = {};
+function phraseKey(t) { return String(t).replace(/ · /g, ", ").replace(/[“”]/g, "").replace(/…/g, ",").replace(/\s+/g, " ").trim(); }
+function phraseId(t) { var h = 0x811c9dc5; for (var i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return ("0000000" + h.toString(16)).slice(-8); }
+function loadPack(kind, onProgress) {
+  if (packs[kind]) return Promise.resolve(packs[kind]);
+  if (packLoads[kind]) return packLoads[kind];
+  var v = VOICES[kind]; if (!v) return Promise.reject(new Error("no voice"));
+  packLoads[kind] = fetch(v.file).then(function (r) {
+    if (!r.ok) throw new Error("missing");
+    var total = +r.headers.get("content-length") || 0;
+    if (!r.body || !r.body.getReader || !onProgress) return r.arrayBuffer();
+    var rd = r.body.getReader(), parts = [], got = 0;
+    return (function pump() {
+      return rd.read().then(function (x) {
+        if (x.done) { var out = new Uint8Array(got), o = 0; parts.forEach(function (p) { out.set(p, o); o += p.length; }); return out.buffer; }
+        parts.push(x.value); got += x.value.length; if (total) onProgress(got / total);
+        return pump();
+      });
+    })();
+  }).then(function (buf) {
+    var n = new DataView(buf).getUint32(0, true);
+    var index = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 4, n)));
+    packs[kind] = { buf: buf, base: 4 + n, index: index, cache: {}, order: [] };
+    return packs[kind];
+  });
+  packLoads[kind].catch(function () { delete packLoads[kind]; });
+  return packLoads[kind];
+}
+function packHas(kind, key) { var p = packs[kind]; return !!(p && p.index[phraseId(key)]); }
+var clip = null, clipToken = 0;
+function decodeClip(p, id) {
+  if (p.cache[id]) return Promise.resolve(p.cache[id]);
+  var at = p.index[id], c = ctx();
+  var bytes = p.buf.slice(p.base + at[0], p.base + at[0] + at[1]);
+  return new Promise(function (res, rej) {
+    var pr = c.decodeAudioData(bytes, res, rej); if (pr && pr.then) pr.then(res, rej);
+  }).then(function (ab) {
+    p.cache[id] = ab; p.order.push(id);
+    if (p.order.length > 40) delete p.cache[p.order.shift()];
+    return ab;
+  });
+}
+function playClip(kind, key) {
+  var p = packs[kind], id = phraseId(key), my = ++clipToken;
+  clip = { src: null, pending: true };
+  decodeClip(p, id).then(function (ab) {
+    if (my !== clipToken) return;
+    var c = ctx(), src = c.createBufferSource(), g = c.createGain();
+    src.buffer = ab; g.gain.value = guideVol;
+    src.connect(g); g.connect(c.destination);
+    var me = { src: src, end: c.currentTime + ab.duration };
+    src.onended = function () { if (clip === me) clip = null; };
+    clip = me; src.start();
+  }).catch(function () { if (my === clipToken) { clip = null; deviceSay(key); } });
+}
+function deviceSay(key) {
   try {
     if (!window.speechSynthesis) return;
     speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(String(text).replace(/ · /g, ", ").replace(/[“”]/g, "").replace(/…/g, ","));
+    var u = new SpeechSynthesisUtterance(key);
     var v = pickVoice(); if (v) u.voice = v;
     u.rate = voiceRate; u.pitch = 1; u.volume = guideVol;
     speechSynthesis.speak(u);
   } catch (e) {}
 }
-function hush() { try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
+function say(text, force) {
+  if (guide !== "voice" && !force) return;
+  if (COLLECT) { COLLECT.push(text); return; }
+  var key = phraseKey(text);
+  hush();
+  if (voiceKind !== "device") {
+    if (packHas(voiceKind, key)) { playClip(voiceKind, key); return; }
+    if (!packs[voiceKind]) loadPack(voiceKind).catch(function () {});
+  }
+  deviceSay(key);
+}
+function speaking() {
+  if (clip) return true;
+  try { return !!(window.speechSynthesis && speechSynthesis.speaking); } catch (e) { return false; }
+}
+function hush() {
+  clipToken++;
+  if (clip) { try { if (clip.src) clip.src.stop(); } catch (e) {} clip = null; }
+  try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
+}
+// when collecting the list of lines to record, tools report what they would say
+var COLLECT = null;
 // one call for every cue: spoken words in voice mode, a tone in tones mode
 function cue(text, freq, len) { if (guide === "voice") say(text); else chime(freq, len); }
 
@@ -728,6 +848,10 @@ function dimButton(start, stop) {
 /* ---------- tool: breathing pacer ---------- */
 // phases: {label, s, to (circle scale 0.35-1)}; square shape uses 4 phases as 4 sides.
 function breath(cfg) {
+  if (COLLECT) {
+    (cfg.variants ? cfg.variants.map(function (v) { return v.phases; }) : [cfg.phases]).forEach(function (ph) { ph.forEach(function (x) { COLLECT.push(x.say || x.label); }); });
+    COLLECT.push("Done. " + (cfg.done || "Notice how you feel now."));
+  }
   var wrap = h("div", { class: "chips", style: "justify-items:center" });
   var variant = 0, length = cfg.lengths ? cfg.lengths[0] : null;
   var stage = h("div", { class: "stage" });
@@ -817,6 +941,10 @@ function breath(cfg) {
 
 /* ---------- tool: timed steps (timers, countdowns, guided sequences) ---------- */
 function steps(cfg) {
+  if (COLLECT) {
+    cfg.steps.forEach(function (st) { COLLECT.push(st.say || st.label); });
+    COLLECT.push((cfg.doneLabel || "Done") + ". " + (cfg.doneText || ""));
+  }
   var wrap = h("div", { class: "chips", style: "justify-items:center" });
   var label = h("div", { class: "phase", "aria-live": "polite" }, [cfg.ready || "Ready"]);
   var big = h("div", { class: "big" }, [cfg.showFirst === false ? "" : String(cfg.steps[0].s)]);
@@ -1227,8 +1355,8 @@ function soundLabel() {
 }
 function soundPanel(btn) {
   var panel = h("section", { class: "panel", "aria-label": "Sound settings" });
-  function group(title, help, opts, current, onPick) {
-    var row = h("div", { class: "row" });
+  function choice(opts, current, onPick, cls) {
+    var row = h("div", { class: "row" + (cls ? " " + cls : "") });
     opts.forEach(function (o) {
       var b = h("button", { class: "opt", type: "button", "aria-pressed": String(o[0] === current()) }, [o[1]]);
       b.addEventListener("click", function () {
@@ -1237,18 +1365,33 @@ function soundPanel(btn) {
       });
       row.appendChild(b);
     });
-    return h("div", { class: "pgroup" }, [h("span", { class: "label" }, [title]), row, h("p", { class: "phelp" }, [help])]);
+    return row;
   }
-  panel.appendChild(group("Guidance", "Voice reads each step aloud, so you can keep your eyes closed. Tones: a higher note means breathe in, a lower note means breathe out or release.",
-    [["off", "Silent"], ["tones", "Tones"], ["voice", "Voice"]], function () { return guide; },
-    function (v) { guide = v; store.set("guide", v); if (v === "voice") say("Voice guidance is on.", true); if (v === "tones") chime(528, 0.4, true); }));
-  panel.appendChild(group("Background", "Plays quietly under everything until you turn it off. Made on your phone, so it works offline.",
-    [["off", "Off"], ["brown", "Brown noise"], ["ocean", "Ocean"], ["rain", "Rain"]], function () { return bgKind; },
-    function (v) { startBg(v); }));
-  panel.insertBefore(slider("Guidance volume", "gvol-r", guideVol, function (v) { guideVol = v; store.set("gvol", v); }, function () { if (guide === "voice") say("This loud.", true); else chime(528, 0.4, true); }), panel.children[1]);
-  panel.appendChild(slider("Background volume", "bvol-r", bgVol, setBgVol));
-  panel.appendChild(voiceChooser());
-  panel.appendChild(h("p", { class: "phelp" }, ["Hearing nothing on an iPhone? Check that the silent switch is off and the volume is up."]));
+  function head(icon, title) { return h("h3", { class: "psec-h" }, [emblem(icon, "sm"), title]); }
+
+  // guidance: silent, tones, or a voice
+  var HELP = { off: "No sound. Watch the screen.", tones: "A higher note means breathe in. A lower note means breathe out or let go.", voice: "Each step is read aloud, so you can keep your eyes closed." };
+  var help = h("p", { class: "phelp" }, [HELP[guide]]);
+  var vbox = h("div", { class: "vbox" });
+  var g = h("div", { class: "psec" }, [head("speaker", "Guidance"),
+    choice([["off", "Silent"], ["tones", "Tones"], ["voice", "Voice"]], function () { return guide; }, function (v) {
+      guide = v; store.set("guide", v); help.textContent = HELP[v]; vbox.hidden = v !== "voice";
+      if (v === "voice") say("Voice guidance is on.", true);
+      if (v === "tones") chime(528, 0.4, true);
+    }), help, vbox,
+    slider("Volume", "gvol-r", guideVol, function (v) { guideVol = v; store.set("gvol", v); }, function () { if (guide === "voice") say("This loud.", true); else chime(528, 0.4, true); })
+  ]);
+  vbox.hidden = guide !== "voice";
+  vbox.appendChild(voiceChooser());
+  panel.appendChild(g);
+
+  // background sound
+  panel.appendChild(h("div", { class: "psec" }, [head("waves", "Background"),
+    choice([["off", "Off"], ["brown", "Brown noise"], ["ocean", "Ocean"], ["rain", "Rain"]], function () { return bgKind; }, function (v) { startBg(v); }),
+    slider("Volume", "bvol-r", bgVol, setBgVol),
+    h("p", { class: "phelp" }, ["Plays quietly under everything until you turn it off. Made by the app itself, so it works offline."])
+  ]));
+  panel.appendChild(h("p", { class: "phelp" }, ["Hearing nothing? Turn the device volume up. On an iPhone, also check the silent switch."]));
   return panel;
 }
 function slider(name, id, value, onInput, onRelease) {
@@ -1259,25 +1402,89 @@ function slider(name, id, value, onInput, onRelease) {
   if (onRelease) r.addEventListener("change", onRelease);
   return h("label", { class: "slider", for: id }, [h("span", { class: "label" }, [name]), r, out]);
 }
+var REGION = { US: "American", GB: "British", AU: "Australian", IE: "Irish", IN: "Indian", ZA: "South African", CA: "Canadian", NZ: "New Zealand", SC: "Scottish" };
+function voiceRow(title, sub, on, onTap) {
+  var b = h("button", { class: "vbtn", type: "button", "aria-pressed": String(on) }, [
+    h("span", { class: "ck", "aria-hidden": "true" }),
+    h("span", { class: "vname" }, [title, sub ? h("small", null, [sub]) : null]),
+    h("span", { class: "hear", "aria-hidden": "true" }, ["▶ Hear"])
+  ]);
+  b.addEventListener("click", function () { onTap(b); });
+  return b;
+}
+function pressOnly(list, b) { [].forEach.call(list.querySelectorAll(".vbtn"), function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true"); }
 function voiceChooser() {
   var box = h("div", { class: "pgroup" });
-  var sel = h("select", { id: "voice-sel" });
-  function fill() {
-    var vs = englishVoices(); sel.innerHTML = "";
-    sel.appendChild(h("option", { value: "" }, ["Best available" + (vs[0] ? " (" + vs[0].name + ")" : "")]));
-    vs.forEach(function (v) { var o = h("option", { value: v.name }, [v.name + " · " + v.lang]); sel.appendChild(o); });
-    sel.value = voiceName;
-    if (sel.value !== voiceName) sel.value = "";
+  var list = h("div", { class: "voices" });
+  var status = h("p", { class: "phelp vstatus", "aria-live": "polite" });
+  var dev = h("div", { class: "devbox" });
+  function getPack(kind, then) {
+    if (packs[kind]) { status.textContent = ""; then(); return; }
+    status.textContent = "Getting the " + VOICES[kind].name + " voice ready…";
+    loadPack(kind, function (f) { status.textContent = "Getting the " + VOICES[kind].name + " voice ready… " + Math.round(f * 100) + "%"; })
+      .then(function () { status.textContent = "Ready. Saved on this device, so it works offline."; then(); })
+      .catch(function () { status.textContent = "Couldn't get that voice right now. Using this device's voice until it can."; then(); });
   }
-  fill(); voiceListeners.push(fill);
-  sel.addEventListener("change", function () { voiceName = sel.value; store.set("voice", voiceName); voicePick = null; say("Breathe in, slowly. And let it go.", true); });
-  var test = h("button", { class: "opt", type: "button" }, ["Test voice"]);
-  test.addEventListener("click", function () { say("Breathe in, slowly. And let it go.", true); });
-  var speed = slider("Voice speed", "rate-r", (voiceRate - 0.6) / 0.6, function (v) { voiceRate = +(0.6 + v * 0.6).toFixed(2); store.set("rate", voiceRate); }, function () { say("Breathe in, slowly.", true); });
-  speed.lastChild.textContent = "";
-  box.appendChild(h("label", { class: "pgroup", for: "voice-sel" }, [h("span", { class: "label" }, ["Voice"]), h("div", { class: "vrow" }, [sel, test])]));
-  box.appendChild(speed);
-  box.appendChild(h("p", { class: "phelp" }, ["For the most natural voice on an iPhone, download one first: Settings → Accessibility → Spoken Content → Voices → English. Voices marked Premium or Enhanced (Ava, Zoe, Evan, Nathan) sound far more human. Then reopen this page and pick it here."]));
+  Object.keys(VOICES).forEach(function (k) {
+    var v = VOICES[k];
+    list.appendChild(voiceRow(v.name, v.desc + " · built in", voiceKind === k, function (b) {
+      voiceKind = k; store.set("vkind", k); pressOnly(list, b); dev.hidden = true;
+      try { ctx(); } catch (e) {}
+      getPack(k, function () { say(SAMPLE, true); });
+    }));
+  });
+  list.appendChild(voiceRow("This device's voice", "Uses your phone or computer's own voices", voiceKind === "device", function (b) {
+    voiceKind = "device"; store.set("vkind", "device"); pressOnly(list, b); status.textContent = ""; dev.hidden = false; drawDevice(); say(SAMPLE, true);
+  }));
+  box.appendChild(h("span", { class: "label" }, ["Pick a voice"]));
+  box.appendChild(list); box.appendChild(status); box.appendChild(dev);
+
+  // the device's own voices, for anyone who prefers them
+  var devList = h("div", { class: "voices" }), showAll = false;
+  function drawDevice() {
+    var vs = englishVoices(), seen = {};
+    vs = vs.filter(function (v) { var k = v.name + "|" + v.lang; if (seen[k]) return false; seen[k] = 1; return true; });
+    devList.innerHTML = "";
+    if (!vs.length) {
+      devList.appendChild(h("p", { class: "phelp" }, ["Looking for this device's voices…"]));
+      waitForDeviceVoices(function (n) { if (n) drawDevice(); else { devList.innerHTML = ""; devList.appendChild(h("p", { class: "phelp" }, ["This device didn't share any voices. It will still use its default voice."])); } });
+      return;
+    }
+    var current = voiceName && vs.some(function (v) { return v.name === voiceName; }) ? voiceName : vs[0].name;
+    (showAll ? vs : vs.slice(0, 4)).forEach(function (v) {
+      var reg = (v.lang.split(/[-_]/)[1] || "").toUpperCase();
+      var tag = /premium/i.test(v.name) ? "Premium" : /enhanced/i.test(v.name) ? "Enhanced" : /natural|neural|online/i.test(v.name) ? "Natural" : "";
+      devList.appendChild(voiceRow(v.name.replace(/\s*\((Premium|Enhanced)\)/i, ""), [REGION[reg] || v.lang, tag].filter(Boolean).join(" · "), v.name === current, function (b) {
+        voiceName = v.name; store.set("voice", voiceName); voicePick = null; pressOnly(devList, b); say(SAMPLE, true);
+      }));
+    });
+    if (vs.length > 4) {
+      var more = h("button", { class: "opt", type: "button", style: "justify-self:start" }, [showAll ? "Show fewer" : "Show all " + vs.length + " voices"]);
+      more.addEventListener("click", function () { showAll = !showAll; drawDevice(); });
+      devList.appendChild(more);
+    }
+  }
+  voiceListeners.length = 0; voiceListeners.push(function () { if (!dev.hidden) drawDevice(); });
+  var RATES = [["Slow", 0.72], ["Calm", 0.85], ["Normal", 1]];
+  var near = RATES.reduce(function (a, r) { return Math.abs(r[1] - voiceRate) < Math.abs(a[1] - voiceRate) ? r : a; });
+  var speed = h("div", { class: "row left" });
+  RATES.forEach(function (r) {
+    var b = h("button", { class: "opt", type: "button", "aria-pressed": String(r === near) }, [r[0]]);
+    b.addEventListener("click", function () { voiceRate = r[1]; store.set("rate", r[1]); [].forEach.call(speed.children, function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true"); say("Breathe in, slowly.", true); });
+    speed.appendChild(b);
+  });
+  dev.appendChild(devList);
+  dev.appendChild(h("div", { class: "pgroup" }, [h("span", { class: "label" }, ["Speed"]), speed]));
+  dev.appendChild(h("details", { class: "more howto" }, [h("summary", null, ["Want a more natural device voice?"]),
+    h("ol", null, [
+      h("li", null, ["iPhone: open Settings → Accessibility → Spoken Content → Voices → English."]),
+      h("li", null, ["Download a voice marked Premium or Enhanced, such as Ava, Zoe, Evan, or Nathan."]),
+      h("li", null, ["On a Windows computer, Microsoft Edge has natural voices built in."]),
+      h("li", null, ["Close and reopen this app, then pick the voice here."])
+    ])]));
+  dev.hidden = voiceKind !== "device";
+  if (!dev.hidden) drawDevice();
+  else if (guide === "voice" && !packs[voiceKind]) getPack(voiceKind, function () {});
   return box;
 }
 
@@ -1391,7 +1598,7 @@ function readButton(e) {
     if (reading) { hush(); reading = false; read.textContent = "Read the method aloud"; return; }
     stopActive(); reading = true; read.textContent = "Stop reading";
     say(e.name + ". " + e.method, true);
-    try { var poll = setInterval(function () { if (!speechSynthesis.speaking) { clearInterval(poll); reading = false; read.textContent = "Read the method aloud"; } }, 500); } catch (err) {}
+    var poll = setInterval(function () { if (!speaking()) { clearInterval(poll); reading = false; read.textContent = "Read the method aloud"; } }, 700);
   });
   return read;
 }
@@ -1596,6 +1803,8 @@ var EMB = {
   "tb-fineprint": '<circle cx="10.5" cy="10.5" r="5.8"/><path d="M14.8 14.8L20.5 20.5M8 9h5M8 12h3.5"/>',
   "glossary": '<path d="M5 20L10 4h1.5l5 16M7 14h8"/><path d="M17.5 4.5v5M15 7h5"/>',
   "free-shelf": '<path d="M3 21h18"/><rect x="4" y="6" width="3.6" height="15"/><rect x="8.6" y="3.5" width="3.6" height="17.5"/><path d="M14 7.2l3.5-.9 3.3 13.8-3.5.9Z"/>',
+  "speaker": '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>',
+  "waves": '<path d="M3 8c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0M3 12.5c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0M3 17c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0"/>',
   /* routines */
   "sun": '<circle cx="12" cy="13" r="3.6"/><path d="M3 19h18M12 4.5v2.4M5.2 7.6l1.7 1.7M18.8 7.6l-1.7 1.7M2.8 13h2.4M18.8 13h2.4"/>',
   "noon": '<circle cx="12" cy="12" r="4"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/>',
@@ -1789,7 +1998,7 @@ function practiceView(id) {
   app.appendChild(h("section", { class: "methodbox", "aria-label": "Method" }, [
     h("span", { class: "label" }, ["Method"]), mtext,
     APP_TIP[id] ? h("p", { class: "apptip" }, [APP_TIP[id]]) : null,
-    readButton({ name: b.name, method: mtext.textContent })
+    readButton({ name: b.name, method: methodText(id) })
   ]));
   app.appendChild(h("section", { class: "tool", "aria-label": "Tool" }, [e.tool()]));
   app.appendChild(h("dl", { class: "fields" }, [
@@ -2044,6 +2253,30 @@ var _routineView = routineView, _timerView = timerView;
 routineView = function (k) { _routineView(k); topbar({ back: ["Practices", "#/"], sound: true }); tabs("practice"); var b = app.querySelector(".back"); if (b) b.remove(); };
 timerView = function () { _timerView(); topbar({ back: ["Practices", "#/"], sound: true }); tabs("practice"); var b = app.querySelector(".back"); if (b) b.remove(); };
 
+/* ---------- every line the app can speak (used to make the built-in voice recordings) ---------- */
+var SAMPLE = "Breathe in, slowly. And let it go.";
+function methodText(id) { var d = document.createElement("div"); d.innerHTML = BOOK.entries[id].method; return d.textContent; }
+function allPhrases() {
+  COLLECT = [];
+  Object.keys(E).forEach(function (n) { try { E[n].tool(); } catch (e) {} });
+  var out = COLLECT; COLLECT = null;
+  out.push("Parked. Not now.", "Set done. Start the next task now.", "Begin.", "Voice guidance is on.", "This loud.", SAMPLE, "Breathe in, slowly.",
+    "Two minutes. Finish your sentence, write the note.", "Time to switch. Palms on the doorframe, breathe out, step through.");
+  for (var i = 1; i <= 60; i++) out.push(String(i));
+  Object.keys(ROUTINES).forEach(function (k) {
+    var r = ROUTINES[k];
+    out.push(r.name + ". First: " + E[r.ids[0]].name + ". Tap start when you're ready.");
+    r.ids.slice(1).forEach(function (id) { out.push("Next: " + E[id].name + ". Tap next when you're ready."); });
+    out.push(r.name + " is done.");
+  });
+  Object.keys(BOOK.entries).forEach(function (n) { out.push(BOOK.entries[n].name + ". " + methodText(n)); });
+  LINES.forEach(function (ln) { out.push(ln.t + " " + ln.by.replace(/\s*\(.*\)/, "")); });
+  var seen = {}, list = [];
+  out.forEach(function (t) { var k = phraseKey(t); if (k && !seen[k]) { seen[k] = 1; list.push({ id: phraseId(k), text: k }); } });
+  return list;
+}
+window.trestleboardPhrases = allPhrases;
+
 /* ---------- router ---------- */
 function render() {
   stopActive(); closeDim(); onDone = null; panelOpen = false;
@@ -2059,6 +2292,10 @@ function render() {
   window.scrollTo(0, 0); onScroll();
 }
 document.body.setAttribute("data-size", store.get("size", "m"));
+// phones only allow sound after a tap: wake the audio on the first tap when guidance is on
+document.addEventListener("click", function () { if (guide !== "off" && (!actx || actx.state === "suspended")) { try { ctx(); } catch (e) {} } }, true);
+// have the chosen built-in voice ready before it's needed
+if (guide === "voice" && voiceKind !== "device") loadPack(voiceKind).catch(function () {});
 window.addEventListener("hashchange", render);
 render();
 

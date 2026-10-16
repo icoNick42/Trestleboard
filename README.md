@@ -17,6 +17,7 @@ Open it once with internet so the phone saves its copy. After that it opens with
 - **Practices**: the quote of the day, "What's happening?" buttons, three routines, a quiet timer, and all 24 practices with their tools (breathing guides, timers, voice guidance, background sounds, and a dim screen for bedtime).
 - **Read**: the Trestleboard's preface, "Where the Threads Cross," and "Reading the Fine Print"; all of *A Field Guide to the Western Mysteries*; one combined glossary; and the Free Shelf.
 - **My Log**: your before-and-after ratings, parked thoughts, and a backup button.
+- **Voices**: two built-in voices, Heart and Michael, so guidance sounds the same on a phone or a computer and works offline. You can also use your device's own voice.
 
 Your ratings, notes, and pins are saved only on your phone. They are never uploaded here.
 
@@ -24,4 +25,5 @@ Your ratings, notes, and pins are saved only on your phone. They are never uploa
 
 - `index.html`: the whole app
 - `sw.js`: lets the phone keep a copy so it works offline
+- `voices/`: the built-in voice recordings, one file per voice. They were made with [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M), a free, open-source voice (Apache 2.0 license).
 - `manifest.webmanifest` and `icons/`: the home-screen name and icon
