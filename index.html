@@ -420,6 +420,115 @@ blockquote { margin: 0; padding-left: 0.9rem; border-left: 2px solid var(--steel
 
 .top { display: block; }
 
+/* ===== v6: phone layout fixes + a little flair ===== */
+/* grid children may shrink below their content, so a wide table can't push the page sideways */
+.app > *, .prose > *, .prose section > * { min-width: 0; }
+.prose .tablewrap { max-width: 100%; }
+
+/* tables become stacked cards on narrow screens (JS adds .stack and the data-label on each cell) */
+@media (max-width: 36rem) {
+  .prose .table.stack .tablewrap { overflow: visible; border: 0; background: none; }
+  .prose .table.stack table, .prose .table.stack tbody, .prose .table.stack tr, .prose .table.stack td { display: block; width: auto; }
+  .prose .table.stack colgroup, .prose .table.stack thead { display: none; }
+  .prose .table.stack table { min-width: 0; font-size: 0.95em; }
+  .prose .table.stack tbody { display: grid; gap: 0.75rem; counter-reset: card; }
+  .prose .table.stack tr { background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--steel); padding: 0.85rem 1rem 0.6rem; counter-increment: card; }
+  .prose .table.stack td { border: 0; padding: 0.35rem 0; }
+  .prose .table.stack td:first-child { display: flex; align-items: center; gap: 0.6rem; font-family: var(--display); font-weight: 400; font-size: 1.15rem; color: var(--ink); padding: 0 0 0.55rem; margin-bottom: 0.25rem; border-bottom: 1px solid var(--rule); }
+  .prose .table.stack td:first-child .emb { color: var(--steel); }
+  .prose .table.stack.numbered td:first-child::before { content: counter(card, upper-roman); font-family: var(--display); color: var(--steel); font-size: 0.85rem; min-width: 1.6rem; }
+  .prose .table.stack td + td::before { content: attr(data-label); display: block; font-family: var(--body); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 0.1rem; }
+  .prose .table.stack td:last-child { color: var(--ink); }
+  .prose .table.stack.highlight-last td:last-child { background: var(--steel-soft); margin: 0.35rem -0.5rem 0.2rem; padding: 0.5rem; }
+}
+@media (min-width: 36.01rem) and (max-width: 48rem) {
+  .prose .table.wide.stack .tablewrap { overflow: visible; border: 0; background: none; }
+  .prose .table.wide.stack table, .prose .table.wide.stack tbody, .prose .table.wide.stack tr, .prose .table.wide.stack td { display: block; width: auto; }
+  .prose .table.wide.stack colgroup, .prose .table.wide.stack thead { display: none; }
+  .prose .table.wide.stack table { min-width: 0; }
+  .prose .table.wide.stack tbody { display: grid; gap: 0.75rem; }
+  .prose .table.wide.stack tr { background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--steel); padding: 0.85rem 1rem 0.6rem; }
+  .prose .table.wide.stack td { border: 0; padding: 0.35rem 0; }
+  .prose .table.wide.stack td:first-child { display: flex; align-items: center; gap: 0.6rem; font-family: var(--display); font-weight: 400; font-size: 1.15rem; color: var(--ink); padding: 0 0 0.55rem; border-bottom: 1px solid var(--rule); }
+  .prose .table.wide.stack td + td::before { content: attr(data-label); display: block; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .prose .table.wide.stack.highlight-last td:last-child { background: var(--steel-soft); margin: 0.35rem -0.5rem 0.2rem; padding: 0.5rem; }
+}
+.prose td .emb { display: none; }
+.prose .stack td:first-child .emb { display: inline-grid; }
+
+/* emblems: one small line drawing per tradition */
+.emb { display: inline-grid; place-items: center; flex: none; color: var(--steel); }
+.emb svg { width: 1.5rem; height: 1.5rem; }
+.emb.tile { width: 2.3rem; height: 2.3rem; border: 1px solid var(--rule); background: var(--surface); border-radius: 50%; }
+.emb.tile svg { width: 1.3rem; height: 1.3rem; }
+.emb.sm svg { width: 1.05rem; height: 1.05rem; }
+
+/* contents list with emblems */
+.toc li a { grid-template-columns: 2.3rem minmax(0, 1fr); gap: 0.1rem 0.8rem; align-items: center; transition: background 0.2s; }
+.toc li a:active { background: var(--steel-soft); }
+.toc .t .cn { font-family: var(--display); color: var(--steel); font-weight: 400; margin-right: 0.35rem; }
+.toc .d { grid-column: 2; }
+.toc .seen .emb.tile { border-color: var(--steel); background: var(--steel-soft); }
+.toc .seen .t::after { content: " ✓"; font-size: 0.75rem; color: var(--steel); font-weight: 400; }
+.readbar { display: grid; gap: 0.35rem; padding-top: 0.3rem; }
+.readbar .track { height: 4px; background: var(--rule); border-radius: 2px; overflow: hidden; }
+.readbar .track i { display: block; height: 100%; background: var(--steel); border-radius: 2px; }
+.readbar small { font-size: 0.8rem; color: var(--muted); }
+
+/* chapter opener */
+.prose > h1 .opener { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.6rem; }
+.prose > h1 .opener .ch-label { margin: 0; }
+.prose > h1 .opener .emb.tile { width: 2.8rem; height: 2.8rem; border-color: var(--steel); }
+.prose > h1 .opener .emb.tile svg { width: 1.6rem; height: 1.6rem; }
+.prose h2::before { content: ""; display: inline-block; width: 0.42rem; height: 0.42rem; border: 1px solid var(--steel); transform: rotate(45deg); margin: 0 0.65rem 0 0.1rem; vertical-align: 0.18em; }
+.prose .group > h2::before { display: none; }
+
+/* home: section icons, check-in chips, routines */
+.group > h2 .ic { display: inline-grid; color: var(--steel); }
+.big-opt { display: inline-flex; align-items: center; gap: 0.4rem; transition: transform 0.12s, background 0.2s; }
+.big-opt svg { width: 1.05rem; height: 1.05rem; color: var(--steel); flex: none; }
+.pick.routine { grid-template-columns: 2.3rem minmax(0, 1fr) auto; }
+.pick .ri { display: inline-grid; place-items: center; width: 2.3rem; height: 2.3rem; border-radius: 50%; background: var(--steel-soft); color: var(--steel); }
+.pick .ri svg { width: 1.25rem; height: 1.25rem; }
+.today { position: relative; overflow: hidden; }
+.today .wm { position: absolute; right: -0.9rem; top: -0.6rem; width: 6.5rem; height: 6.5rem; color: var(--slate-mark); opacity: 0.1; pointer-events: none; }
+.today .wm svg { width: 100%; height: 100%; }
+.today .quote::before { content: "\201C"; font-family: var(--display); font-style: normal; font-size: 3rem; line-height: 0.6; color: var(--slate-mark); height: 1.1rem; }
+
+/* practice page: tradition emblems + a faint watermark */
+.p-head { position: relative; }
+.p-head .wm { position: absolute; right: -0.5rem; top: 1.2rem; width: 6.5rem; height: 6.5rem; color: var(--steel); opacity: 0.09; pointer-events: none; }
+.p-head .wm svg { width: 100%; height: 100%; }
+.p-head h1, .p-head .when, .p-head .p-meta { position: relative; }
+.p-meta .embs { display: inline-flex; gap: 0.3rem; }
+.fields .hole dt::before { content: "\2726  "; color: var(--steel); }
+
+/* bottom tabs: a soft pill behind the current one */
+.tabs a { position: relative; isolation: isolate; transition: color 0.2s; }
+.tabs a svg { transition: transform 0.25s; }
+.tabs a[aria-current="page"] svg { transform: translateY(-1px) scale(1.06); }
+.tabs a[aria-current="page"]::before { content: ""; position: absolute; z-index: -1; top: 0.4rem; left: 50%; width: 3.6rem; height: 1.85rem; margin-left: -1.8rem; border-radius: 1rem; background: var(--steel-soft); }
+.tabs a.fresh::before { animation: pill 0.3s ease-out; }
+@keyframes pill { from { transform: scaleX(0.4); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
+
+/* pages ease in; buttons give a little under the thumb */
+.app > * { animation: rise 0.38s ease-out backwards; }
+.app > :nth-child(2) { animation-delay: 0.04s; } .app > :nth-child(3) { animation-delay: 0.08s; }
+.app > :nth-child(4) { animation-delay: 0.12s; } .app > :nth-child(n+5) { animation-delay: 0.16s; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+.pick, .go, .opt, .linkrow, .pager a, .star { transition: transform 0.12s, border-color 0.2s, background 0.2s; }
+.pick:active, .go:active, .opt:active, .linkrow:active, .pager a:active { transform: scale(0.985); }
+.star.pop { animation: pop 0.35s ease-out; }
+@keyframes pop { 50% { transform: scale(1.15); } }
+.tool.lit { animation: lit 1.6s ease-out; }
+@keyframes lit { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--steel) 55%, transparent); } 100% { box-shadow: 0 0 0 18px transparent; } }
+.pager .label .ar { color: var(--steel); }
+.pager a.next .label .ar { color: var(--slate-mark); }
+@media (prefers-reduced-motion: reduce) {
+  .app > *, .tabs a.fresh::before, .star.pop, .tool.lit { animation: none; }
+  .pick:active, .go:active, .opt:active, .linkrow:active, .pager a:active { transform: none; }
+}
+
 </style>
 </head>
 <body>
@@ -606,7 +715,8 @@ var active = null; // the running tool, so leaving a page stops it
 function dayKey(d) { d = d || new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
 function markDay() { var days = store.get("days", {}); days[dayKey()] = (days[dayKey()] || 0) + 1; store.set("days", days); }
 var onDone = null;
-function toolDone() { markDay(); var f = onDone; if (f) setTimeout(function () { if (onDone === f) f(); }, 1800); }
+function toolDone() { markDay(); var f = onDone;
+  if (!reduce) { var tl = document.querySelector("section.tool"); if (tl) { tl.classList.remove("lit"); void tl.offsetWidth; tl.classList.add("lit"); } } if (f) setTimeout(function () { if (onDone === f) f(); }, 1800); }
 function stopActive() { if (active && active.stop) active.stop(); active = null; letSleep(); hush(); }
 // starts the tool if needed, then darkens the screen; the dim view has its own Stop
 function dimButton(start, stop) {
@@ -1461,14 +1571,83 @@ var TAB_ICONS = {
   log: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 19.5 H20"/><path d="M7 16 V11"/><path d="M12 16 V6"/><path d="M17 16 V9"/></svg>'
 };
 
+/* ---------- emblems: a small line drawing for each tradition and page ---------- */
+var EMB = {
+  "pythagoreanism": '<g fill="currentColor" stroke="none"><circle cx="12" cy="4" r="1.4"/><circle cx="9.5" cy="8.5" r="1.4"/><circle cx="14.5" cy="8.5" r="1.4"/><circle cx="7" cy="13" r="1.4"/><circle cx="12" cy="13" r="1.4"/><circle cx="17" cy="13" r="1.4"/><circle cx="4.5" cy="17.5" r="1.4"/><circle cx="9.5" cy="17.5" r="1.4"/><circle cx="14.5" cy="17.5" r="1.4"/><circle cx="19.5" cy="17.5" r="1.4"/></g>',
+  "stoicism": '<path d="M4.5 4h15M6 6.5h12M4.5 20.5h15M6 18h12M8 6.5v11.5M12 6.5v11.5M16 6.5v11.5"/>',
+  "hermeticism": '<circle cx="12" cy="10.5" r="4"/><path d="M8.3 2.8Q12 7 15.7 2.8M12 14.5v6.5M9 18h6"/>',
+  "gnosticism": '<path d="M12 3L13.5 10.5 21 12 13.5 13.5 12 21 10.5 13.5 3 12 10.5 10.5Z"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+  "neoplatonism": '<circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="5.2"/><circle cx="12" cy="12" r="8.8" stroke-dasharray="2 2.2"/>',
+  "christian-mysticism": '<path d="M12 2.5v12M8.2 6.5h7.6"/><path d="M4 21c0-2.3 2.2-3.5 4.1-2.6.9-2.2 4.8-2.4 5.8 0 2-1 4.6.2 4.6 2.6Z"/>',
+  "alchemy": '<path d="M9.5 3h5M10.5 3v6.2L5 19a1.4 1.4 0 0 0 1.3 2h11.4a1.4 1.4 0 0 0 1.3-2L13.5 9.2V3M7.3 15h9.4"/>',
+  "kabbalah": '<path stroke-width="1" d="M12 3v18.5M7 6.2v10M17 6.2v10M7 6.2h10M7 11.2h10M7 16.2h10M12 3L7 6.2M12 3l5 3.2M7 16.2l5 2.3 5-2.3M7 6.2l5 6.8 5-6.8"/><g fill="currentColor" stroke="none"><circle cx="12" cy="3" r="1.6"/><circle cx="7" cy="6.2" r="1.6"/><circle cx="17" cy="6.2" r="1.6"/><circle cx="7" cy="11.2" r="1.6"/><circle cx="17" cy="11.2" r="1.6"/><circle cx="12" cy="13" r="1.6"/><circle cx="7" cy="16.2" r="1.6"/><circle cx="17" cy="16.2" r="1.6"/><circle cx="12" cy="18.5" r="1.6"/><circle cx="12" cy="21.5" r="1.6"/></g>',
+  "tarot": '<rect x="6" y="2.8" width="12" height="18.4" rx="1.5"/><path d="M12 7.6l1.25 2.6 2.85.35-2.1 1.95.55 2.8L12 13.9l-2.55 1.4.55-2.8-2.1-1.95 2.85-.35Z"/>',
+  "the-rosicrucians": '<path d="M12 2.5v4.3M12 13.2v8.3M4.5 10h4.3M15.2 10h4.3"/><circle cx="12" cy="10" r="3.2"/><circle cx="12" cy="10" r="1.1" fill="currentColor"/>',
+  "freemasonry": '<circle cx="12" cy="3.6" r="1.3"/><path d="M11.4 4.8L6 20M12.6 4.8L18 20M4.5 11.5L12 19l7.5-7.5"/>',
+  "theosophy": '<circle cx="12" cy="12" r="9.2"/><path d="M12 5.2l5.9 10.2H6.1ZM12 18.8L6.1 8.6h11.8Z"/>',
+  "the-golden-dawn": '<path d="M3 17.5h18M7 17.5a5 5 0 0 1 10 0M12 6.2v2.6M6.3 9.4l1.6 1.6M17.7 9.4l-1.6 1.6M3.8 13.6h2.1M18.1 13.6h2.1M8.5 21h7"/>',
+  "new-thought-and-the-kybalion": '<path d="M6.5 3h11M12 3l3.6 12.6"/><circle cx="16.3" cy="17.9" r="2.4"/><path stroke-dasharray="1.6 1.8" d="M5 16.5q7 6 14 0"/>',
+  "how-to-read-this": '<path d="M12 6.5C9.5 5 6.5 4.6 3.5 5v13.5c3-.4 6 0 8.5 1.5 2.5-1.5 5.5-1.9 8.5-1.5V5c-3-.4-6 0-8.5 1.5ZM12 6.5V20"/>',
+  "the-line-of-descent": '<path d="M12 3v5.5M12 8.5L6 14v6.5M12 8.5L18 14v6.5M12 8.5v12"/><circle cx="12" cy="3" r="1.4" fill="currentColor"/>',
+  "side-by-side": '<rect x="3" y="4.5" width="18" height="15" rx="1"/><path d="M9 4.5v15M15 4.5v15M3 8.5h18"/>',
+  "how-to-spot-a-hook": '<circle cx="15" cy="3.8" r="1.5"/><path d="M15 5.3V14a4.5 4.5 0 0 1-9 0v-3l-2 2.5"/>',
+  "tb-preface": '<rect x="6" y="9" width="12" height="11"/><path d="M6 9l6-4 6 4"/>',
+  "tb-threads": '<path d="M3.5 6c7 0 10 12 17 12M3.5 18c7 0 10-12 17-12"/>',
+  "tb-fineprint": '<circle cx="10.5" cy="10.5" r="5.8"/><path d="M14.8 14.8L20.5 20.5M8 9h5M8 12h3.5"/>',
+  "glossary": '<path d="M5 20L10 4h1.5l5 16M7 14h8"/><path d="M17.5 4.5v5M15 7h5"/>',
+  "free-shelf": '<path d="M3 21h18"/><rect x="4" y="6" width="3.6" height="15"/><rect x="8.6" y="3.5" width="3.6" height="17.5"/><path d="M14 7.2l3.5-.9 3.3 13.8-3.5.9Z"/>',
+  /* routines */
+  "sun": '<circle cx="12" cy="13" r="3.6"/><path d="M3 19h18M12 4.5v2.4M5.2 7.6l1.7 1.7M18.8 7.6l-1.7 1.7M2.8 13h2.4M18.8 13h2.4"/>',
+  "noon": '<circle cx="12" cy="12" r="4"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/>',
+  "moon": '<path d="M19 14.6A7.6 7.6 0 0 1 9.4 5a7.6 7.6 0 1 0 9.6 9.6Z"/><path d="M16.5 3.5v3M15 5h3"/>',
+  "bell": '<path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 2H5Z"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0M12 3.5v2"/>'
+};
+function emblem(key, cls) {
+  var d = EMB[key]; if (!d) return null;
+  return h("span", { class: "emb" + (cls ? " " + cls : ""), "aria-hidden": "true",
+    html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + d + "</svg>" });
+}
+// "Christian mysticism" or "Rosicrucians" in a table cell -> the chapter's emblem key
+function emblemKeyFor(name) {
+  var n = String(name).toLowerCase().replace(/[^a-z ]/g, "").trim();
+  if (!n) return null;
+  for (var i = 0; i < BOOK.chapters.length; i++) {
+    var c = BOOK.chapters[i], t = c.title.toLowerCase();
+    if (c.num && (t === n || t === "the " + n || t.indexOf(n) === 0 || n.indexOf(t.replace(/^the /, "")) === 0)) return c.id;
+  }
+  if (/new thought|kybalion/.test(n)) return "new-thought-and-the-kybalion";
+  return null;
+}
+/* tables turn into stacked cards on a phone: label each cell with its column heading */
+function stackTables(root) {
+  [].forEach.call(root.querySelectorAll(".table"), function (wrap) {
+    var table = wrap.querySelector("table"); if (!table) return;
+    var heads = [].map.call(table.querySelectorAll("thead th"), function (th) { return th.textContent.trim(); });
+    if (!heads.length) return;
+    var withEmb = 0;
+    [].forEach.call(table.querySelectorAll("tbody tr"), function (tr) {
+      [].forEach.call(tr.children, function (td, i) { if (heads[i]) td.setAttribute("data-label", heads[i]); });
+      var first = tr.children[0], key = first && emblemKeyFor(first.textContent);
+      if (key) { first.insertBefore(emblem(key, "sm"), first.firstChild); withEmb++; }
+    });
+    wrap.classList.add("stack");
+    if (!withEmb) wrap.classList.add("numbered");
+    if (/usable|who says/i.test(heads[heads.length - 1])) wrap.classList.add("highlight-last");
+  });
+}
+
+function secSvg(n) { for (var i = 0; i < BOOK.sections.length; i++) if (BOOK.sections[i].n === n) return BOOK.sections[i].svg || ""; return ""; }
+
 /* ---------- top bar + bottom tabs ---------- */
+var lastTab = null;
 function tabs(current) {
   tabsEl.innerHTML = "";
   [["practice", "#/", "Practices"], ["read", "#/read", "Read"], ["log", "#/log", "My Log"]].forEach(function (t) {
     var a = h("a", { href: t[1], html: TAB_ICONS[t[0]] + "<span>" + t[2] + "</span>" });
-    if (t[0] === current) a.setAttribute("aria-current", "page");
+    if (t[0] === current) { a.setAttribute("aria-current", "page"); if (lastTab !== current && lastTab !== null) a.classList.add("fresh"); }
     tabsEl.appendChild(a);
   });
+  lastTab = current;
 }
 // opts: { back: [label, hash], where: html, sound: bool, size: bool, progress: bool }
 function topbar(opts) {
@@ -1529,6 +1708,7 @@ function homeView() {
   // 1. quote of the day, first thing on screen
   var ln = lineOfDay();
   app.appendChild(card([
+    h("span", { class: "wm", "aria-hidden": "true" }, [stoneMark()]),
     h("span", { class: "label" }, ["Today"]),
     h("blockquote", { class: "quote" }, [ln.t, h("cite", null, [ln.by])]),
     h("div", { class: "row left" }, [
@@ -1544,7 +1724,7 @@ function homeView() {
       var el = document.getElementById(c[1]); if (!el) return;
       el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
       el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
-    } }, [c[0]]));
+    } }, [h("span", { html: secSvg(c[1].slice(4)) }), c[0]]));
   });
   app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["What's happening?"]), h("p", null, ["Tap the closest word, or scroll for all 24."]), checks]));
 
@@ -1553,11 +1733,13 @@ function homeView() {
   Object.keys(ROUTINES).forEach(function (k) {
     var r = ROUTINES[k];
     rs.appendChild(h("button", { class: "pick routine", type: "button", onclick: function () { location.hash = "#/r/" + k; } }, [
+      h("span", { class: "ri" }, [emblem({ morning: "sun", reset: "noon", evening: "moon" }[k])]),
       h("span", null, [h("span", { class: "sit" }, [r.name]), h("span", { class: "nm" }, [r.ids.map(function (i) { return BOOK.entries[i].name; }).join(" → ")])]),
       h("span", { class: "arrow", "aria-hidden": "true" }, ["▶"])
     ]));
   });
   rs.appendChild(h("button", { class: "pick routine", type: "button", onclick: function () { location.hash = "#/timer"; } }, [
+    h("span", { class: "ri" }, [emblem("bell")]),
     h("span", null, [h("span", { class: "sit" }, ["Quiet timer"]), h("span", { class: "nm" }, ["Bells only. For prayer, reading, or sitting still."])]),
     h("span", { class: "arrow", "aria-hidden": "true" }, ["▶"])
   ]));
@@ -1573,7 +1755,7 @@ function homeView() {
 
   // 5. all 24, in the book's eight sections
   BOOK.sections.forEach(function (sec) {
-    var head = h("h2", null, [h("span", { class: "n" }, [sec.n]), sec.name]);
+    var head = h("h2", null, [h("span", { class: "ic", html: sec.svg || "" }), h("span", { class: "n" }, [sec.n]), sec.name]);
     var g = h("section", { class: "group", id: "sec-" + sec.n }, [head, h("p", { class: "gdesc", html: sec.desc })]);
     sec.ids.forEach(function (id) { g.appendChild(pick(id)); });
     app.appendChild(g);
@@ -1588,11 +1770,13 @@ function homeView() {
 function practiceHead(id) {
   var b = BOOK.entries[id];
   var star = h("button", { class: "star", type: "button", "aria-pressed": String(isFav(id)), "aria-label": "Pin to your practices" }, [isFav(id) ? "★ Pinned" : "☆ Pin"]);
-  star.addEventListener("click", function () { var on = toggleFav(id); star.setAttribute("aria-pressed", String(on)); star.textContent = on ? "★ Pinned" : "☆ Pin"; });
+  star.addEventListener("click", function () { var on = toggleFav(id); star.setAttribute("aria-pressed", String(on)); star.textContent = on ? "★ Pinned" : "☆ Pin"; star.classList.remove("pop"); void star.offsetWidth; if (on) star.classList.add("pop"); });
+  var chs = PRACTICE_CH[id] || [];
   return h("header", { class: "p-head" }, [
+    chs[0] ? h("span", { class: "wm", "aria-hidden": "true", html: emblem(chs[0]).innerHTML }) : null,
     h("div", { class: "row between" }, [h("span", { class: "num" }, [two(id)]), star]),
     h("h1", null, [b.name]),
-    h("div", { class: "p-meta" }, [h("span", { class: "label", html: b.trad }), h("span", { class: "ev" }, [evText(b.ev)])]),
+    h("div", { class: "p-meta" }, [h("span", { class: "embs" }, chs.map(function (c) { return emblem(c, "sm"); })), h("span", { class: "label", html: b.trad }), h("span", { class: "ev" }, [evText(b.ev)])]),
     h("p", { class: "when", html: b.when })
   ]);
 }
@@ -1620,7 +1804,7 @@ function practiceView(id) {
       h("span", { class: "label" }, ["Read more in the Field Guide"]),
       h("div", { class: "links" }, chs.map(function (cid) {
         var c = READ_BY[cid];
-        return h("a", { class: "linkrow", href: "#/read/" + cid }, [h("span", null, [h("small", null, ["Chapter " + c.num]), h("span", { html: niceTitle(c.title) })]), h("span", { class: "arrow", "aria-hidden": "true" }, ["→"])]);
+        return h("a", { class: "linkrow", href: "#/read/" + cid, style: "grid-template-columns:2.3rem minmax(0,1fr) auto" }, [emblem(cid, "tile"), h("span", null, [h("small", null, ["Chapter " + c.num]), h("span", { html: niceTitle(c.title) })]), h("span", { class: "arrow", "aria-hidden": "true" }, ["→"])]);
       }))
     ]));
   }
@@ -1645,8 +1829,8 @@ function readHome() {
   }
   function row(r) {
     var a = h("a", { href: "#/read/" + r.id, class: seen[r.id] ? "seen" : "" }, [
-      h("span", { class: "n" }, [r.num ? String(r.num) : "·"]),
-      h("span", { class: "t", html: niceTitle(r.title) }),
+      emblem(r.id, "tile") || h("span", { class: "n" }, ["·"]),
+      h("span", { class: "t", html: (r.num ? '<span class="cn">' + r.num + "</span>" : "") + niceTitle(r.title) }),
       r.dateline ? h("span", { class: "d" }, [r.dateline]) : null
     ]);
     return h("li", null, [a]);
@@ -1660,6 +1844,12 @@ function readHome() {
   toc.appendChild(h("div", { class: "toc-group" }, [
     h("h2", null, ["A Field Guide to the Western Mysteries"]),
     h("p", { class: "gnote" }, ["Fourteen traditions, from Pythagoras to The Kybalion. About five minutes a chapter; read them in any order."]),
+    (function () {
+      var chs = READ.filter(function (r) { return r.group === "fg" && r.num; }), done = chs.filter(function (r) { return seen[r.id]; }).length;
+      if (!done) return null;
+      return h("div", { class: "readbar" }, [h("div", { class: "track" }, [h("i", { style: "width:" + Math.round(done / chs.length * 100) + "%" })]),
+        h("small", null, [done === chs.length ? "All 14 chapters opened. Well walked." : done + " of " + chs.length + " chapters opened"])]);
+    })(),
     h("ol", null, READ.filter(function (r) { return r.group === "fg"; }).map(row))
   ]));
   toc.appendChild(h("div", { class: "toc-group" }, [
@@ -1713,13 +1903,13 @@ function readerView(id) {
 
   var head = h("h1", null, []);
   var label = r.group === "tb" ? "The Trestleboard" : r.group === "fg" ? (r.num ? "Chapter " + r.num : "A Field Guide to the Western Mysteries") : "At the back";
-  head.appendChild(h("span", { class: "ch-label" }, [label]));
+  head.appendChild(h("span", { class: "opener" }, [emblem(r.id, "tile"), h("span", { class: "ch-label" }, [label])]));
   head.appendChild(h("span", { html: niceTitle(r.title) }));
   var art = h("article", { class: "prose" }, [head]);
   if (r.dateline) art.appendChild(h("p", { class: "dateline" }, [r.dateline]));
   if (r.special === "glossary") art.appendChild(glossaryBody());
   else if (r.special === "shelf") art.appendChild(shelfBody());
-  else art.appendChild(h("div", { class: "prose", html: r.html }));
+  else { var body = h("div", { class: "prose", html: r.html }); stackTables(body); art.appendChild(body); }
 
   // practices that come from this tradition
   var ps = CH_PRACTICES[id];
@@ -1736,8 +1926,8 @@ function readerView(id) {
 
   var prev = READ[r.i - 1], next = READ[r.i + 1];
   var pager = h("nav", { class: "pager", "aria-label": "Page navigation" });
-  if (prev) pager.appendChild(h("a", { class: "prev", href: "#/read/" + prev.id }, [h("span", { class: "label" }, ["Previous"]), h("span", { class: "t", html: niceTitle(prev.title) })]));
-  if (next) pager.appendChild(h("a", { class: "next", href: "#/read/" + next.id }, [h("span", { class: "label" }, ["Next"]), h("span", { class: "t", html: niceTitle(next.title) })]));
+  if (prev) pager.appendChild(h("a", { class: "prev", href: "#/read/" + prev.id }, [h("span", { class: "label", html: '<span class="ar">←</span> Previous' }), h("span", { class: "t", html: niceTitle(prev.title) })]));
+  if (next) pager.appendChild(h("a", { class: "next", href: "#/read/" + next.id }, [h("span", { class: "label", html: 'Next <span class="ar">→</span>' }), h("span", { class: "t", html: niceTitle(next.title) })]));
   pager.appendChild(h("a", { class: "home", href: "#/read" }, ["Back to contents"]));
   app.appendChild(pager);
 }

@@ -1,7 +1,7 @@
 /* Keeps a copy of the Trestleboard on the phone so it opens with no internet.
    With signal, it checks for a newer version first (giving up after 3 seconds);
    without signal, it uses the saved copy. */
-var CACHE = "trestleboard-6c0f76bffe";
+var CACHE = "trestleboard-v6-2026-10-16";
 var FILES = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", function (e) {
