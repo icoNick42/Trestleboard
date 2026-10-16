@@ -14,8 +14,8 @@ Open it once with internet so the phone saves its copy. After that it opens with
 
 ## What's in it
 
-- **Practices**: the quote of the day, "What's happening?" buttons, three routines, a quiet timer, and all 24 practices with their tools (breathing guides, timers, voice guidance, background sounds, and a dim screen for bedtime).
-- **Read**: the Trestleboard's preface, "Where the Threads Cross," and "Reading the Fine Print"; all of *A Field Guide to the Western Mysteries*; one combined glossary; and the Free Shelf.
+- **Practices**: a short welcome the first time you open it, the line of the day, "How are you right now?" with eight groups (Starting, Foggy, Too Much, Heated, Looping, Deciding, People, Winding Down), three routines, a quiet timer, and all 24 practices with their tools (breathing guides, timers, voice guidance, background sounds, and a dim screen for bedtime).
+- **Read**: About (the preface, "Where the Threads Cross," and "Reading the Fine Print"); the Field Guide (all of *A Field Guide to the Western Mysteries*); and Extras (one combined glossary and the Free Shelf).
 - **My Log**: your before-and-after ratings, parked thoughts, and a backup button.
 - **Voices**: two built-in voices, Heart and Michael, so guidance sounds the same on a phone or a computer and works offline. You can also use your device's own voice.
 
