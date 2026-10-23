@@ -18,8 +18,8 @@
 /* ==========================================================
    Trestleboard styles: one set, in one place.
    Text sizes: six steps (--t-*). Spacing: 4 / 8 / 12 / 16 / 24 / 32.
-   Fonts are the phone's own (Optima for titles, Iowan Old Style for
-   reading on iPhone), so nothing downloads and it works offline.
+   Fonts are the device's own sans-serif (San Francisco on iPhone and
+   Mac, Segoe UI on Windows), so nothing downloads and it works offline.
    ========================================================== */
 :root {
   --paper: #e7ebef;
@@ -34,8 +34,9 @@
   --on-slate: #e8edf2;
   --on-slate-muted: #a9b5c2;
   --slate-mark: #93b4d2;
-  --display: "Optima", "Candara", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
-  --body: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --display: var(--sans);
+  --body: var(--sans);
 
   /* six text sizes */
   --t-title: 2rem;        /* 32: page titles */
@@ -75,7 +76,7 @@ html { -webkit-text-size-adjust: 100%; background: var(--slate); }
 body {
   margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink);
   font-family: var(--body); font-size: var(--t-body); line-height: 1.55;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased;
 }
 body[data-size="s"] { --fs: 0.97rem; }
 body[data-size="l"] { --fs: 1.22rem; }
@@ -83,8 +84,8 @@ body[data-size="l"] { --fs: 1.22rem; }
 a { color: var(--steel); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
 button { font: inherit; color: inherit; cursor: pointer; }
 :focus-visible { outline: 2px solid var(--steel); outline-offset: 2px; }
-h1, h2, h3 { font-family: var(--display); font-weight: 400; line-height: 1.2; margin: 0; text-wrap: balance; }
-h1 { font-size: var(--t-title); }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.25; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h1 { font-size: var(--t-title); font-weight: 700; letter-spacing: -0.02em; }
 h2 { font-size: var(--t-head); }
 h3 { font-size: var(--t-card); }
 p { margin: 0; }
@@ -105,8 +106,8 @@ p { margin: 0; }
 .top-in { max-width: 40rem; margin: 0 auto; display: flex; align-items: center; gap: var(--s1); min-height: 52px; }
 .top .brand { display: flex; align-items: center; gap: var(--s2); color: var(--on-slate); text-decoration: none; min-width: 0; min-height: var(--tap); padding: 0 var(--s1); }
 .top .brand svg { width: 1.4rem; height: 1.4rem; color: var(--slate-mark); flex: none; }
-.top .brand span { font-family: var(--display); font-size: var(--t-body); letter-spacing: 0.08em; text-transform: uppercase; }
-.top .ttl { font-family: var(--display); font-size: var(--t-card); letter-spacing: 0.04em; flex: 1; padding: 0 var(--s1); }
+.top .brand span { font-family: var(--display); font-size: var(--t-body); font-weight: 600; }
+.top .ttl { font-family: var(--display); font-size: var(--t-card); font-weight: 600; flex: 1; padding: 0 var(--s1); }
 .top .spacer { flex: 1; }
 .tb {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--s1);
@@ -118,7 +119,7 @@ p { margin: 0; }
 .tb[aria-pressed="true"], .tb[aria-expanded="true"] { color: var(--slate-mark); }
 .tb.backlink { color: var(--slate-mark); font-size: var(--t-body); padding-left: 0; min-width: 0; }
 .tb.backlink .ico { width: 1.1rem; height: 1.1rem; }
-.tb.aa { font-family: var(--display); font-size: var(--t-card); letter-spacing: 0.02em; }
+.tb.aa { font-family: var(--display); font-size: var(--t-card); font-weight: 600; }
 .progress { position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: var(--slate-mark); }
 .sizepop { position: absolute; right: max(var(--s3), env(safe-area-inset-right, 0px)); top: calc(100% + var(--s2)); display: flex; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s1); box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
 .sizepop button { min-width: 52px; min-height: var(--tap); background: none; border: 0; border-radius: var(--r-s); color: var(--ink); font-family: var(--display); }
@@ -185,7 +186,7 @@ p { margin: 0; }
 .pick .nm, .linkrow small { display: block; font-size: var(--t-small); color: var(--muted); }
 .pick .end { display: inline-flex; align-items: center; gap: var(--s2); }
 .pick .pin { width: 0.95rem; height: 0.95rem; color: var(--steel); }
-.links, .routines, .rows { display: grid; gap: var(--s2); }
+.links, .rows { display: grid; gap: var(--s2); }
 
 /* fold-outs styled as rows */
 .tipping, .more { display: grid; }
@@ -207,14 +208,26 @@ p { margin: 0; }
 .card { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s4); display: grid; gap: var(--s3); }
 .card h2 { font-size: var(--t-card); }
 
-/* today's line: a slim slate tablet */
-.today { background: var(--slate); color: var(--on-slate); border: 0; padding: var(--s4) var(--s4) var(--s2) var(--s5); gap: var(--s2); }
-.today .quote { margin: 0; border: 0; padding-left: 0; font-style: italic; font-size: var(--t-body); line-height: 1.5; padding-right: var(--s2); }
-.today cite { display: block; font-style: normal; font-size: var(--t-tiny); color: var(--on-slate-muted); }
-.today .qrow { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); margin-top: calc(var(--s1) * -1); }
-.today .try { display: inline-flex; align-items: center; gap: var(--s1); min-height: var(--tap); color: var(--slate-mark); text-decoration: none; font-size: var(--t-small); font-weight: 600; }
-.today .try .chev { color: var(--slate-mark); opacity: 1; }
-.today .icobtn { color: var(--slate-mark); margin-right: calc(var(--s2) * -1); }
+/* the Watch, offered on the home page: the one slate card there */
+.wpromo { background: var(--slate); color: var(--on-slate); border: 0; padding: var(--s5); gap: var(--s4); }
+.wpromo-top { display: flex; align-items: center; gap: var(--s3); }
+.wpromo .emb.tile { width: 2.8rem; height: 2.8rem; background: transparent; color: var(--slate-mark); border-color: color-mix(in srgb, var(--on-slate-muted) 45%, transparent); }
+.wpromo .emb.tile svg { width: 1.5rem; height: 1.5rem; }
+.wpromo .label { color: var(--slate-mark); }
+.wpromo h2 { font-size: var(--t-head); }
+.wpromo p { color: color-mix(in srgb, var(--on-slate) 82%, var(--slate)); }
+.wpromo .go { background: var(--slate-mark); color: var(--slate); border-color: var(--slate-mark); }
+.wpromo .opt { background: transparent; color: var(--on-slate); border-color: color-mix(in srgb, var(--on-slate-muted) 45%, transparent); }
+
+/* a line for today */
+.linecard { gap: var(--s3); }
+.linecard .quote { margin: 0; border: 0; padding: 0; font-style: italic; font-size: var(--t-card); line-height: 1.45; }
+.linecard .qrow { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); margin-top: calc(var(--s2) * -1); }
+.linecard cite { font-style: normal; font-size: var(--t-tiny); color: var(--muted); }
+.linecard .icobtn { margin-right: calc(var(--s2) * -1); }
+.linecard .linkrow { background: var(--paper); }
+.minis .gtile { background: transparent; }
+.minis .emb svg { width: 1.35rem; height: 1.35rem; }
 
 /* how are you: eight even tiles */
 .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
@@ -225,7 +238,7 @@ p { margin: 0; }
   color: var(--ink); text-decoration: none; transition: transform 0.1s, border-color 0.15s;
 }
 .gtile .gicon { width: 1.4rem; height: 1.4rem; }
-.gtile .tname { font-family: var(--display); font-size: var(--t-card); line-height: 1.2; }
+.gtile .tname { font-family: var(--display); font-size: var(--t-body); font-weight: 600; line-height: 1.25; }
 .gtile .thint { grid-column: 1 / -1; font-size: var(--t-tiny); color: var(--muted); line-height: 1.35; margin-top: var(--s1); }
 .gicon { display: inline-grid; place-items: center; color: var(--steel); flex: none; }
 .gicon svg { width: 100%; height: 100%; }
@@ -245,7 +258,7 @@ p { margin: 0; }
 
 /* ---------- practice page ---------- */
 .p-head { display: grid; gap: var(--s2); }
-.p-head .num { font-family: var(--display); color: var(--steel); font-size: var(--t-small); }
+.p-head .num { font-family: var(--display); color: var(--steel); font-size: var(--t-small); font-weight: 600; }
 .p-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); font-size: var(--t-small); color: var(--muted); }
 .p-meta .dotsep { opacity: 0.6; }
 .when { font-size: var(--t-body); }
@@ -287,10 +300,10 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 .sq-side { fill: none; stroke: var(--steel); stroke-width: 4; stroke-linecap: round; opacity: 0; }
 .sq-side.on { opacity: 1; }
 .dot { fill: var(--steel); }
-.phase { font-family: var(--display); font-size: var(--t-head); min-height: 1.7rem; }
+.phase { font-family: var(--display); font-size: var(--t-head); font-weight: 600; min-height: 1.7rem; }
 .sub:empty { display: none; }
 .sub { font-size: var(--t-small); color: var(--muted); font-variant-numeric: tabular-nums; min-height: 1.3rem; }
-.big { font-family: var(--display); font-size: 4rem; line-height: 1; color: var(--steel); font-variant-numeric: tabular-nums; min-height: 4rem; }
+.big { font-family: var(--display); font-size: 4rem; font-weight: 300; line-height: 1; color: var(--steel); font-variant-numeric: tabular-nums; min-height: 4rem; }
 .big.clock { font-size: 4rem; }
 .bar { width: min(16rem, 100%); height: 4px; background: var(--rule); border-radius: 2px; overflow: hidden; }
 .bar i { display: block; height: 100%; width: 0; background: var(--steel); }
@@ -298,7 +311,7 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 .note label { display: grid; gap: var(--s1); }
 .note input { font: inherit; font-size: var(--t-body); color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: var(--r-s); padding: var(--s2) var(--s3); min-height: var(--tap); width: 100%; min-width: 0; }
 .saved { font-size: var(--t-tiny); color: var(--muted); min-height: 1rem; }
-.tap { width: 10rem; height: 10rem; border-radius: 50%; border: 2px solid var(--steel); background: var(--steel-soft); font-family: var(--display); font-size: 3.5rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tap { width: 10rem; height: 10rem; border-radius: 50%; border: 2px solid var(--steel); background: var(--steel-soft); font-family: var(--display); font-size: 3.5rem; font-weight: 300; color: var(--ink); font-variant-numeric: tabular-nums; }
 .tap:active { transform: scale(0.97); }
 .result { font-size: var(--t-body); min-height: 1.6rem; }
 .script { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s3); align-items: center; text-align: left; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s2) var(--s2) var(--s2) var(--s3); }
@@ -359,7 +372,7 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 /* ---------- dim screen: always dark ---------- */
 .dim { position: fixed; inset: 0; z-index: 10; background: #05070b; color: #8a7a55; display: grid; place-content: center; justify-items: center; gap: var(--s4); text-align: center;
   padding: max(var(--s5), env(safe-area-inset-top, 0px)) max(var(--s4), env(safe-area-inset-right, 0px)) max(var(--s5), env(safe-area-inset-bottom, 0px)) max(var(--s4), env(safe-area-inset-left, 0px)); }
-.dim-big { font-family: var(--display); font-size: var(--t-title); max-width: 20ch; min-height: 3rem; }
+.dim-big { font-family: var(--display); font-size: var(--t-title); font-weight: 300; max-width: 20ch; min-height: 3rem; }
 .dim-sub { font-size: var(--t-head); color: #5c5240; font-variant-numeric: tabular-nums; min-height: 2rem; }
 .dim-x { font-size: var(--t-small); background: transparent; color: #5c5240; border: 1px solid #2a2619; border-radius: 999px; padding: 0 var(--s5); min-height: var(--tap); margin-top: var(--s6); }
 
@@ -376,7 +389,7 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 .toc li a { display: grid; grid-template-columns: 1.9rem minmax(0, 1fr) auto; column-gap: var(--s2); align-items: center; min-height: 52px; padding: var(--s2) 0; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--rule); transition: background 0.2s; }
 .toc li a:active { background: var(--steel-soft); }
 .toc li a:not(:has(.n)) { grid-template-columns: minmax(0, 1fr) auto; }
-.toc .n { font-family: var(--display); color: var(--steel); font-size: var(--t-body); }
+.toc .n { font-family: var(--display); color: var(--steel); font-size: var(--t-small); font-weight: 600; font-variant-numeric: tabular-nums; }
 .toc .tt { display: grid; min-width: 0; }
 .toc .t { font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
 .toc .d { color: var(--muted); font-size: var(--t-tiny); font-style: italic; }
@@ -387,29 +400,29 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 .readbar small { font-size: var(--t-tiny); color: var(--muted); }
 
 /* ---------- Read: one page ---------- */
-.prose { font-size: var(--fs); line-height: 1.65; display: grid; gap: var(--s4); }
+.prose { font-size: var(--fs); line-height: 1.6; display: grid; gap: var(--s4); }
 .prose .ch-label { display: block; font-family: var(--body); font-size: var(--t-tiny); font-weight: 600; color: var(--steel); }
-.prose > h1 { font-size: var(--t-title); letter-spacing: 0.02em; padding-bottom: var(--s4); border-bottom: 1px solid var(--rule); }
+.prose > h1 { font-size: var(--t-title); padding-bottom: var(--s4); border-bottom: 1px solid var(--rule); }
 .prose > h1 .opener { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s2); }
 .prose > h1 .opener .emb.tile { width: 2.6rem; height: 2.6rem; border-color: var(--steel); }
 .prose > h1 .opener .emb.tile svg { width: 1.5rem; height: 1.5rem; }
 .prose .dateline { color: var(--muted); font-style: italic; margin-top: calc(var(--s1) * -1); }
 .prose section { display: grid; gap: var(--s4); }
-.prose h2 { font-size: 1.3em; letter-spacing: 0.02em; margin-top: var(--s5); }
+.prose h2 { font-size: 1.3em; margin-top: var(--s5); }
 .prose h2::before { content: ""; display: inline-block; width: 0.42rem; height: 0.42rem; border: 1px solid var(--steel); transform: rotate(45deg); margin: 0 0.65rem 0 0.1rem; vertical-align: 0.18em; }
 .prose .group > h2::before, .prose h2.plain::before { display: none; }
 .prose h3 { font-size: 1.12em; margin-top: var(--s3); }
 .prose ul, .prose ol { margin: 0; padding-left: 1.2rem; display: grid; gap: var(--s2); }
 .prose li::marker { color: var(--steel); }
 .prose strong { font-weight: 600; }
-.prose .lede::first-letter { font-family: var(--display); color: var(--steel); float: left; font-size: 3.2em; line-height: 0.85; padding: 0.06em 0.12em 0 0; }
+.prose .lede { font-size: 1.06em; }
 .prose .glance { background: var(--slate); color: var(--on-slate); border-radius: var(--r); padding: var(--s4); font-size: 0.92em; line-height: 1.55; display: grid; gap: var(--s1); }
 .prose .glance::before { content: "At a glance"; font-family: var(--body); font-size: var(--t-tiny); font-weight: 600; color: var(--slate-mark); }
 .prose .glance strong { color: var(--slate-mark); }
 .prose .timeline ul { list-style: none; padding: 0; gap: 0; border-left: 1px solid var(--steel); margin-left: 0.3rem; }
 .prose .timeline li { padding: 0.4rem 0 0.4rem 1.1rem; position: relative; }
 .prose .timeline li::before { content: ""; position: absolute; left: -0.3rem; top: 0.95rem; width: 0.55rem; height: 0.55rem; background: var(--paper); border: 1px solid var(--steel); transform: rotate(45deg); }
-.prose .timeline strong { display: block; color: var(--steel); font-family: var(--display); letter-spacing: 0.05em; font-size: 0.9em; }
+.prose .timeline strong { display: block; color: var(--steel); font-family: var(--display); font-size: 0.9em; }
 .tablewrap { overflow-x: auto; max-width: 100%; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); }
 .prose table { border-collapse: collapse; width: 100%; font-size: 0.88em; line-height: 1.45; }
 .prose .wide table { min-width: 40rem; }
@@ -446,7 +459,7 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
   .prose .table.stack tbody { display: grid; gap: var(--s3); counter-reset: card; }
   .prose .table.stack tr { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s3) var(--s4) var(--s2); counter-increment: card; }
   .prose .table.stack td { border: 0; padding: var(--s1) 0; }
-  .prose .table.stack td:first-child { display: flex; align-items: baseline; gap: var(--s3); font-family: var(--display); font-weight: 400; font-size: var(--t-card); color: var(--ink); padding: 0 0 var(--s2); margin-bottom: var(--s1); border-bottom: 1px solid var(--rule); }
+  .prose .table.stack td:first-child { display: flex; align-items: baseline; gap: var(--s3); font-family: var(--display); font-weight: 600; font-size: var(--t-body); color: var(--ink); padding: 0 0 var(--s2); margin-bottom: var(--s1); border-bottom: 1px solid var(--rule); }
   .prose .table.stack.numbered td:first-child::before { content: counter(card, upper-roman); font-family: var(--display); color: var(--steel); font-size: var(--t-small); min-width: 1.6rem; }
   .prose .table.stack td + td::before { content: attr(data-label); display: block; font-family: var(--body); font-size: var(--t-tiny); color: var(--muted); margin-bottom: 2px; }
   .prose .table.stack td:last-child { color: var(--ink); }
@@ -460,7 +473,7 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
   .prose .table.wide.stack tbody { display: grid; gap: var(--s3); counter-reset: card; }
   .prose .table.wide.stack tr { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s3) var(--s4) var(--s2); counter-increment: card; }
   .prose .table.wide.stack td { border: 0; padding: var(--s1) 0; }
-  .prose .table.wide.stack td:first-child { display: flex; align-items: baseline; gap: var(--s3); font-family: var(--display); font-weight: 400; font-size: var(--t-card); color: var(--ink); padding: 0 0 var(--s2); margin-bottom: var(--s1); border-bottom: 1px solid var(--rule); }
+  .prose .table.wide.stack td:first-child { display: flex; align-items: baseline; gap: var(--s3); font-family: var(--display); font-weight: 600; font-size: var(--t-body); color: var(--ink); padding: 0 0 var(--s2); margin-bottom: var(--s1); border-bottom: 1px solid var(--rule); }
   .prose .table.wide.stack.numbered td:first-child::before { content: counter(card, upper-roman); font-family: var(--display); color: var(--steel); font-size: var(--t-small); min-width: 1.6rem; }
   .prose .table.wide.stack td + td::before { content: attr(data-label); display: block; font-family: var(--body); font-size: var(--t-tiny); color: var(--muted); margin-bottom: 2px; }
   .prose .table.wide.stack td:last-child { color: var(--ink); }
@@ -480,7 +493,7 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 .gloss .from { color: var(--muted); font-size: 0.85em; }
 .gloss a { padding: 10px 4px; margin: 0 -4px; }
 .gloss .chref { white-space: nowrap; }
-.gloss .letter { font-family: var(--display); font-size: var(--t-head); color: var(--steel); padding: var(--s3) 0 var(--s1); border-bottom: 1px solid var(--rule); margin-top: var(--s2); }
+.gloss .letter { font-family: var(--display); font-size: var(--t-head); font-weight: 600; color: var(--steel); padding: var(--s3) 0 var(--s1); border-bottom: 1px solid var(--rule); margin-top: var(--s2); }
 .gloss .letter::before { display: none; }
 .search { font: inherit; font-size: var(--t-body); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-s); padding: var(--s2) var(--s3); min-height: var(--tap); width: 100%; }
 
@@ -490,7 +503,7 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 .pager a, .pager button { display: grid; gap: 2px; align-content: center; min-height: 64px; padding: var(--s3) var(--s4); border: 1px solid var(--rule); border-radius: var(--r); text-decoration: none; color: var(--ink); background: var(--surface); text-align: left; font: inherit; }
 .pager .next { text-align: right; grid-column: 2; background: var(--slate); color: var(--on-slate); border-color: var(--slate); }
 .pager .next .label { color: var(--slate-mark); }
-.pager .t { font-family: var(--display); font-size: var(--t-body); line-height: 1.25; }
+.pager .t { font-family: var(--display); font-size: var(--t-body); font-weight: 600; line-height: 1.25; }
 .pager .home { grid-column: 1 / -1; justify-self: center; border: 0; background: none; color: var(--steel); padding: 0 var(--s3); min-height: var(--tap); font-size: var(--t-small); }
 @media (max-width: 30rem) { .pager { grid-template-columns: 1fr; } .pager .next { grid-column: 1; } }
 
@@ -529,52 +542,72 @@ html.locked, html.locked body { overflow: hidden; }
 .w-in { width: 100%; max-width: 25rem; display: grid; gap: var(--s5); justify-items: center; text-align: center; }
 .w-mark { width: 4rem; height: 4rem; color: var(--slate-mark); }
 .w-mark svg { width: 100%; height: 100%; }
-.welcome h1 { font-size: var(--t-head); letter-spacing: 0.14em; text-transform: uppercase; }
+.welcome h1 { font-size: var(--t-title); }
 .w-lede { color: var(--on-slate-muted); font-size: var(--t-body); max-width: 22rem; }
 .w-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s4); text-align: left; width: 100%; }
 .w-list li { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: var(--s3); align-items: start; }
 .w-ic { width: 2.6rem; height: 2.6rem; border-radius: 50%; display: grid; place-items: center; color: var(--slate-mark); border: 1px solid color-mix(in srgb, var(--on-slate-muted) 40%, transparent); }
 .w-ic svg { width: 1.3rem; height: 1.3rem; }
-.w-list b { display: block; font-family: var(--display); font-weight: 400; font-size: var(--t-card); color: var(--on-slate); }
+.w-list b { display: block; font-family: var(--display); font-weight: 600; font-size: var(--t-body); color: var(--on-slate); }
 .w-list li > span:last-child > span { color: var(--on-slate-muted); font-size: var(--t-small); line-height: 1.4; }
 .w-note { color: var(--on-slate-muted); font-size: var(--t-small); font-style: italic; }
 .welcome .go { background: var(--slate-mark); color: var(--slate); border-color: var(--slate-mark); min-width: 12rem; }
 
-/* ---------- day of the week, on the line of the day ---------- */
-.today .daytag { display: flex; align-items: center; gap: var(--s2); font-size: var(--t-tiny); font-weight: 600; color: var(--slate-mark); }
-.today .daytag .emb { color: var(--slate-mark); }
-.today .lens { font-size: var(--t-small); color: var(--on-slate-muted); border-top: 1px solid color-mix(in srgb, var(--on-slate-muted) 30%, transparent); padding-top: var(--s2); }
-.today .lens b { font-weight: 600; color: var(--on-slate); }
-
 /* ---------- small practices and the Watch ---------- */
-.wp > .foldbody .wfrom blockquote, .wnow .wfrom blockquote { margin: var(--s2) 0; }
+.wp > .foldbody .wfrom blockquote, .wstage .wfrom blockquote { margin: var(--s2) 0; }
 .wshort { font-size: var(--t-body); }
 .wp > summary .sit { display: block; }
 .wp > summary .nm { display: block; font-size: var(--t-small); color: var(--muted); }
-.wnow .saved:empty { display: none; }
+.wstage .saved:empty { display: none; }
 .foldbody .subhead { margin-top: var(--s2); }
 .lensbox { display: grid; gap: var(--s2); text-align: left; }
-.w-head { display: flex; align-items: center; gap: var(--s4); }
-.w-head .emb.tile { width: 3.4rem; height: 3.4rem; border-color: var(--steel); }
-.w-head .emb.tile svg { width: 1.9rem; height: 1.9rem; }
-.w-head p { color: var(--muted); font-size: var(--t-small); margin-top: var(--s1); }
-.wctl { display: grid; gap: var(--s2); justify-items: start; }
-.wstatus { color: var(--muted); font-size: var(--t-small); }
-.wnow { border-top: 3px solid var(--steel); }
-.wnow-top { display: flex; justify-content: space-between; gap: var(--s2); }
-.wnow h2 { font-size: var(--t-head); }
-.wnow .row { margin-top: var(--s1); }
+.lensq { font-size: var(--t-card); font-weight: 600; line-height: 1.35; }
+.lenstag { display: flex; align-items: center; gap: var(--s2); }
+.wday { display: flex; align-items: center; gap: var(--s3); color: var(--on-slate-muted); font-size: var(--t-small); }
+.wday .emb.tile { background: transparent; color: var(--slate-mark); border-color: color-mix(in srgb, var(--on-slate-muted) 45%, transparent); }
 .wwhy > summary { cursor: pointer; color: var(--steel); font-size: var(--t-small); min-height: var(--tap); display: flex; align-items: center; }
 .wwhy .foldbody { display: grid; gap: var(--s2); font-size: var(--t-small); color: var(--muted); }
 .wtoday { gap: var(--s5); }
 .wtoday .grp { display: grid; gap: var(--s2); }
-.wdrift { gap: var(--s2); }
-.wdrift .wdtext { font-size: var(--t-body); line-height: 1.55; }
-.wdrift cite { font-style: normal; font-size: var(--t-tiny); color: var(--muted); }
-.wdrift .qrow { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
-.wdrift .try { display: inline-flex; align-items: center; gap: var(--s1); min-height: var(--tap); text-decoration: none; font-size: var(--t-small); font-weight: 600; }
-.wdrift .icobtn { margin-right: calc(var(--s2) * -1); }
 .dayrev { margin-top: var(--s2); }
+
+/* the Watch's screen: slate, like a player, with what's on now in the middle */
+.wstage { background: var(--slate); color: var(--on-slate); border-radius: var(--r); padding: var(--s4) var(--s5); display: grid; grid-template-rows: auto 1fr auto; gap: var(--s4); min-height: min(34rem, 62vh); }
+.wtop { display: flex; justify-content: space-between; align-items: center; gap: var(--s2); }
+.wstage .label { color: var(--slate-mark); }
+.wstage .wclock { color: var(--on-slate-muted); font-variant-numeric: tabular-nums; }
+.wmid { display: grid; gap: var(--s3); align-content: center; min-width: 0; }
+.wtitle { font-size: var(--t-head); line-height: 1.3; }
+.wtitle.sm { font-size: var(--t-card); }
+.wtext { font-size: 1.125rem; line-height: 1.6; }
+.wsub { font-size: var(--t-small); color: var(--on-slate-muted); margin-top: calc(var(--s2) * -1); }
+.wquote { margin: 0; border: 0; padding: 0; font-size: 1.3rem; line-height: 1.5; font-style: italic; }
+.wstage cite { font-style: normal; font-size: var(--t-tiny); color: var(--on-slate-muted); margin-top: calc(var(--s2) * -1); }
+.wgo { display: inline-flex; align-items: center; gap: var(--s1); justify-self: start; min-height: var(--tap); color: var(--slate-mark); text-decoration: none; font-size: var(--t-small); font-weight: 600; }
+.wgo .chev { color: var(--slate-mark); opacity: 1; }
+.wplan { margin: 0; padding-left: 1.1rem; display: grid; gap: var(--s2); color: color-mix(in srgb, var(--on-slate) 82%, var(--slate)); }
+.wplan li::marker { color: var(--slate-mark); }
+.worb { width: 10rem; height: 10rem; justify-self: center; }
+.worb svg { width: 100%; height: 100%; overflow: visible; }
+.worb ~ * { text-align: center; }
+.wstage .ring { stroke: color-mix(in srgb, var(--on-slate-muted) 45%, transparent); }
+.wstage .orb { fill: var(--slate-mark); opacity: 0.8; }
+.wcount { font-size: 3.5rem; font-weight: 300; line-height: 1; color: var(--slate-mark); font-variant-numeric: tabular-nums; }
+.wstage .opt { background: transparent; color: var(--on-slate); border-color: color-mix(in srgb, var(--on-slate-muted) 45%, transparent); }
+.wstage .opt[aria-pressed="true"] { background: color-mix(in srgb, var(--slate-mark) 25%, transparent); border-color: var(--slate-mark); color: var(--on-slate); }
+.wstage .wwhy > summary { color: var(--slate-mark); }
+.wstage .wwhy .foldbody { color: var(--on-slate-muted); }
+.wstage blockquote { border-left-color: var(--slate-mark); }
+.wstage .saved { color: var(--on-slate-muted); }
+.wstage .list li { background: transparent; border-color: color-mix(in srgb, var(--on-slate-muted) 35%, transparent); }
+.wstage .list li span small { color: var(--slate-mark); }
+.wstage .x { color: var(--on-slate-muted); }
+.wstage .note input { background: transparent; color: var(--on-slate); border-color: color-mix(in srgb, var(--on-slate-muted) 45%, transparent); }
+.wfoot { display: grid; gap: var(--s2); }
+.wbar { height: 3px; background: color-mix(in srgb, var(--on-slate-muted) 25%, transparent); border-radius: 2px; overflow: hidden; }
+.wbar i { display: block; height: 100%; width: 0; background: var(--slate-mark); }
+.wnext { font-size: var(--t-tiny); color: var(--on-slate-muted); }
+.app > .wstage + .btnrow { margin-top: calc(var(--s5) * -1); }
 
 /* ---------- motion, skipped when the phone asks for less ---------- */
 .app > * { animation: rise 0.38s ease-out backwards; }
@@ -593,8 +626,9 @@ html.locked, html.locked body { overflow: hidden; }
   .w-in > *:nth-child(4) { animation-delay: 0.55s; }
   .w-in > *:nth-child(n+5) { animation-delay: 0.7s; }
   .welcome.leaving { opacity: 0; transition: opacity 0.35s ease; }
-  .wdrift.turn > * { animation: wfade 0.8s ease-out; }
-  .wnow.lit { animation: lit 1.6s ease-out; }
+  .wstage.turn .wmid > * { animation: wfade 0.8s ease-out; }
+  .wstage.lit { animation: lit 1.6s ease-out; }
+  .wbar i { transition: width 1s linear; }
 }
 @media (prefers-reduced-motion: reduce) {
   .app > *, .tabs a.fresh::before, .icobtn.pop, .tool.lit, .coin.spin { animation: none; }
@@ -811,9 +845,66 @@ function noiseBuffer(kind) {
   for (var k = 0; k < 2000; k++) { var f = k / 2000; d[k] *= f; d[len - 1 - k] *= f; }
   return buf;
 }
+/* soft music, made here: slow chords with a few bell notes over them, never quite the same twice */
+function startMusic(c) {
+  var out = c.createGain(), base = 2.2, t0 = c.currentTime;
+  out.gain.setValueAtTime(0.0001, t0);
+  out.gain.exponentialRampToValueAtTime(Math.max(0.0002, base * bgVol), t0 + 4);
+  out.connect(c.destination);
+  // a simple room: a burst of fading noise used as the echo
+  var len = Math.floor(c.sampleRate * 3.5), ir = c.createBuffer(2, len, c.sampleRate);
+  for (var ch = 0; ch < 2; ch++) { var d = ir.getChannelData(ch); for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
+  var room = c.createConvolver(); room.buffer = ir;
+  var wet = c.createGain(); wet.gain.value = 0.5;
+  var dry = c.createGain(); dry.gain.value = 0.6;
+  var tone = c.createBiquadFilter(); tone.type = "lowpass"; tone.frequency.value = 2400;
+  tone.connect(dry); tone.connect(room); room.connect(wet); dry.connect(out); wet.connect(out);
+  function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+  // chords in C major (as MIDI note numbers), and bell notes from the five-note scale above them
+  var CHORDS = [[48, 55, 64, 71], [45, 52, 60, 67], [41, 48, 57, 64], [43, 50, 59, 62], [40, 47, 55, 62], [41, 53, 57, 60]];
+  var BELLS = [72, 74, 76, 79, 81, 84, 86, 88];
+  var ci = 0, nextChord = t0 + 0.2, nextBell = t0 + 5;
+  function pad(notes, t, dur) {
+    notes.forEach(function (m, k) {
+      var o = c.createOscillator(), g = c.createGain(), lvl = k === 0 ? 0.05 : 0.022;
+      o.type = k === 0 ? "sine" : "triangle"; o.frequency.value = hz(m); o.detune.value = (Math.random() - 0.5) * 8;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(lvl, t + 5);
+      g.gain.setValueAtTime(lvl, t + dur - 6); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(tone); o.start(t); o.stop(t + dur + 0.1);
+    });
+  }
+  function ding(m, t) {
+    [[1, 0.045], [2, 0.012]].forEach(function (p) {
+      var o = c.createOscillator(), g = c.createGain();
+      o.type = "sine"; o.frequency.value = hz(m) * p[0];
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(p[1], t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 4.5 / p[0]);
+      o.connect(g); g.connect(tone); o.start(t); o.stop(t + 5);
+    });
+  }
+  function bellNote() { return BELLS[Math.floor(Math.random() * BELLS.length)]; }
+  // schedule 20 seconds ahead, so a slowed background tab doesn't leave gaps
+  function ahead() {
+    var until = c.currentTime + 20;
+    while (nextChord < until) {
+      var r = Math.random(); ci = r < 0.7 ? (ci + 1) % CHORDS.length : r < 0.85 ? (ci + 2) % CHORDS.length : ci;
+      pad(CHORDS[ci], nextChord, 17); nextChord += 12;
+    }
+    while (nextBell < until) {
+      ding(bellNote(), nextBell);
+      if (Math.random() < 0.3) ding(bellNote(), nextBell + 0.6 + Math.random());
+      nextBell += 3 + Math.random() * 6;
+    }
+  }
+  ahead();
+  return { out: out, nodes: [tone, room, wet, dry, out], base: base, timer: setInterval(ahead, 2000) };
+}
 function startBg(kind) {
   stopBg();
   if (kind === "off") return;
+  if (kind === "music") {
+    try { bg = startMusic(ctx()); bgKind = kind; } catch (e) { bg = null; bgKind = "off"; }
+    return;
+  }
   try {
     var c = ctx(), src = c.createBufferSource(), out = c.createGain(), nodes = [src, out];
     src.buffer = noiseBuffer(kind); src.loop = true;
@@ -846,6 +937,7 @@ function setBgVol(v) {
 function stopBg() {
   if (!bg) { bgKind = "off"; return; }
   var b = bg; bg = null; bgKind = "off";
+  if (b.timer) clearInterval(b.timer);
   try {
     var t = actx.currentTime;
     b.out.gain.cancelScheduledValues(t); b.out.gain.setValueAtTime(b.out.gain.value, t);
@@ -1333,7 +1425,7 @@ var sheet = null;
 function soundOn() { return guide !== "off" || bgKind !== "off"; }
 function soundLabel() {
   var g = { off: "Off", tones: "Tones", voice: "Voice" }[guide];
-  return "Sound: " + g + (bgKind !== "off" ? " + " + { brown: "noise", ocean: "ocean", rain: "rain" }[bgKind] : "");
+  return "Sound: " + g + (bgKind !== "off" ? " + " + { brown: "noise", ocean: "ocean", rain: "rain", music: "music" }[bgKind] : "");
 }
 function soundPanel(onChange) {
   var panel = h("section", { class: "panel", "aria-label": "Sound settings" });
@@ -1369,16 +1461,18 @@ function soundPanel(onChange) {
 
   // background sound
   panel.appendChild(h("div", { class: "psec" }, [head("waves", "Background"),
-    choice([["off", "Off"], ["brown", "Brown noise"], ["ocean", "Ocean"], ["rain", "Rain"]], function () { return bgKind; }, function (v) { startBg(v); }),
+    choice([["off", "Off"], ["music", "Soft music"], ["brown", "Brown noise"], ["ocean", "Ocean"], ["rain", "Rain"]], function () { return bgKind; }, function (v) { startBg(v); }),
     slider("Volume", "bvol-r", bgVol, setBgVol),
     h("p", { class: "phelp" }, ["Plays quietly under everything until you turn it off. Made by the app itself, so it works offline."])
   ]));
   panel.appendChild(h("p", { class: "phelp" }, ["Hearing nothing? Turn the device volume up. On an iPhone, also check the silent switch."]));
   return panel;
 }
+var redrawSound = null; // the top bar's speaker, so it changes when the Watch starts or stops a sound
 function soundButton() {
   var b = h("button", { class: "tb", type: "button", "aria-haspopup": "dialog" });
   function draw() { b.innerHTML = ""; b.appendChild(icon(soundOn() ? "speaker" : "speakerOff")); b.setAttribute("aria-label", soundLabel() + ". Sound settings"); }
+  redrawSound = draw;
   b.addEventListener("click", function () { openSheet(draw); });
   draw();
   return b;
@@ -1520,17 +1614,40 @@ var LINES = [
 function dayNumber(d) { d = d || new Date(); return Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 864e5); }
 function lineOfDay() { return LINES[dayNumber() % LINES.length]; }
 
-// the seven-day planetary week (Sunday first), each with its alchemical metal; the Kybalion lens for each day is this app's own pairing
+// the seven-day planetary week (Sunday first), each with its alchemical metal; the Kybalion lens for each day is this app's own pairing.
+// q: the day's question in plain words. named: where the day's name comes from. what: the Kybalion principle, explained.
 var DAYS = [
-  { day: "Sunday", planet: "Sun", metal: "gold", key: "pl-sun", theme: "Purpose", lens: "Mentalism", axiom: "“The All is Mind; the Universe is Mental.”", prompt: "Notice how much of today is shaped by the story you tell about it." },
-  { day: "Monday", planet: "Moon", metal: "silver", key: "pl-moon", theme: "Rhythm and rest", lens: "Rhythm", axiom: "“Everything flows, out and in; everything has its tides; all things rise and fall…”", prompt: "Track when your energy rises and when it dips." },
-  { day: "Tuesday", planet: "Mars", metal: "iron", key: "pl-mars", theme: "Strength and restraint", lens: "Vibration", axiom: "“Nothing rests; everything moves; everything vibrates.”", prompt: "Notice where your energy is running high, and whether it’s going where you want it." },
-  { day: "Wednesday", planet: "Mercury", metal: "quicksilver", key: "hermeticism", theme: "Words and learning", lens: "Correspondence", axiom: "“As above, so below; as below, so above.”", prompt: "Spot one small pattern that mirrors a bigger one." },
-  { day: "Thursday", planet: "Jupiter", metal: "tin", key: "pl-jupiter", theme: "Generosity and perspective", lens: "Polarity", axiom: "“Everything is Dual; everything has poles; everything has its pair of opposites…”", prompt: "When something feels bad, ask what good thing it’s the low end of." },
-  { day: "Friday", planet: "Venus", metal: "copper", key: "pl-venus", theme: "Harmony", lens: "Gender", axiom: "“Gender is in everything; everything has its Masculine and Feminine Principles…”", prompt: "Notice when to push and when to take in. The Kybalion’s “gender” means active and receptive." },
-  { day: "Saturday", planet: "Saturn", metal: "lead", key: "pl-saturn", theme: "Limits and finishing", lens: "Cause and Effect", axiom: "“Every Cause has its Effect; every Effect has its Cause…”", prompt: "Before acting, name the likely result. Finish one thing." }
+  { day: "Sunday", planet: "Sun", metal: "gold", key: "pl-sun", theme: "Purpose", lens: "Mentalism", axiom: "“The All is Mind; the Universe is Mental.”", prompt: "Notice how much of today is shaped by the story you tell about it.",
+    q: "How much of today is the story I’m telling about it?", named: "Sunday is the Sun’s day.",
+    what: "The Kybalion’s first principle, Mentalism, claims that everything is mind. Here it becomes a smaller question: how much of your day is shaped by how you frame it?" },
+  { day: "Monday", planet: "Moon", metal: "silver", key: "pl-moon", theme: "Rhythm and rest", lens: "Rhythm", axiom: "“Everything flows, out and in; everything has its tides; all things rise and fall…”", prompt: "Track when your energy rises and when it dips.",
+    q: "When does my energy rise today, and when does it dip?", named: "Monday is the Moon’s day.",
+    what: "The principle it calls Rhythm says everything swings back and forth, like a pendulum or the tides. Here it’s a reason to watch your own ups and downs instead of fighting them." },
+  { day: "Tuesday", planet: "Mars", metal: "iron", key: "pl-mars", theme: "Strength and restraint", lens: "Vibration", axiom: "“Nothing rests; everything moves; everything vibrates.”", prompt: "Notice where your energy is running high, and whether it’s going where you want it.",
+    q: "Where is my energy running high, and is it going where I want?", named: "Tuesday is Mars’s day: mardi in French. The English name comes from Tiw, a Germanic war god who was matched with Mars.",
+    what: "The principle it calls Vibration says nothing is ever completely still. Here it’s a question about where your energy is going." },
+  { day: "Wednesday", planet: "Mercury", metal: "quicksilver", key: "hermeticism", theme: "Words and learning", lens: "Correspondence", axiom: "“As above, so below; as below, so above.”", prompt: "Spot one small pattern that mirrors a bigger one.",
+    q: "What small pattern today mirrors a bigger one?", named: "Wednesday is Mercury’s day: mercredi in French. The English name comes from Woden (Odin), who was matched with Mercury.",
+    what: "The principle it calls Correspondence (“as above, so below”) says small things mirror large ones. Here: how you handle one email may be how you handle the whole week." },
+  { day: "Thursday", planet: "Jupiter", metal: "tin", key: "pl-jupiter", theme: "Generosity and perspective", lens: "Polarity", axiom: "“Everything is Dual; everything has poles; everything has its pair of opposites…”", prompt: "When something feels bad, ask what good thing it’s the low end of.",
+    q: "When something feels bad, what good thing is it the low end of?", named: "Thursday is Jupiter’s day: jeudi in French. The English name comes from Thor, who was matched with Jupiter.",
+    what: "The principle it calls Polarity says opposites are two ends of one scale, the way hot and cold are both temperature. Impatience, for example, sits on the same scale as caring how things turn out." },
+  { day: "Friday", planet: "Venus", metal: "copper", key: "pl-venus", theme: "Harmony", lens: "Gender", axiom: "“Gender is in everything; everything has its Masculine and Feminine Principles…”", prompt: "Notice the moments when pushing helps, and the ones where it works better to wait, listen, and take things in.",
+    q: "When should I push today, and when should I hold back and take in?", named: "Friday is Venus’s day: vendredi in French. The English name comes from Frigg, a Germanic goddess who was matched with Venus.",
+    what: "The book calls this principle Gender, but uses the word far more broadly than men and women: for the active and the receptive (pushing and taking in) in everything. Here it’s a question about balance." },
+  { day: "Saturday", planet: "Saturn", metal: "lead", key: "pl-saturn", theme: "Limits and finishing", lens: "Cause and Effect", axiom: "“Every Cause has its Effect; every Effect has its Cause…”", prompt: "Before acting, name the likely result. Finish one thing.",
+    q: "What will this lead to? And what one thing can I finish today?", named: "Saturday is Saturn’s day.",
+    what: "The principle it calls Cause and Effect says nothing happens by chance. Here it’s simpler: before you act, name the likely result." }
 ];
 function dayInfo() { return DAYS[new Date().getDay()]; }
+// where the day's theme comes from, in plain words
+function dayAbout(dd) {
+  var pl = (dd.planet === "Sun" || dd.planet === "Moon" ? "the " : "") + dd.planet;
+  return dd.named + " The seven days of the week are named for the seven moving lights the ancients could see in the sky. Alchemists gave each one a metal (" +
+    pl + "’s is " + dd.metal + "), and this app gives each a theme, loosely after old astrology; for " + pl + " it’s " + dd.theme.toLowerCase() + ". " +
+    "The question comes from The Kybalion (1908), a book that lists seven “principles”; this app gives one to each day. " + dd.what +
+    " None of it needs believing. It’s a theme to notice the day by.";
+}
 // the monastic day hours, for the Watch's "old hours" bells
 var HOURS = [
   { h: 6, name: "Prime", say: "the first hour" }, { h: 9, name: "Terce", say: "the third hour" }, { h: 12, name: "Sext", say: "the sixth hour" },
@@ -1588,7 +1705,7 @@ var EVERY = [
     why: "Wandering is the mind’s normal state: in a large study that sampled people by phone through the day (Killingsworth and Gilbert, 2010), minds were off the task at hand almost half the time. Meditation research treats the moment of noticing and returning as the skill being trained. Scolding yourself for drifting mostly adds a second distraction.",
     from: "Brother Lawrence (about 1614–1691) was a lay brother who worked in a Paris monastery kitchen. He kept his mind on God, <blockquote>“recalling it as often as I found it wandered from Him,”</blockquote> and said that in “the noise and clatter of my kitchen” he kept the same calm as at prayer. He also advised against fretting over wandering, since <blockquote>“trouble and disquiet serve rather to distract the mind than to recollect it.”</blockquote> (<em>The Practice of the Presence of God</em>, 1895 translation)" },
   { id: "lens", name: "Today’s Lens", plain: "Today’s question", trad: "Hermeticism · The Kybalion", tier: "m", cue: "Carried through the day", tool: "lens",
-    short: "", how: "Each day of the week takes one of The Kybalion’s seven principles as a lens. You don’t have to believe it; use it as a question for noticing things. The line of the day on the Practices page shows today’s.",
+    short: "", how: "Each day of the week takes one of The Kybalion’s seven principles as a lens. You don’t have to believe it; use it as a question for noticing things. The Watch shows today’s when it starts.",
     why: "One question carried through the day gives scattered attention a direction. Treat it as a reflective game: The Kybalion’s claims about the universe aren’t evidence of anything.",
     from: "<em>The Kybalion</em> (1908) sets out seven principles, from “The All is Mind” to “Gender is in everything.” It presents them as ancient Hermetic teaching; it is American New Thought, most likely written by William Walker Atkinson (see the Field Guide chapter). The seven-day planetary week is ancient and the metals come from alchemy, but pairing each day with a principle is this app’s own arrangement." },
   { id: "stage", name: "The Four Stages", plain: "Name the stage", trad: "Alchemy", tier: "s", cue: "Partway through a task",
@@ -1607,7 +1724,7 @@ var EVERY = [
     why: "Doing a mildly unpleasant thing by choice is a small dose of exposure, the principle behind well-supported anxiety treatments that build tolerance through gradual practice. Research on this everyday version is thin, so judge it by whether ordinary friction starts to feel smaller.",
     from: "Seneca told Lucilius to practice poverty on purpose: <blockquote>“Set aside a certain number of days, during which you shall be content with the scantiest and cheapest fare, with coarse and rough dress, saying to yourself the while: ‘Is this the condition that I feared?’”</blockquote> (Letter 18, Gummere)" },
   { id: "weather", name: "The Weather Report", plain: "Quick check-in", trad: "Ignatian discernment", tier: "s", cue: "A few times a day", tool: "weather",
-    short: "One tap: what’s the weather in here right now?",
+    short: "One tap: how are you right now? Clear, foggy, stirred up, or low.",
     how: "Pick the closest word. No explanation needed. After a few weeks, My Log shows how your days tend to run by time of day.",
     why: "Brief check-ins through the day give a truer picture than remembering at night. Memory of a day leans heavily on its most intense moment and its ending (Daniel Kahneman’s peak-end rule), so in-the-moment reports, which researchers call experience sampling, catch what recall smooths over.",
     from: "Ignatius of Loyola taught people to notice two movements in themselves, consolation and desolation, and to name them before acting on them (<em>Spiritual Exercises</em>, rules for discernment)." },
@@ -1638,7 +1755,29 @@ var EVERY = [
     from: "The Hesychasts (from Greek <em>hēsychia</em>, stillness) of Eastern Orthodox monasticism joined a short prayer to the breath and repeated it through the day. Their writings, gathered in the <em>Philokalia</em>, call the alertness this builds <em>nepsis</em>: watchfulness, a guard kept at the entrance of the heart." }
 ];
 var EVERY_BY = {}; EVERY.forEach(function (p) { EVERY_BY[p.id] = p; });
+// how each small practice is put when the Watch brings it up on its own, with no situation around it.
+// count: seconds to show a countdown for. Practices left out here need a moment the Watch can't see coming.
+var WATCH_SAYS = {
+  attention: { t: "Where is your attention right now? What are you actually doing? Is it up to you? A word for each is enough." },
+  threshold: { t: "Next time you walk through a doorway, let one slow breath out before you step through." },
+  onething: { t: "Name what you’re doing in three words. Then close or hide one thing that isn’t that." },
+  kavanah: { t: "Look at what you’re working on and finish this sentence: “This is so that…” For example: “This message is so they can decide by Friday.” If nothing comes, that’s worth a minute." },
+  drill: { t: "Next time you reach for your phone or open a message, wait three seconds first, jaw loose. Then go." },
+  watchtower: { t: "Look up from the screen. Find the farthest thing you can see and rest your eyes on it until the count runs out.", count: 20 },
+  above: { t: "Picture this room from the ceiling. Then the building, the city, the whole planet. Then come back to what you’re doing. Does it look a different size?", count: 60 },
+  kitchen: { t: "If your mind has wandered off what you’re doing, come back to it now. No scolding. Coming back is the practice." },
+  stage: { t: "Whatever is in front of you, which stage is it in? Blackening: a mess. Whitening: clearing. Yellowing: taking shape. Reddening: finishing." },
+  shadow: { t: "Has anyone irritated you today more than the moment deserved? If so, ask: what did they do that I don’t let myself do?" },
+  hardship: { t: "Choose one small discomfort to do on purpose today: take the stairs, stand for your next call, or put your phone in another room for half an hour." },
+  spark: { t: "Think back over the last hour. Name one thing that went right, or was good to see." },
+  silence: { t: "At your next meeting or meal, say only what’s needed. Notice what you wanted to say and didn’t." },
+  walk: { t: "If you’re stuck on something that can wait, walk for five minutes with no phone. When you sit back down, write the first thing you think." },
+  breath: { t: "For the next minute, pair two words with your breath: “here” as you breathe in, “now” as you breathe out. Let the out-breath run a little longer.", count: 60 }
+};
 var WEATHER = ["Clear", "Foggy", "Stormy", "Overcast"];
+// the saved check-in values stay the same; these are the words shown for them
+var WEATHER_SAYS = { Clear: "Clear", Foggy: "Foggy", Stormy: "Stirred up", Overcast: "Low" };
+function wxName(v) { return WEATHER_SAYS[v] || v; }
 
 /* ---------- small building blocks ---------- */
 
@@ -2063,31 +2202,7 @@ function homeView() {
   var today = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
   app.appendChild(h("header", { class: "hello" }, [h("h1", null, [greeting()]), h("p", null, [today])]));
 
-  // 2. the line for today
-  var ln = lineOfDay();
-  var speak = h("button", { class: "icobtn", type: "button", "aria-label": "Read the line aloud", onclick: function () { say(ln.t + " " + ln.by.replace(/\s*\(.*\)/, ""), true); } }, [icon("speaker")]);
-  var dd = dayInfo();
-  app.appendChild(h("section", { class: "card today", "aria-label": "Today's line" }, [
-    h("div", { class: "daytag" }, [emblem(dd.key, "sm"), h("span", null, [dd.planet + "’s day · " + dd.metal + " · " + dd.theme])]),
-    h("blockquote", { class: "quote" }, [ln.t]),
-    h("cite", null, [ln.by]),
-    h("p", { class: "lens" }, [h("b", null, ["Lens: " + dd.lens + ". "]), dd.prompt]),
-    h("div", { class: "qrow" }, [h("a", { class: "try", href: "#/p/" + ln.n }, ["Try " + BOOK.entries[ln.n].name, icon("chev", "chev")]), speak])
-  ]));
-
-  // 2b. for ordinary hours: the Watch and the small practices
-  app.appendChild(h("section", { class: "group" }, [
-    h("h2", null, ["For steady moments"]),
-    h("p", { class: "gdesc" }, ["Small practices for ordinary hours, and a page to keep open in the background."]),
-    h("div", { class: "rows" }, [
-      h("button", { class: "pick", type: "button", onclick: function () { location.hash = "#/watch"; } }, [
-        h("span", null, [h("span", { class: "sit" }, ["The Watch"]), h("span", { class: "nm" }, ["Bells, small practices, and a slow drift of reading"])]), icon("chev", "chev")]),
-      h("button", { class: "pick", type: "button", onclick: function () { location.hash = "#/steady"; } }, [
-        h("span", null, [h("span", { class: "sit" }, ["All " + EVERY.length + " small practices"]), h("span", { class: "nm" }, ["Seconds to a few minutes each"])]), icon("chev", "chev")])
-    ])
-  ]));
-
-  // 3. how are you? eight tiles
+  // 2. for a hard moment: how are you? eight tiles
   var tiles = h("div", { class: "tiles" });
   BOOK.sections.forEach(function (g) {
     tiles.appendChild(h("a", { class: "gtile", href: "#/g/" + g.key }, [groupIcon(g), h("span", { class: "tname" }, [g.name]), h("span", { class: "thint" }, [g.hint])]));
@@ -2100,7 +2215,32 @@ function homeView() {
     h("a", { class: "linkrow", href: "#/all" }, [h("span", null, ["All 24 practices"]), icon("chev", "chev")])
   ]));
 
-  // 4. pinned practices, or four good first ones
+  // 3. for ordinary hours: the Watch and the small practices
+  app.appendChild(h("section", { class: "card wpromo", "aria-labelledby": "wpromo-h" }, [
+    h("div", { class: "wpromo-top" }, [emblem("watch", "tile"), h("div", null, [
+      h("span", { class: "label" }, ["For steady moments"]),
+      h("h2", { id: "wpromo-h" }, ["The Watch"])
+    ])]),
+    h("p", null, ["Leave it open in the background, the way you might leave a video playing. It keeps a soft sound going, stops every so often for a slow minute of breathing or a small practice, and shows short readings in between."]),
+    h("div", { class: "btnrow" }, [
+      h("a", { class: "go", href: "#/watch" }, ["Open the Watch"]),
+      h("a", { class: "opt", href: "#/steady" }, ["The " + EVERY.length + " small practices"])
+    ])
+  ]));
+
+  // 4. a line for today, and the practice it points at
+  var ln = lineOfDay();
+  var speak = h("button", { class: "icobtn", type: "button", "aria-label": "Read the line aloud", onclick: function () { say(ln.t + " " + ln.by.replace(/\s*\(.*\)/, ""), true); } }, [icon("speaker")]);
+  app.appendChild(h("section", { class: "group" }, [
+    h("h2", null, ["A line for today"]),
+    h("div", { class: "card linecard" }, [
+      h("blockquote", { class: "quote" }, [ln.t]),
+      h("div", { class: "qrow" }, [h("cite", null, [ln.by]), speak]),
+      h("a", { class: "linkrow", href: "#/p/" + ln.n }, [h("span", null, [h("small", null, ["The practice that goes with it"]), h("span", { class: "t1" }, [BOOK.entries[ln.n].name])]), icon("chev", "chev")])
+    ])
+  ]));
+
+  // 5. pinned practices, or four good first ones
   var f = favs();
   app.appendChild(h("section", { class: "group" }, [
     h("h2", null, [f.length ? "Pinned" : "Good first practices"]),
@@ -2108,19 +2248,14 @@ function homeView() {
     h("div", { class: "rows" }, (f.length ? f : STARTERS).map(function (id) { return pick(id, true); }))
   ]));
 
-  // 5. routines + quiet timer
-  var rs = h("div", { class: "routines" });
+  // 6. routines + quiet timer, as four small tiles
+  var RICON = { morning: "sun", reset: "noon", evening: "moon" };
+  var rs = h("div", { class: "tiles minis" });
   Object.keys(ROUTINES).forEach(function (k) {
     var r = ROUTINES[k];
-    rs.appendChild(h("button", { class: "pick routine", type: "button", onclick: function () { location.hash = "#/r/" + k; } }, [
-      h("span", null, [h("span", { class: "sit" }, [r.name]), h("span", { class: "nm" }, [r.ids.length + " practices · about " + r.min + " min"])]),
-      icon("chev", "chev")
-    ]));
+    rs.appendChild(h("a", { class: "gtile", href: "#/r/" + k }, [emblem(RICON[k]), h("span", { class: "tname" }, [r.name]), h("span", { class: "thint" }, [r.ids.length + " practices · about " + r.min + " min"])]));
   });
-  rs.appendChild(h("button", { class: "pick routine", type: "button", onclick: function () { location.hash = "#/timer"; } }, [
-    h("span", null, [h("span", { class: "sit" }, ["Quiet Timer"]), h("span", { class: "nm" }, ["Bells only · for prayer, reading, or sitting still"])]),
-    icon("chev", "chev")
-  ]));
+  rs.appendChild(h("a", { class: "gtile", href: "#/timer" }, [emblem("bell"), h("span", { class: "tname" }, ["Quiet Timer"]), h("span", { class: "thint" }, ["Bells only · for prayer, reading, or sitting still"])]));
   app.appendChild(h("section", { class: "group" }, [h("h2", null, ["Routines and timer"]), h("p", { class: "gdesc" }, ["A few practices back to back, or a quiet timer with bells."]), rs]));
 
   app.appendChild(h("footer", { class: "ending" }, [
@@ -2165,21 +2300,22 @@ function logWeather(v) {
   if (list.length > 1000) list = list.slice(-1000);
   store.set("weather", list);
 }
-// one tap: how is it in here right now?
-function weatherChips() {
+// one tap: how are you right now?
+function weatherChips(onLog, noLabel) {
   var wrap = h("div", { class: "grp" });
   var row = h("div", { class: "row left", role: "group", "aria-label": "Quick check-in" });
   var msg = h("span", { class: "saved", "aria-live": "polite" });
   WEATHER.forEach(function (v) {
-    var b = h("button", { class: "opt", type: "button" }, [v]);
+    var b = h("button", { class: "opt", type: "button" }, [wxName(v)]);
     b.addEventListener("click", function () {
       logWeather(v);
       [].forEach.call(row.children, function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true");
-      msg.textContent = "Logged at " + clock12(nowClock()) + ": " + v.toLowerCase() + ".";
+      msg.textContent = "Logged at " + clock12(nowClock()) + ": " + wxName(v).toLowerCase() + ".";
+      if (onLog) onLog();
     });
     row.appendChild(b);
   });
-  wrap.appendChild(h("span", { class: "label" }, ["Quick check-in: what’s the weather in here?"]));
+  if (!noLabel) wrap.appendChild(h("span", { class: "label" }, ["Quick check-in: how are you right now?"]));
   wrap.appendChild(row); wrap.appendChild(msg);
   return wrap;
 }
@@ -2227,9 +2363,15 @@ function shadowNotes() {
 }
 function lensBox() {
   var dd = dayInfo();
-  return h("div", { class: "lensbox" }, [h("span", { class: "label" }, [dd.day + "’s lens: " + dd.lens]), h("blockquote", null, [dd.axiom]), h("p", null, [dd.prompt])]);
+  return h("div", { class: "lensbox" }, [
+    h("span", { class: "label lenstag" }, [emblem(dd.key, "sm"), dd.day + "’s question"]),
+    h("p", { class: "lensq" }, [dd.q]),
+    h("p", null, [dd.prompt]),
+    h("details", { class: "wwhy" }, [h("summary", null, ["Where this comes from"]),
+      h("div", { class: "foldbody" }, [h("blockquote", null, [dd.axiom]), h("p", null, [dayAbout(dd)])])])
+  ]);
 }
-function shortOf(p) { return p.tool === "lens" ? dayInfo().prompt : p.short; }
+
 function everyTool(p) {
   return p.tool === "weather" ? weatherChips() : p.tool === "aim" ? aimBox() : p.tool === "shadow" ? shadowNotes() : p.tool === "lens" ? lensBox() : null;
 }
@@ -2239,7 +2381,7 @@ function dayReview() {
   if (d.aim) lines.push(["Habit watched", d.aim + (d.caught ? ", caught " + d.caught + (d.caught === 1 ? " time" : " times") : ", none counted")]);
   if (d.done) lines.push(["Watch pauses", d.done + (d.done === 1 ? " small practice" : " small practices")]);
   var w = weatherToday();
-  if (w.length) lines.push(["Check-ins", w.map(function (r) { return clock12(r.t) + " " + r.v.toLowerCase(); }).join(" · ")]);
+  if (w.length) lines.push(["Check-ins", w.map(function (r) { return clock12(r.t) + " " + wxName(r.v).toLowerCase(); }).join(" · ")]);
   var rated = store.get("log", []).filter(function (r) { return r.k === k; });
   if (rated.length) lines.push(["Rated", rated.map(function (r) { return BOOK.entries[r.n].name + " " + r.b + " → " + r.a; }).join(" · ")]);
   var parked = store.get("park", []).length;
@@ -2276,18 +2418,28 @@ function steadyView() {
   });
 }
 
-/* ---------- the Watch: a calm page to leave open all day ---------- */
-var WSET_DEFAULT = { every: 30, varied: true, len: "s", drift: 5, speak: "off", awake: false, plain: false };
+/* ---------- the Watch: a screen to leave running in the background ---------- */
+// It runs on its own, like a video left playing: a background sound, a pause every so often
+// (a minute of breathing, a small practice, or a check-in), and short readings in between.
+// every: minutes between pauses, or "hours" for the old monastic hours. drift: minutes per reading (0 = only on Next).
+// speak: "off" | "bells" (pauses only) | "all" (pauses and readings). sound: what plays underneath while it runs.
+var WSET_DEFAULT = { every: 20, varied: true, len: "s", drift: 5, speak: "off", awake: true, plain: false, sound: "music" };
+var SOUND_NAMES = { music: "Soft music", rain: "Rain", ocean: "Ocean", brown: "Brown noise" };
 var watchOn = false;
-document.addEventListener("visibilitychange", function () { if (watchOn && document.visibilityState === "visible" && store.get("wset", WSET_DEFAULT).awake) holdAwake(); });
+// coming back to the page: the screen lock and the sound may have been interrupted, so pick them up again
+document.addEventListener("visibilitychange", function () {
+  if (!watchOn || document.visibilityState !== "visible") return;
+  if (store.get("wset", WSET_DEFAULT).awake) holdAwake();
+  try { if (actx && actx.state !== "running") actx.resume(); } catch (e) {}
+});
 function drifts(plain) {
   var out = [];
-  LINES.forEach(function (ln) { out.push({ label: "Line", text: ln.t, by: ln.by, href: "#/p/" + ln.n, go: "Try " + BOOK.entries[ln.n].name }); });
-  EVERY.forEach(function (p) { out.push({ label: "Why it might help · " + (plain ? p.plain : p.name), text: p.why, href: "#/steady", go: "All small practices" }); });
+  LINES.forEach(function (ln) { out.push({ label: "A line to keep", text: ln.t, by: ln.by, quote: true, href: "#/p/" + ln.n, go: "Open " + BOOK.entries[ln.n].name }); });
+  EVERY.forEach(function (p) { out.push({ label: "Why it might help", title: plain ? p.plain : p.name, text: p.why, href: "#/steady", go: "All small practices" }); });
   if (!plain) {
-    BOOK.glossary.forEach(function (g) { out.push({ label: "Glossary", text: g.term + ": " + plainText(g.def), href: "#/read/glossary", go: "Open the glossary" }); });
-    Object.keys(BOOK.entries).forEach(function (n) { out.push({ label: "Go deeper · " + BOOK.entries[n].name, text: plainText(BOOK.entries[n].hole), href: "#/p/" + n, go: "Open the practice" }); });
-    EVERY.forEach(function (p) { out.push({ label: "Where it comes from · " + p.name, text: plainText(p.from), href: "#/steady", go: "All small practices" }); });
+    BOOK.glossary.forEach(function (g) { out.push({ label: "From the glossary", title: g.term, text: plainText(g.def), href: "#/read/glossary", go: "Open the glossary" }); });
+    Object.keys(BOOK.entries).forEach(function (n) { out.push({ label: "Going deeper", title: BOOK.entries[n].name, text: plainText(BOOK.entries[n].hole), href: "#/p/" + n, go: "Open the practice" }); });
+    EVERY.forEach(function (p) { out.push({ label: "Where it comes from", title: p.name, text: plainText(p.from), href: "#/steady", go: "All small practices" }); });
   }
   // shuffle once per visit
   for (var i = out.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = out[i]; out[i] = out[j]; out[j] = x; }
@@ -2298,103 +2450,188 @@ function watchView() {
   Object.keys(WSET_DEFAULT).forEach(function (k) { if (set[k] === undefined) set[k] = WSET_DEFAULT[k]; });
   topbar({ back: ["Practices", "#/"], sound: true }); tabs("practice");
   var dd = dayInfo();
+  app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["The Watch"])]));
 
-  // head: the day and its planet
-  var head = h("header", { class: "w-head" });
-  function drawHead() {
-    head.innerHTML = "";
-    if (!set.plain) head.appendChild(emblem(dd.key, "tile"));
-    head.appendChild(h("div", null, [
-      h("span", { class: "label" }, [set.plain ? "Watch" : "The Watch"]),
-      h("h1", null, [dd.day]),
-      h("p", null, [set.plain ? dd.theme : dd.planet + " · " + dd.metal + " · " + dd.theme])
-    ]));
+  // the screen: what's on now, the clock, and how long until it moves on
+  var stLabel = h("span", { class: "label" }), stClock = h("span", { class: "label wclock" });
+  var mid = h("div", { class: "wmid", "aria-live": "polite" });
+  var barI = h("i"), foot = h("p", { class: "wnext" });
+  var stage = h("section", { class: "wstage", "aria-label": "Now showing" }, [
+    h("div", { class: "wtop" }, [stLabel, stClock]), mid, h("div", { class: "wfoot" }, [h("div", { class: "wbar" }, [barI]), foot])
+  ]);
+  app.appendChild(stage);
+  var startB = h("button", { class: "go", type: "button" }, ["Start"]);
+  var nextB = h("button", { class: "opt", type: "button", "aria-label": "Skip to the next reading" }, ["Next"]);
+  var breatheB = h("button", { class: "opt", type: "button" }, ["Breathe now"]);
+  nextB.hidden = breatheB.hidden = true;
+  app.appendChild(h("div", { class: "btnrow" }, [startB, nextB, breatheB]));
+
+  var running = false, iv = null, raf = null, seg = null, nextAt = 0, nextHour = null, hourNow = null;
+  var pauses = 0, cur = null, flagged = false, ownSound = false;
+  var pool = drifts(set.plain), di = 0;
+  var orb = null, bPhase = null, bSub = null, lastB = -1, cnt = null, cntLeft = -1;
+
+  function readMs() { return set.drift ? set.drift * 60000 : 0; }
+  function begin(kind, ms) { seg = { kind: kind, start: Date.now(), end: ms ? Date.now() + ms : 0 }; mid.setAttribute("aria-live", "polite"); }
+  function inPause() { return seg && (seg.kind === "breathe" || seg.kind === "practice" || seg.kind === "checkin"); }
+  function hourTag() { return hourNow ? hourNow.name + " · " : ""; }
+  function hourSay() { return hourNow ? hourNow.name + ", " + hourNow.say + ". " : ""; }
+  function flag() { flagged = true; document.title = "◆ Pause · Trestleboard"; }
+  function unflag() { if (flagged) { flagged = false; document.title = "Trestleboard"; } }
+  function turn() { if (!reduce) { stage.classList.remove("turn"); void stage.offsetWidth; stage.classList.add("turn"); } }
+  function lit() { if (!reduce) { stage.classList.remove("lit"); void stage.offsetWidth; stage.classList.add("lit"); } }
+  function fold(title, kids) { return h("details", { class: "wwhy" }, [h("summary", null, [title]), h("div", { class: "foldbody" }, kids)]); }
+  function hm(t) { var d = new Date(t); return clock12(two(d.getHours()) + ":" + two(d.getMinutes())); }
+
+  // before it starts: say plainly what will happen
+  function pauseWhat() { return "a slow minute of breathing, a small practice, or a one-tap check-in."; }
+  function drawReady() {
+    stLabel.textContent = "Ready"; stClock.textContent = clock12(nowClock());
+    mid.innerHTML = "";
+    mid.appendChild(h("h2", { class: "wtitle" }, ["Press Start, then leave it running."]));
+    mid.appendChild(h("ul", { class: "wplan" }, [
+      set.sound !== "off" ? SOUND_NAMES[set.sound] + " plays quietly the whole time." : "No background sound.",
+      set.every ? (set.every === "hours" ? "At the old monastic hours (6, 9, noon, 3, 6, and 9)" : "About every " + set.every + " minutes") + ", a bell rings for a pause: " + pauseWhat() : "No pauses.",
+      set.drift ? "In between, a short reading changes every " + set.drift + " minutes." : "In between, a short reading stays until you tap Next.",
+      set.speak === "off" ? null : set.speak === "bells" ? "Pauses are read aloud." : "Pauses and readings are read aloud."
+    ].map(function (t) { return t ? h("li", null, [t]) : null; })));
+    foot.textContent = "Nothing needs a tap once it’s going. Keep this page open; on a phone, the screen has to stay on, and locking it or switching apps pauses everything.";
+    barI.style.width = "0";
   }
-  drawHead();
-  app.appendChild(head);
 
-  // begin / pause, and when the next bell comes
-  var begin = h("button", { class: "go", type: "button" }, ["Begin the watch"]);
-  var status = h("p", { class: "wstatus", "aria-live": "polite" });
-  app.appendChild(h("section", { class: "wctl" }, [begin, status]));
+  // the day's question opens each watch
+  function showDay(speakIt) {
+    hourNow = null; begin("day", readMs());
+    stLabel.textContent = dd.day + "’s question";
+    mid.innerHTML = "";
+    if (!set.plain) mid.appendChild(h("div", { class: "wday" }, [emblem(dd.key, "tile"), h("span", null, [dd.planet + "’s day · " + dd.theme])]));
+    mid.appendChild(h("h2", { class: "wtitle" }, [dd.q]));
+    mid.appendChild(h("p", { class: "wtext" }, [dd.prompt]));
+    mid.appendChild(fold("Where this comes from", [h("blockquote", null, [dd.axiom]), h("p", null, [dayAbout(dd)])]));
+    turn();
+    if (speakIt) say(dd.day + "’s question. " + dd.q + " " + dd.prompt, true);
+  }
+  // a reading from the app's own pages
+  function showRead(speakIt) {
+    hourNow = null; cnt = null;
+    var it = pool[di % pool.length]; di++;
+    begin("read", readMs());
+    stLabel.textContent = it.label;
+    mid.innerHTML = "";
+    if (it.title) mid.appendChild(h("h2", { class: "wtitle sm" }, [it.title]));
+    mid.appendChild(h(it.quote ? "blockquote" : "p", { class: it.quote ? "wquote" : "wtext" }, [it.text]));
+    if (it.by) mid.appendChild(h("cite", null, [it.by]));
+    mid.appendChild(h("a", { class: "wgo", href: it.href }, [it.go, icon("chev", "chev")]));
+    turn();
+    if (speakIt) say((it.title ? it.title + ". " : "") + it.text + (it.by ? " " + it.by.replace(/\s*\(.*\)/, "") : ""), true);
+  }
 
-  // now: one small practice
-  var nowBox = h("section", { class: "card wnow", "aria-label": "Now" });
-  app.appendChild(nowBox);
-  var cur = null, flagged = false;
+  // pause 1: a minute of slow breathing (about six breaths a minute)
+  var B_LEAD = 6000, B_ROUNDS = 6, B_TAIL = 5000, B = P.resonance;
+  var B_CYCLE = (B[0].s + B[1].s) * 1000;
+  function setScale(v) { if (orb) orb.setAttribute("transform", "translate(50 50) scale(" + v.toFixed(3) + ") translate(-50 -50)"); }
+  function ease(x) { return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; }
+  function showBreathe(fromBell) {
+    cnt = null; begin("breathe", B_LEAD + B_ROUNDS * B_CYCLE + B_TAIL);
+    stLabel.textContent = hourTag() + "A minute to breathe";
+    mid.innerHTML = "";
+    var svg = s("svg", { viewBox: "0 0 100 100", "aria-hidden": "true" });
+    svg.appendChild(s("circle", { class: "ring", cx: 50, cy: 50, r: 46 }));
+    orb = s("circle", { class: "orb", cx: 50, cy: 50, r: 45, transform: "translate(50 50) scale(" + B[1].to + ") translate(-50 -50)" });
+    svg.appendChild(orb);
+    bPhase = h("h2", { class: "wtitle" }, ["Get comfortable"]);
+    bSub = h("p", { class: "wtext" }, ["Breathe in as the circle grows and out as it shrinks. Or just listen."]);
+    mid.appendChild(h("div", { class: "worb" }, [svg])); mid.appendChild(bPhase); mid.appendChild(bSub);
+    // let a screen reader announce the pause once, not every breath
+    setTimeout(function () { if (seg && seg.kind === "breathe") mid.setAttribute("aria-live", "off"); }, 1500);
+    lastB = -1;
+    if (fromBell) bell(1);
+    if (set.speak !== "off") say(hourSay() + "A minute to breathe. Follow the circle, or just listen.", true);
+    flag(); lit(); frame();
+  }
+  function stepBreath() {
+    if (!seg || seg.kind !== "breathe") return;
+    var el = Date.now() - seg.start - B_LEAD;
+    if (el < 0) return;
+    if (el >= B_ROUNDS * B_CYCLE) {
+      if (lastB !== -2) { lastB = -2; bPhase.textContent = "Done"; bSub.textContent = "Notice how you feel now."; setScale(B[1].to); chime(396, 1.6, true); }
+      return;
+    }
+    var pos = el % B_CYCLE, i = pos < B[0].s * 1000 ? 0 : 1;
+    var frac = i === 0 ? pos / (B[0].s * 1000) : (pos - B[0].s * 1000) / (B[1].s * 1000);
+    var idx = Math.floor(el / B_CYCLE) * 2 + i;
+    if (idx !== lastB) {
+      lastB = idx; bPhase.textContent = B[i].label; bSub.textContent = "Breath " + (Math.floor(el / B_CYCLE) + 1) + " of " + B_ROUNDS;
+      if (set.speak !== "off") say(B[i].say, true); else chime(B[i].hz, i === 0 ? 1.4 : 1.8, true);
+    }
+    if (!reduce) { var from = B[1 - i].to, to = B[i].to; setScale(from + (to - from) * ease(frac)); }
+  }
+  function frame() { if (raf) cancelAnimationFrame(raf); raf = null; if (!seg || seg.kind !== "breathe") return; stepBreath(); raf = requestAnimationFrame(frame); }
+
+  // pause 2: one small practice, put so it makes sense on its own
   function poolOf() {
     var ok = { s: ["s"], m: ["s", "m"], l: ["s", "m", "l"] }[set.len] || ["s"];
-    return EVERY.filter(function (p) { return ok.indexOf(p.tier) >= 0 && p.tool !== "weather" && p.tool !== "aim" && (!cur || p.id !== cur.id); });
+    return EVERY.filter(function (p) { return WATCH_SAYS[p.id] && ok.indexOf(p.tier) >= 0 && (!cur || p.id !== cur.id); });
   }
-  function drawNow(rung, note) {
-    var pool = poolOf(); cur = pool[Math.floor(Math.random() * pool.length)];
-    var p = cur, done = h("button", { class: "go", type: "button" }, ["Done"]), other = h("button", { class: "opt", type: "button" }, ["Another"]);
-    var msg = h("span", { class: "saved", "aria-live": "polite" }, [note || ""]);
-    done.addEventListener("click", function () { var d = wday(); d.done++; store.set("wday", d); unflag(); drawNow(false, "Done. Here’s the next one, whenever you like."); });
-    other.addEventListener("click", function () { unflag(); drawNow(false); });
-    nowBox.innerHTML = "";
-    nowBox.appendChild(h("div", { class: "wnow-top" }, [h("span", { class: "label" }, [rung ? "Now" : "When you’re ready"]), h("span", { class: "label" }, [TIERS[p.tier]])]));
-    nowBox.appendChild(h("h2", null, [set.plain ? p.plain : p.name]));
-    nowBox.appendChild(h("p", { class: "wshort" }, [shortOf(p)]));
-    var tool = p.tool === "shadow" ? shadowNotes() : null;
-    if (tool) nowBox.appendChild(tool);
-    nowBox.appendChild(h("div", { class: "row left" }, [done, other]));
-    nowBox.appendChild(msg);
-    nowBox.appendChild(h("details", { class: "wwhy" }, [h("summary", null, ["How and why"]),
-      h("div", { class: "foldbody" }, [h("p", null, [p.how]), h("p", null, [p.why]), set.plain ? null : h("div", { class: "wfrom", html: p.from })])]));
-    if (rung && !reduce) { nowBox.classList.remove("lit"); void nowBox.offsetWidth; nowBox.classList.add("lit"); }
+  function showPractice(fromBell) {
+    var list = poolOf(); cur = list[Math.floor(Math.random() * list.length)];
+    var p = cur, w = WATCH_SAYS[p.id];
+    begin("practice", Math.max(90000, (w.count || 0) * 1000 + 60000));
+    stLabel.textContent = hourTag() + "A small practice";
+    mid.innerHTML = "";
+    mid.appendChild(h("h2", { class: "wtitle" }, [set.plain ? p.plain : p.name]));
+    if (!set.plain) mid.appendChild(h("p", { class: "wsub" }, [p.plain + " · " + p.trad]));
+    mid.appendChild(h("p", { class: "wtext" }, [w.t]));
+    cnt = null; cntLeft = -1;
+    if (w.count) { cnt = h("div", { class: "wcount", "aria-hidden": "true" }, [String(w.count)]); mid.appendChild(cnt); }
+    if (p.tool === "shadow") mid.appendChild(shadowNotes());
+    var done = h("button", { class: "opt", type: "button" }, ["Done"]);
+    done.addEventListener("click", function () { var d = wday(); d.done++; store.set("wday", d); unflag(); showRead(false); drawFoot(); });
+    mid.appendChild(h("div", { class: "row left" }, [done]));
+    mid.appendChild(fold("How and why", [h("p", null, [p.how]), h("p", null, [p.why]), set.plain ? null : h("div", { class: "wfrom", html: p.from })]));
+    if (fromBell) bell(1);
+    if (set.speak !== "off") say(hourSay() + (set.plain ? p.plain : p.name) + ". " + w.t, true);
+    flag(); lit();
   }
-  function unflag() { if (flagged) { flagged = false; document.title = "Trestleboard"; } }
-
-  // today: check-in and the one habit
-  app.appendChild(h("section", { class: "card wtoday", "aria-label": "Today" }, [weatherChips(), aimBox()]));
-
-  // drift: a slow turn through the app's own reading
-  var pool = drifts(set.plain), di = 0;
-  var dLabel = h("span", { class: "label" }), dText = h("p", { class: "wdtext" }), dBy = h("cite"), dGo = h("a", { class: "try" });
-  var dNext = h("button", { class: "icobtn", type: "button", "aria-label": "Next reading" }, [icon("chev")]);
-  var driftBox = h("section", { class: "card wdrift", "aria-label": "Drift", "aria-live": "polite" }, [dLabel, dText, dBy, h("div", { class: "qrow" }, [dGo, dNext])]);
-  app.appendChild(driftBox);
-  function drawDrift(speakIt) {
-    var it = pool[di % pool.length]; di++;
-    dLabel.textContent = it.label; dText.textContent = it.text; dBy.textContent = it.by || ""; dBy.hidden = !it.by;
-    dGo.setAttribute("href", it.href); dGo.innerHTML = ""; dGo.appendChild(document.createTextNode(it.go)); dGo.appendChild(icon("chev", "chev"));
-    if (!reduce) { driftBox.classList.remove("turn"); void driftBox.offsetWidth; driftBox.classList.add("turn"); }
-    if (speakIt) say(it.text + (it.by ? " " + it.by.replace(/\s*\(.*\)/, "") : ""), true);
+  // a countdown, when the practice has one; it waits a few seconds so there's time to read first
+  function stepCount() {
+    if (!cnt || !seg || seg.kind !== "practice") return;
+    var w = WATCH_SAYS[cur.id], el = (Date.now() - seg.start) / 1000 - 8;
+    var left = el < 0 ? w.count : Math.max(0, Math.ceil(w.count - el));
+    if (left === cntLeft) return;
+    cntLeft = left; cnt.textContent = left ? String(left) : "✓";
+    if (!left) chime(396, 1.6, true);
   }
-  dNext.addEventListener("click", function () { driftAt = Date.now() + set.drift * 60000; drawDrift(running && set.speak === "all"); });
 
-  // settings, folded away
-  function chooser(title, opts, key, after) {
-    var row = h("div", { class: "row left" });
-    opts.forEach(function (o) {
-      var b = h("button", { class: "opt", type: "button", "aria-pressed": String(set[key] === o[0]) }, [o[1]]);
-      b.addEventListener("click", function () {
-        set[key] = o[0]; store.set("wset", set);
-        [].forEach.call(row.children, function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true");
-        if (after) after();
-      });
-      row.appendChild(b);
-    });
-    return h("div", { class: "pgroup" }, [h("span", { class: "label" }, [title]), row]);
+  // pause 3: a one-tap check-in, skipped if there was one in the last hour and a half
+  function recentCheckin() {
+    var w = weatherToday(); if (!w.length) return false;
+    var p = w[w.length - 1].t.split(":"), d = new Date(); d.setHours(+p[0], +p[1], 0, 0);
+    return Date.now() - d.getTime() < 90 * 60000;
   }
-  app.appendChild(h("details", { class: "more" }, [h("summary", null, [h("span", null, ["Watch settings"]), icon("chev", "chev")]),
-    h("div", { class: "foldbody" }, [
-      chooser("Bells", [[0, "Off"], [20, "20 min"], [30, "30 min"], [45, "45 min"], [60, "Hourly"], ["hours", "The old hours"]], "every", function () { if (running) plan(); drawStatus(); }),
-      chooser("Bell timing", [[true, "Varied"], [false, "Even"]], "varied", function () { if (running) plan(); drawStatus(); }),
-      chooser("Practices", [["s", "Seconds only"], ["m", "Up to a minute"], ["l", "Any length"]], "len"),
-      chooser("Read aloud", [["off", "Off"], ["bells", "At bells"], ["all", "Bells and drift"]], "speak"),
-      chooser("Drift", [[0, "Off"], [3, "Every 3 min"], [5, "Every 5 min"], [10, "Every 10 min"]], "drift", function () { driftBox.hidden = !set.drift; driftAt = Date.now() + set.drift * 60000; }),
-      chooser("Keep screen on", [[false, "Off"], [true, "On"]], "awake", function () { if (running && set.awake) holdAwake(); else if (!set.awake) letSleep(); }),
-      chooser("Look", [[false, "Symbols"], [true, "Plain"]], "plain", function () { drawHead(); pool = drifts(set.plain); di = 0; drawNow(false); drawDrift(false); }),
-      h("p", { class: "phelp" }, ["The old hours ring at 6, 9, noon, 3, 6, and 9, the times monks stopped for prayer. Bells ring only while this page is open; on a phone, the screen has to stay on. In a hidden browser tab a bell can come up to a minute late, and some browsers put quiet tabs to sleep; background sound (the speaker at the top) keeps the tab awake."])
-    ])]));
+  function showCheckin(fromBell) {
+    cnt = null; begin("checkin", 90000);
+    stLabel.textContent = hourTag() + "Check-in";
+    mid.innerHTML = "";
+    mid.appendChild(h("h2", { class: "wtitle" }, ["How are you right now?"]));
+    mid.appendChild(h("p", { class: "wtext" }, ["One tap, if you like; it goes to My Log, where you can see how your days tend to run. If not, this moves on by itself."]));
+    mid.appendChild(weatherChips(function () { setTimeout(function () { if (seg && seg.kind === "checkin") { unflag(); showRead(false); drawFoot(); } }, 2500); }, true));
+    if (fromBell) bell(1);
+    if (set.speak !== "off") say(hourSay() + "Check-in. How are you right now?", true);
+    flag(); lit();
+  }
+  // pauses take turns: breathe, practice, breathe, check-in
+  function pause(fromBell) {
+    var k = pauses % 4; pauses++;
+    if (k === 0 || k === 2) showBreathe(fromBell);
+    else if (k === 3 && !recentCheckin()) showCheckin(fromBell);
+    else showPractice(fromBell);
+  }
 
-  // the clock
-  var running = false, iv = null, nextAt = 0, nextHour = null, driftAt = 0;
+  // the clock: everything runs on clock time, so a slowed background tab catches up
   function plan() {
     nextHour = null; nextAt = 0;
-    if (!set.every) { nextAt = 0; return; }
+    if (!set.every) return;
     var now = new Date();
     if (set.every === "hours") {
       for (var d = 0; d < 2 && !nextAt; d++) for (var i = 0; i < HOURS.length; i++) {
@@ -2406,52 +2643,98 @@ function watchView() {
     var ms = set.every * 60000; if (set.varied) ms *= 0.7 + Math.random() * 0.6;
     nextAt = now.getTime() + ms;
   }
-  function drawStatus() {
-    if (!running) { status.textContent = set.every ? "Bells start when you begin. Tap once so the phone allows sound." : "Bells are off. The drift still turns while the watch runs."; return; }
-    if (!nextAt) { status.textContent = "Watching. Bells are off."; return; }
-    var t = new Date(nextAt), hm = clock12(two(t.getHours()) + ":" + two(t.getMinutes()));
-    status.textContent = nextHour ? "Next bell: " + nextHour.name + ", " + hm + "." : "Next bell around " + hm + ".";
+  function drawFoot() {
+    if (!running || !seg) return;
+    var now = Date.now();
+    stClock.textContent = clock12(nowClock());
+    barI.style.width = seg.end ? Math.min(100, (now - seg.start) / (seg.end - seg.start) * 100).toFixed(1) + "%" : "0";
+    if (inPause()) { foot.textContent = "Back to the readings in " + Math.max(1, Math.ceil((seg.end - now) / 1000)) + " seconds."; return; }
+    foot.textContent = !nextAt ? "Pauses are off." : nextHour ? "Next pause: " + nextHour.name + ", " + hm(nextAt) + "." : "Next pause around " + hm(nextAt) + ".";
   }
-  function ring() {
-    var hr = nextHour;
-    bell(1); flagged = true; document.title = "◆ Pause · Trestleboard";
-    drawNow(true);
-    if (set.speak !== "off") say((hr ? hr.name + ", " + hr.say + ". " : "") + (set.plain ? cur.plain : cur.name) + ". " + shortOf(cur), true);
-    plan(); drawStatus();
-  }
+  function ring() { hourNow = nextHour; pause(true); plan(); }
   function tick() {
     var now = Date.now();
-    if (nextAt && now >= nextAt) ring();
-    if (set.drift && now >= driftAt) { driftAt = now + set.drift * 60000; drawDrift(set.speak === "all"); }
+    stepBreath(); stepCount();
+    if (seg.end && now >= seg.end) {
+      if (inPause()) { unflag(); showRead(false); }
+      else showRead(set.speak === "all");
+    }
+    if (nextAt && now >= nextAt && !inPause()) ring();
+    drawFoot();
   }
-  function stop() {
-    clearInterval(iv); iv = null; running = false; watchOn = false; letSleep(); unflag();
-    begin.textContent = "Begin the watch"; begin.classList.remove("ghost"); drawStatus();
-  }
-  begin.addEventListener("click", function () {
-    if (running) { stop(); return; }
+  function start() {
     stopActive(); active = { stop: stop };
     try { ctx(); } catch (e) {}
-    running = true; watchOn = true; chime(528, 0.4, true);
+    running = true; watchOn = true;
+    if (set.sound !== "off") { startBg(set.sound); ownSound = true; if (redrawSound) redrawSound(); }
     if (set.awake) holdAwake();
-    plan(); driftAt = Date.now() + set.drift * 60000;
+    chime(528, 0.4, true);
+    plan(); pauses = 0;
+    showDay(set.speak === "all");
     iv = setInterval(tick, 1000);
-    begin.textContent = "Pause the watch"; begin.classList.add("ghost"); drawStatus();
-  });
+    startB.textContent = "Stop"; startB.classList.add("ghost");
+    nextB.hidden = breatheB.hidden = false;
+    drawFoot();
+  }
+  function stop() {
+    clearInterval(iv); iv = null; if (raf) cancelAnimationFrame(raf); raf = null;
+    running = false; watchOn = false; seg = null; letSleep(); unflag(); hush();
+    if (ownSound) { stopBg(); ownSound = false; if (redrawSound) redrawSound(); }
+    startB.textContent = "Start"; startB.classList.remove("ghost");
+    nextB.hidden = breatheB.hidden = true;
+    drawReady();
+  }
+  startB.addEventListener("click", function () { if (running) stop(); else start(); });
+  nextB.addEventListener("click", function () { var was = inPause(); unflag(); showRead(!was && set.speak === "all"); drawFoot(); });
+  breatheB.addEventListener("click", function () { hourNow = null; showBreathe(false); drawFoot(); });
 
-  drawNow(false);
-  driftBox.hidden = !set.drift;
-  drawDrift(false);
-  drawStatus();
+  // your day: the check-in and the one habit, folded away
+  app.appendChild(h("details", { class: "more" }, [h("summary", null, [h("span", null, ["Your day: check-in and one habit"]), icon("chev", "chev")]),
+    h("div", { class: "foldbody wtoday" }, [weatherChips(), aimBox()])]));
+
+  // settings, folded away
+  function chooser(title, opts, key, after) {
+    var row = h("div", { class: "row left" });
+    opts.forEach(function (o) {
+      var b = h("button", { class: "opt", type: "button", "aria-pressed": String(set[key] === o[0]) }, [o[1]]);
+      b.addEventListener("click", function () {
+        set[key] = o[0]; store.set("wset", set);
+        [].forEach.call(row.children, function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true");
+        if (after) after();
+        if (!running) drawReady();
+      });
+      row.appendChild(b);
+    });
+    return h("div", { class: "pgroup" }, [h("span", { class: "label" }, [title]), row]);
+  }
+  app.appendChild(h("details", { class: "more" }, [h("summary", null, [h("span", null, ["Watch settings"]), icon("chev", "chev")]),
+    h("div", { class: "foldbody" }, [
+      chooser("Background sound", [["music", "Soft music"], ["rain", "Rain"], ["ocean", "Ocean"], ["brown", "Brown noise"], ["off", "None"]], "sound", function () {
+        if (!running) return;
+        if (set.sound === "off") { if (ownSound) stopBg(); ownSound = false; } else { startBg(set.sound); ownSound = true; }
+        if (redrawSound) redrawSound();
+      }),
+      chooser("Pauses", [[0, "Off"], [20, "Every 20 min"], [30, "30 min"], [45, "45 min"], [60, "Hourly"], ["hours", "The old hours"]], "every", function () { if (running) { plan(); drawFoot(); } }),
+      chooser("Pause timing", [[true, "Varied"], [false, "Even"]], "varied", function () { if (running) { plan(); drawFoot(); } }),
+      chooser("Small practices", [["s", "Seconds only"], ["m", "Up to a minute"], ["l", "Any length"]], "len"),
+      chooser("Readings change", [[0, "Only on Next"], [3, "Every 3 min"], [5, "5 min"], [10, "10 min"]], "drift", function () { if (running && seg && !inPause()) { seg.start = Date.now(); seg.end = readMs() ? Date.now() + readMs() : 0; drawFoot(); } }),
+      chooser("Read aloud", [["off", "Off"], ["bells", "Pauses only"], ["all", "Pauses and readings"]], "speak"),
+      chooser("Keep screen on", [[false, "Off"], [true, "On"]], "awake", function () { if (running && set.awake) holdAwake(); else if (!set.awake) letSleep(); }),
+      chooser("Look", [[false, "Symbols"], [true, "Plain"]], "plain", function () { pool = drifts(set.plain); di = 0; if (running && !inPause()) showRead(false); }),
+      h("p", { class: "phelp" }, ["The old hours ring at 6, 9, noon, 3, 6, and 9, the times monks stopped for prayer. Bells ring only while this page is open; on a phone, the screen has to stay on. In a hidden browser tab a bell can come up to a minute late, and some browsers put quiet tabs to sleep; a background sound keeps the tab awake."])
+    ])]));
+
+  drawReady();
 }
 
 /* ---------- welcome: shown once, on the first open ---------- */
 function showWelcome() {
   if (document.getElementById("welcome")) return;
   var rows = [
-    ["practice", "Practices", "Pick how you feel right now and get a short practice that fits."],
-    ["read", "Read", "A field guide to the old traditions each practice comes from."],
-    ["log", "My Log", "Rate how tense you were before and after. Keep what works."]
+    [TAB_ICONS.practice, "Practices", "Pick how you feel right now and get a short practice that fits."],
+    ['<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + EMB.watch + "</svg>", "The Watch", "For ordinary hours. Leave it running in the background: soft sound, a slow breath now and then, short readings."],
+    [TAB_ICONS.read, "Read", "A field guide to the old traditions each practice comes from."],
+    [TAB_ICONS.log, "My Log", "Rate how tense you were before and after. Keep what works."]
   ];
   var begin = h("button", { class: "go", type: "button" }, ["Begin"]);
   var el = h("div", { class: "welcome", id: "welcome", role: "dialog", "aria-modal": "true", "aria-label": "Welcome" }, [
@@ -2460,7 +2743,7 @@ function showWelcome() {
       h("h1", null, ["Trestleboard"]),
       h("p", { class: "w-lede" }, ["Twenty-four small practices from old traditions, each one built for a moment in your day."]),
       h("ul", { class: "w-list" }, rows.map(function (r) {
-        return h("li", null, [h("span", { class: "w-ic", html: TAB_ICONS[r[0]] }), h("span", null, [h("b", null, [r[1]]), h("span", null, [r[2]])])]);
+        return h("li", null, [h("span", { class: "w-ic", html: r[0] }), h("span", null, [h("b", null, [r[1]]), h("span", null, [r[2]])])]);
       })),
       h("p", { class: "w-note" }, ["Everything you save stays on this phone. No account, nothing to sign up for."]),
       begin
@@ -2739,12 +3022,12 @@ function logView() {
     var trs = BANDS.map(function (b) {
       var c = {}, n = 0;
       wx.forEach(function (r) { var hr = +r.t.split(":")[0]; if (hr >= b[1] && hr < b[2]) { c[r.v] = (c[r.v] || 0) + 1; n++; } });
-      var txt = n ? WEATHER.filter(function (v) { return c[v]; }).map(function (v) { return v + " " + c[v]; }).join(" · ") : "None yet";
+      var txt = n ? WEATHER.filter(function (v) { return c[v]; }).map(function (v) { return wxName(v) + " " + c[v]; }).join(" · ") : "None yet";
       return h("tr", null, [h("td", null, [b[0]]), h("td", null, [txt])]);
     });
     var days = {}; wx.forEach(function (r) { days[r.k] = 1; });
     app.appendChild(h("section", { class: "group" }, [
-      h("h2", null, ["Your weather by time of day"]),
+      h("h2", null, ["Your check-ins by time of day"]),
       h("p", { class: "gdesc" }, ["From your quick check-ins on the Watch: " + wx.length + (wx.length === 1 ? " check-in" : " check-ins") + " over " + Object.keys(days).length + (Object.keys(days).length === 1 ? " day" : " days") + ". Patterns take a few weeks to show."]),
       h("div", { class: "tablewrap" }, [h("table", { class: "log" }, [h("thead", null, [h("tr", null, [h("th", null, ["When"]), h("th", null, ["Check-ins"])])]), h("tbody", null, trs)])])
     ]));
