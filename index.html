@@ -540,6 +540,42 @@ html.locked, html.locked body { overflow: hidden; }
 .w-note { color: var(--on-slate-muted); font-size: var(--t-small); font-style: italic; }
 .welcome .go { background: var(--slate-mark); color: var(--slate); border-color: var(--slate-mark); min-width: 12rem; }
 
+/* ---------- day of the week, on the line of the day ---------- */
+.today .daytag { display: flex; align-items: center; gap: var(--s2); font-size: var(--t-tiny); font-weight: 600; color: var(--slate-mark); }
+.today .daytag .emb { color: var(--slate-mark); }
+.today .lens { font-size: var(--t-small); color: var(--on-slate-muted); border-top: 1px solid color-mix(in srgb, var(--on-slate-muted) 30%, transparent); padding-top: var(--s2); }
+.today .lens b { font-weight: 600; color: var(--on-slate); }
+
+/* ---------- small practices and the Watch ---------- */
+.wp > .foldbody .wfrom blockquote, .wnow .wfrom blockquote { margin: var(--s2) 0; }
+.wshort { font-size: var(--t-body); }
+.wp > summary .sit { display: block; }
+.wp > summary .nm { display: block; font-size: var(--t-small); color: var(--muted); }
+.wnow .saved:empty { display: none; }
+.foldbody .subhead { margin-top: var(--s2); }
+.lensbox { display: grid; gap: var(--s2); text-align: left; }
+.w-head { display: flex; align-items: center; gap: var(--s4); }
+.w-head .emb.tile { width: 3.4rem; height: 3.4rem; border-color: var(--steel); }
+.w-head .emb.tile svg { width: 1.9rem; height: 1.9rem; }
+.w-head p { color: var(--muted); font-size: var(--t-small); margin-top: var(--s1); }
+.wctl { display: grid; gap: var(--s2); justify-items: start; }
+.wstatus { color: var(--muted); font-size: var(--t-small); }
+.wnow { border-top: 3px solid var(--steel); }
+.wnow-top { display: flex; justify-content: space-between; gap: var(--s2); }
+.wnow h2 { font-size: var(--t-head); }
+.wnow .row { margin-top: var(--s1); }
+.wwhy > summary { cursor: pointer; color: var(--steel); font-size: var(--t-small); min-height: var(--tap); display: flex; align-items: center; }
+.wwhy .foldbody { display: grid; gap: var(--s2); font-size: var(--t-small); color: var(--muted); }
+.wtoday { gap: var(--s5); }
+.wtoday .grp { display: grid; gap: var(--s2); }
+.wdrift { gap: var(--s2); }
+.wdrift .wdtext { font-size: var(--t-body); line-height: 1.55; }
+.wdrift cite { font-style: normal; font-size: var(--t-tiny); color: var(--muted); }
+.wdrift .qrow { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
+.wdrift .try { display: inline-flex; align-items: center; gap: var(--s1); min-height: var(--tap); text-decoration: none; font-size: var(--t-small); font-weight: 600; }
+.wdrift .icobtn { margin-right: calc(var(--s2) * -1); }
+.dayrev { margin-top: var(--s2); }
+
 /* ---------- motion, skipped when the phone asks for less ---------- */
 .app > * { animation: rise 0.38s ease-out backwards; }
 .app > :nth-child(2) { animation-delay: 0.04s; } .app > :nth-child(3) { animation-delay: 0.08s; }
@@ -557,6 +593,8 @@ html.locked, html.locked body { overflow: hidden; }
   .w-in > *:nth-child(4) { animation-delay: 0.55s; }
   .w-in > *:nth-child(n+5) { animation-delay: 0.7s; }
   .welcome.leaving { opacity: 0; transition: opacity 0.35s ease; }
+  .wdrift.turn > * { animation: wfade 0.8s ease-out; }
+  .wnow.lit { animation: lit 1.6s ease-out; }
 }
 @media (prefers-reduced-motion: reduce) {
   .app > *, .tabs a.fresh::before, .icobtn.pop, .tool.lit, .coin.spin { animation: none; }
@@ -1283,7 +1321,7 @@ var E = {
   22: { name: "Solve et Coagula", trad: "Alchemy", sit: "Switching to the next thing",
     tool: switcher },
   23: { name: "Raising the Sparks", trad: "Lurianic Kabbalah · Pythagoreanism", sit: "Brushing your teeth at night",
-    tool: function () { var w = h("div", { class: "chips" }); w.appendChild(steps({ steps: [{ label: "Review the day", s: 60 }], start: "Start 60 seconds", doneLabel: "The work is set down", doneText: "Close the notebook." })); w.appendChild(note("e23", [{ label: "Finished today", ph: "" }, { label: "Unfinished, and when I'll come back to it", ph: "" }])); return w; } },
+    tool: function () { var w = h("div", { class: "chips" }); w.appendChild(steps({ steps: [{ label: "Review the day", s: 60 }], start: "Start 60 seconds", doneLabel: "The work is set down", doneText: "Close the notebook." })); w.appendChild(note("e23", [{ label: "Finished today", ph: "" }, { label: "Unfinished, and when I'll come back to it", ph: "" }])); w.appendChild(dayReview()); return w; } },
   24: { name: "Kenosis", trad: "Christian mysticism", sit: "In bed, mind still running",
     tool: function () { return steps({ dim: true, steps: pmrSteps(), start: "Start", doneLabel: "Rest", doneText: "Nothing left to carry. Good night." }); } }
 };
@@ -1482,11 +1520,125 @@ var LINES = [
 function dayNumber(d) { d = d || new Date(); return Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 864e5); }
 function lineOfDay() { return LINES[dayNumber() % LINES.length]; }
 
+// the seven-day planetary week (Sunday first), each with its alchemical metal; the Kybalion lens for each day is this app's own pairing
+var DAYS = [
+  { day: "Sunday", planet: "Sun", metal: "gold", key: "pl-sun", theme: "Purpose", lens: "Mentalism", axiom: "“The All is Mind; the Universe is Mental.”", prompt: "Notice how much of today is shaped by the story you tell about it." },
+  { day: "Monday", planet: "Moon", metal: "silver", key: "pl-moon", theme: "Rhythm and rest", lens: "Rhythm", axiom: "“Everything flows, out and in; everything has its tides; all things rise and fall…”", prompt: "Track when your energy rises and when it dips." },
+  { day: "Tuesday", planet: "Mars", metal: "iron", key: "pl-mars", theme: "Strength and restraint", lens: "Vibration", axiom: "“Nothing rests; everything moves; everything vibrates.”", prompt: "Notice where your energy is running high, and whether it’s going where you want it." },
+  { day: "Wednesday", planet: "Mercury", metal: "quicksilver", key: "hermeticism", theme: "Words and learning", lens: "Correspondence", axiom: "“As above, so below; as below, so above.”", prompt: "Spot one small pattern that mirrors a bigger one." },
+  { day: "Thursday", planet: "Jupiter", metal: "tin", key: "pl-jupiter", theme: "Generosity and perspective", lens: "Polarity", axiom: "“Everything is Dual; everything has poles; everything has its pair of opposites…”", prompt: "When something feels bad, ask what good thing it’s the low end of." },
+  { day: "Friday", planet: "Venus", metal: "copper", key: "pl-venus", theme: "Harmony", lens: "Gender", axiom: "“Gender is in everything; everything has its Masculine and Feminine Principles…”", prompt: "Notice when to push and when to take in. The Kybalion’s “gender” means active and receptive." },
+  { day: "Saturday", planet: "Saturn", metal: "lead", key: "pl-saturn", theme: "Limits and finishing", lens: "Cause and Effect", axiom: "“Every Cause has its Effect; every Effect has its Cause…”", prompt: "Before acting, name the likely result. Finish one thing." }
+];
+function dayInfo() { return DAYS[new Date().getDay()]; }
+// the monastic day hours, for the Watch's "old hours" bells
+var HOURS = [
+  { h: 6, name: "Prime", say: "the first hour" }, { h: 9, name: "Terce", say: "the third hour" }, { h: 12, name: "Sext", say: "the sixth hour" },
+  { h: 15, name: "None", say: "the ninth hour" }, { h: 18, name: "Vespers", say: "the evening hour" }, { h: 21, name: "Compline", say: "the closing hour" }
+];
+
 var ROUTINES = {
   morning: { name: "Start the day", ids: [1, 3, 2], min: 5, about: "About 5 minutes. Settle, breathe, then take the first step." },
   reset: { name: "Midday reset", ids: [13, 7, 9], min: 4, about: "About 4 minutes. Clear the charge, cut the input, box the tasks." },
   evening: { name: "Close the day", ids: [23, 24], min: 5, about: "About 5 minutes. Set the work down, then let the body go." }
 };
+
+/* ---------- small practices for steady moments (the Watch serves these through the day) ---------- */
+// tier: s = seconds, m = about a minute, l = a few minutes. tool: an optional extra control.
+var TIERS = { s: "Seconds", m: "About a minute", l: "A few minutes" };
+var EVERY = [
+  { id: "attention", name: "Prosoche", plain: "Attention check", trad: "Stoicism", tier: "s", cue: "Any time, especially when nothing is wrong",
+    short: "Three questions: Where is my attention? What am I actually doing? Is this up to me?",
+    how: "Answer each in a word or two, then carry on. You don’t have to change anything. The point is that you looked.",
+    why: "Most practices in this app wait for a bad moment. This one runs when nothing is wrong, so the habit of noticing is already in use when something is. The third question is Epictetus’s split between what is up to you and what isn’t (see The Principle of Cause). There’s no research on this exact exercise; it leans on the general finding that habits form through many repetitions in the same setting (one well-known study, Lally and colleagues, 2010, found a median of 66 days).",
+    from: "<em>Prosochē</em> is Greek for attention. Epictetus gives it a whole chapter (Discourses 4.12, “On Attention”): attention you let slip can’t simply be picked back up whenever you like. The historian Pierre Hadot treated this steady watchfulness as the basic Stoic spiritual attitude." },
+  { id: "threshold", name: "The Threshold", plain: "Doorway breath", trad: "Freemasonry · Jewish custom", tier: "s", cue: "Walking through a doorway",
+    short: "At the next doorway, take one slow breath out before you step through.",
+    how: "Pick the doors you pass most often. Each time, slow down for one long exhale, then step through. If you forget, the next door is another chance.",
+    why: "This is an if-then plan: “when I reach a door, I breathe out.” Tying a habit to a cue you can’t miss is one of the better-supported tricks in behavior research; a 2006 review of 94 studies (Gollwitzer and Sheeran) found a medium-to-large effect on following through, strongest for starting a behavior. Doorways also act as natural mental boundaries: in lab studies (Radvansky and colleagues, 2011), walking through one made people slightly more likely to forget what they had just been doing.",
+    from: "Thresholds are guarded places in old practice. In a Masonic lodge the candidate is stopped at the door and admitted only after a challenge. In many Jewish homes a mezuzah, a small case holding verses from Deuteronomy, is fixed to the doorpost and touched on the way in and out." },
+  { id: "onething", name: "Age Quod Agis", plain: "One thing", trad: "Jesuit tradition", tier: "s", cue: "Several things open at once",
+    short: "Name what you’re doing in three words. Close or hide one thing that isn’t that.",
+    how: "Say it under your breath: “Writing the summary.” Then close one tab, turn the phone face down, or shut one window that belongs to something else. One is enough.",
+    why: "Switching between tasks costs time and accuracy; that much is well established in lab research on task switching. Naming the task draws a clear line, so drifting over it is easier to notice.",
+    from: "Latin for “do what you are doing.” It is the motto of many Jesuit schools, and Pope John XXIII used it to mean giving your whole attention to the task in front of you, not doing everything perfectly." },
+  { id: "kavanah", name: "Kavanah", plain: "Purpose first", trad: "Jewish mysticism", tier: "s", cue: "About to start something",
+    short: "Before you start, say in one sentence what this is for.",
+    how: "For example: “This message is so they can decide by Friday.” Then begin. When you drift, come back to the sentence.",
+    why: "A stated purpose gives you something to come back to, and makes it easier to see when a task has grown past what it’s for. This is an old idea with little direct research behind it; treat it as a habit to try, not a proven fix.",
+    from: "<em>Kavanah</em> is Hebrew for intention: the direction of the heart. The Mishnah (Berakhot 5:1) describes early pious men who waited an hour before praying so they could first direct their hearts. Kabbalists later attached detailed meditations, also called <em>kavanot</em>, to ordinary prayers and acts." },
+  { id: "drill", name: "The Tyler’s Drill", plain: "Practice the pause", trad: "Freemasonry · Stress inoculation", tier: "s", cue: "Before small, routine actions", link: 10,
+    short: "Before something trivial, like opening a message or picking up your phone, wait three seconds. Then go.",
+    how: "Choose one small, frequent action for today. Each time, stop for three seconds and loosen your jaw, then carry on. You’re rehearsing the pause from The Tyler’s Sword on moments that don’t matter.",
+    why: "A skill rehearsed under low pressure is easier to reach under high pressure. Clinicians call the method stress inoculation training (Donald Meichenbaum, from the 1970s on); a 1996 review of 37 studies found it lowered anxiety and helped performance under stress. Those studies tested the full program, not this one piece.",
+    from: "The Tyler guards the lodge door with a drawn sword (see The Tyler’s Sword). A guard is trained before the night of the attack, not during it." },
+  { id: "watchtower", name: "The Watchtower", plain: "Look far away", trad: "The Golden Dawn", tier: "s", cue: "Eyes tired from the screen",
+    short: "Look at the farthest thing you can see for 20 seconds. If you can, look out in all four directions.",
+    how: "A window is best; otherwise the far end of a hallway. Let your eyes go soft at that distance, and blink a few times before you come back to the screen.",
+    why: "Eye-care groups (the American Academy of Ophthalmology and the American Optometric Association) suggest looking about 20 feet away for 20 seconds every 20 minutes at a screen. The rule itself has barely been tested, but a short break from close focus is harmless, and it doubles as a reset for attention.",
+    from: "Golden Dawn rituals open by calling on the four Watchtowers, guardians stationed at the four quarters of the world. Here the watchtower is you, looking out." },
+  { id: "above", name: "The View from Above", plain: "Zoom out", trad: "Stoicism", tier: "m", cue: "Something feels bigger than it is",
+    short: "Picture this room from the ceiling, then the building, the city, the whole planet. Then come back and look at what you’re doing.",
+    how: "Take about a minute. Rise in steps and pause at each one. On the way back down, notice whether the thing in front of you looks a different size.",
+    why: "Psychologists call this self-distancing. In experiments by Ethan Kross and colleagues, people who looked at a problem from a distance, or talked about themselves in the third person, reported less distress and reasoned about it more calmly. The effects are moderate and mostly short-term.",
+    from: "Marcus Aurelius returns to the image often: <blockquote>“Look down from above on the countless herds of men and their countless solemnities.”</blockquote> (Meditations IX.30, Long). Pierre Hadot named it “the view from above.”" },
+  { id: "kitchen", name: "The Kitchen Practice", plain: "Come back", trad: "Christian mysticism", tier: "s", cue: "Plain, repetitive work",
+    short: "When you notice your mind has wandered, come back to the task in front of you. No scolding. Just return.",
+    how: "Use it during plain work: typing, washing up, walking down a hall. Each time you catch yourself drifting, the catch is the practice. Count it as a rep, not a failure.",
+    why: "Wandering is the mind’s normal state: in a large study that sampled people by phone through the day (Killingsworth and Gilbert, 2010), minds were off the task at hand almost half the time. Meditation research treats the moment of noticing and returning as the skill being trained. Scolding yourself for drifting mostly adds a second distraction.",
+    from: "Brother Lawrence (about 1614–1691) was a lay brother who worked in a Paris monastery kitchen. He kept his mind on God, <blockquote>“recalling it as often as I found it wandered from Him,”</blockquote> and said that in “the noise and clatter of my kitchen” he kept the same calm as at prayer. He also advised against fretting over wandering, since <blockquote>“trouble and disquiet serve rather to distract the mind than to recollect it.”</blockquote> (<em>The Practice of the Presence of God</em>, 1895 translation)" },
+  { id: "lens", name: "Today’s Lens", plain: "Today’s question", trad: "Hermeticism · The Kybalion", tier: "m", cue: "Carried through the day", tool: "lens",
+    short: "", how: "Each day of the week takes one of The Kybalion’s seven principles as a lens. You don’t have to believe it; use it as a question for noticing things. The line of the day on the Practices page shows today’s.",
+    why: "One question carried through the day gives scattered attention a direction. Treat it as a reflective game: The Kybalion’s claims about the universe aren’t evidence of anything.",
+    from: "<em>The Kybalion</em> (1908) sets out seven principles, from “The All is Mind” to “Gender is in everything.” It presents them as ancient Hermetic teaching; it is American New Thought, most likely written by William Walker Atkinson (see the Field Guide chapter). The seven-day planetary week is ancient and the metals come from alchemy, but pairing each day with a principle is this app’s own arrangement." },
+  { id: "stage", name: "The Four Stages", plain: "Name the stage", trad: "Alchemy", tier: "s", cue: "Partway through a task",
+    short: "Name the stage of the task in front of you: blackening (a mess), whitening (clearing), yellowing (taking shape), or reddening (finishing).",
+    how: "Say it plainly: “This is still in the blackening.” A task can slip back a stage; that’s normal. When something is stuck in the black, the next move is usually to sort or separate something.",
+    why: "Putting a state into words, even odd words, seems to take a little of its sting: in a brain-imaging study (Lieberman and colleagues, 2007), naming feelings lowered activity in the amygdala, a region involved in alarm. Calling a mess a stage also frames it as part of the process instead of proof that something is wrong.",
+    from: "Alchemists described the Work in color stages: <em>nigredo</em> (blackening), <em>albedo</em> (whitening), <em>citrinitas</em> (yellowing), and <em>rubedo</em> (reddening). Jung read them as stages of inner change in <em>Psychology and Alchemy</em> (1944). See the Field Guide chapter on alchemy." },
+  { id: "shadow", name: "The Shadow Note", plain: "Irritation note", trad: "Jungian psychology", tier: "m", cue: "Someone irritates you more than the moment deserves", tool: "shadow",
+    short: "Write one line: what did they do that I don’t let myself do?",
+    how: "Write it down and leave it. Some answers will be useless; that’s fine. Look over the list now and then for repeats.",
+    why: "Treat this as a prompt for reflection, not a diagnosis. Jung’s idea of the shadow wasn’t built on experiments, and the related idea of projection has only weak support in modern research. The useful part is pausing on a strong reaction long enough to ask a question about it.",
+    from: "In Jung’s psychology the shadow holds the parts of yourself you don’t recognize or accept. Jung held that they often show up first as outsized reactions to other people." },
+  { id: "hardship", name: "The Small Hardship", plain: "Small discomfort", trad: "Stoicism", tier: "l", cue: "Once a day, on purpose",
+    short: "Choose one small discomfort on purpose: take the stairs, stand for a call, or leave your phone in another room for half an hour.",
+    how: "Pick something mild that costs nothing and harms nothing. Do it once today, on purpose, and notice whether it’s as bad as you expected. Skip anything painful, or anything your senses strongly object to; there are other options on the list.",
+    why: "Doing a mildly unpleasant thing by choice is a small dose of exposure, the principle behind well-supported anxiety treatments that build tolerance through gradual practice. Research on this everyday version is thin, so judge it by whether ordinary friction starts to feel smaller.",
+    from: "Seneca told Lucilius to practice poverty on purpose: <blockquote>“Set aside a certain number of days, during which you shall be content with the scantiest and cheapest fare, with coarse and rough dress, saying to yourself the while: ‘Is this the condition that I feared?’”</blockquote> (Letter 18, Gummere)" },
+  { id: "weather", name: "The Weather Report", plain: "Quick check-in", trad: "Ignatian discernment", tier: "s", cue: "A few times a day", tool: "weather",
+    short: "One tap: what’s the weather in here right now?",
+    how: "Pick the closest word. No explanation needed. After a few weeks, My Log shows how your days tend to run by time of day.",
+    why: "Brief check-ins through the day give a truer picture than remembering at night. Memory of a day leans heavily on its most intense moment and its ending (Daniel Kahneman’s peak-end rule), so in-the-moment reports, which researchers call experience sampling, catch what recall smooths over.",
+    from: "Ignatius of Loyola taught people to notice two movements in themselves, consolation and desolation, and to name them before acting on them (<em>Spiritual Exercises</em>, rules for discernment)." },
+  { id: "examen", name: "The Particular Examen", plain: "One habit, counted", trad: "Ignatian spirituality", tier: "m", cue: "Morning, midday, and evening", tool: "aim",
+    short: "Pick one habit to watch today. Each time you catch it, tap once. No grading.",
+    how: "In the morning, write the habit as a short phrase, something to do less (checking the phone) or more (drinking water). Tap “Caught it” each time you notice it. Tonight, Raising the Sparks shows the count. It starts fresh each day.",
+    why: "Self-monitoring, simply counting a behavior, is one of the more dependable techniques in behavior-change research; noticing tends to shift the behavior on its own. It works best on one specific habit at a time.",
+    from: "In the <em>Spiritual Exercises</em> (written 1522–1524), Ignatius sets out a “particular examen” three times a day: on rising, resolve to watch one fault; after the midday meal, go back over the morning hour by hour and mark a dot for each slip; after supper, do it again. Here the dots are taps." },
+  { id: "spark", name: "Gathering a Spark", plain: "One good thing", trad: "Lurianic Kabbalah", tier: "s", cue: "An hour that felt long",
+    short: "Name one thing from the last hour that went right, or was good to see.",
+    how: "It can be small: a clean sentence, a decent coffee, a door someone held. Say it, or write it in a word. That’s all.",
+    why: "In research reviews, gratitude-style exercises have small effects on mood that vary a lot between people. Their use here is as a counterweight: attention drifts toward problems on its own, and this tips it back for a moment.",
+    from: "In Lurianic Kabbalah, sparks of light lie scattered through ordinary things, waiting to be lifted (see Raising the Sparks). This is the daytime version: one spark at a time." },
+  { id: "silence", name: "Pythagorean Silence", plain: "Say less", trad: "Pythagoreanism", tier: "l", cue: "A meeting or a meal",
+    short: "For one stretch (a meeting, a meal, twenty minutes), say only what’s needed. Notice what you wanted to say and didn’t.",
+    how: "You don’t have to be silent, just sparing. Keep a rough count of the urges, and afterward ask which ones you’re glad you held back.",
+    why: "There’s no research on this as such. The value is in the noticing: once you’ve agreed not to follow every urge to speak, the urges become easy to watch.",
+    from: "Later biographers of Pythagoras, such as Iamblichus (around AD 300), report that newcomers to his school kept a long silence, <em>echemythia</em>, before they could join the discussions. The story may be legend, but it puts restraint of speech first among the disciplines." },
+  { id: "walk", name: "Solvitur Ambulando", plain: "Walk it out", trad: "Latin saying", tier: "l", cue: "Stuck on something that can wait five minutes",
+    short: "Walk for five minutes with no phone. When you sit back down, write the first thing you think.",
+    how: "Walk anywhere; a loop of the hallway counts. Don’t try to solve the problem. Let it sit at the edge of your mind, and write down the first thought when you’re back, even if it seems unrelated.",
+    why: "In Stanford experiments (Oppezzo and Schwartz, 2014), people came up with more ideas on a creativity test while walking and shortly afterward, indoors or out. The effect was on producing ideas, not on finding a single right answer.",
+    from: "“It is solved by walking.” The Latin saying is often credited to Diogenes or to Augustine; its real origin is uncertain." },
+  { id: "breath", name: "The Watchful Breath", plain: "Breath phrase", trad: "Hesychasm", tier: "m", cue: "Walking or waiting", link: 3,
+    short: "While walking or waiting, pair a short phrase with your breath: the first half on the in-breath, the second on the out-breath.",
+    how: "Pick two words, such as “here / now” or “steady / on.” Let the out-breath run a little longer than the in-breath. Keep it up for a minute, or for the length of a walk.",
+    why: "Slow breathing, around six breaths a minute, reliably calms the body in the short term, and the phrase gives the mind something to hold onto meanwhile. Vessel Expansion is the longer, sitting version.",
+    from: "The Hesychasts (from Greek <em>hēsychia</em>, stillness) of Eastern Orthodox monasticism joined a short prayer to the breath and repeated it through the day. Their writings, gathered in the <em>Philokalia</em>, call the alertness this builds <em>nepsis</em>: watchfulness, a guard kept at the entrance of the heart." }
+];
+var EVERY_BY = {}; EVERY.forEach(function (p) { EVERY_BY[p.id] = p; });
+var WEATHER = ["Clear", "Foggy", "Stormy", "Overcast"];
 
 /* ---------- small building blocks ---------- */
 
@@ -1767,7 +1919,16 @@ var EMB = {
   "sun": '<circle cx="12" cy="13" r="3.6"/><path d="M3 19h18M12 4.5v2.4M5.2 7.6l1.7 1.7M18.8 7.6l-1.7 1.7M2.8 13h2.4M18.8 13h2.4"/>',
   "noon": '<circle cx="12" cy="12" r="4"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/>',
   "moon": '<path d="M19 14.6A7.6 7.6 0 0 1 9.4 5a7.6 7.6 0 1 0 9.6 9.6Z"/><path d="M16.5 3.5v3M15 5h3"/>',
-  "bell": '<path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 2H5Z"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0M12 3.5v2"/>'
+  "bell": '<path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 2H5Z"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0M12 3.5v2"/>',
+  /* the seven planets of the week (Mercury uses the Hermeticism drawing) */
+  "pl-sun": '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/>',
+  "pl-moon": '<path d="M14.5 3.6A8.5 8.5 0 1 0 14.5 20.4 7 7 0 0 1 14.5 3.6Z"/>',
+  "pl-mars": '<circle cx="10" cy="14" r="5.5"/><path d="M14 10l6-6M15 4h5v5"/>',
+  "pl-jupiter": '<path d="M4.5 15.5h13M15 4v16.5M4.5 15.5c3.5-2.2 5.6-5 5.6-8.2a3 3 0 0 0-5.6-1.4"/>',
+  "pl-venus": '<circle cx="12" cy="9" r="5.5"/><path d="M12 14.5v7M8.8 18.3h6.4"/>',
+  "pl-saturn": '<path d="M8 3v13.5M5 6.3h6M8 10.5c1.8-2.2 7-2.4 7 2 0 3.2-3 4.2-3 6.6 0 1.3.9 2 2 1.9"/>',
+  /* the Watch */
+  "watch": '<path d="M12 3.2 20.5 12 12 20.8 3.5 12Z"/><circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/>'
 };
 function emblem(key, cls) {
   var d = EMB[key]; if (!d) return null;
@@ -1905,10 +2066,25 @@ function homeView() {
   // 2. the line for today
   var ln = lineOfDay();
   var speak = h("button", { class: "icobtn", type: "button", "aria-label": "Read the line aloud", onclick: function () { say(ln.t + " " + ln.by.replace(/\s*\(.*\)/, ""), true); } }, [icon("speaker")]);
+  var dd = dayInfo();
   app.appendChild(h("section", { class: "card today", "aria-label": "Today's line" }, [
+    h("div", { class: "daytag" }, [emblem(dd.key, "sm"), h("span", null, [dd.planet + "’s day · " + dd.metal + " · " + dd.theme])]),
     h("blockquote", { class: "quote" }, [ln.t]),
     h("cite", null, [ln.by]),
+    h("p", { class: "lens" }, [h("b", null, ["Lens: " + dd.lens + ". "]), dd.prompt]),
     h("div", { class: "qrow" }, [h("a", { class: "try", href: "#/p/" + ln.n }, ["Try " + BOOK.entries[ln.n].name, icon("chev", "chev")]), speak])
+  ]));
+
+  // 2b. for ordinary hours: the Watch and the small practices
+  app.appendChild(h("section", { class: "group" }, [
+    h("h2", null, ["For steady moments"]),
+    h("p", { class: "gdesc" }, ["Small practices for ordinary hours, and a page to keep open in the background."]),
+    h("div", { class: "rows" }, [
+      h("button", { class: "pick", type: "button", onclick: function () { location.hash = "#/watch"; } }, [
+        h("span", null, [h("span", { class: "sit" }, ["The Watch"]), h("span", { class: "nm" }, ["Bells, small practices, and a slow drift of reading"])]), icon("chev", "chev")]),
+      h("button", { class: "pick", type: "button", onclick: function () { location.hash = "#/steady"; } }, [
+        h("span", null, [h("span", { class: "sit" }, ["All " + EVERY.length + " small practices"]), h("span", { class: "nm" }, ["Seconds to a few minutes each"])]), icon("chev", "chev")])
+    ])
   ]));
 
   // 3. how are you? eight tiles
@@ -1976,6 +2152,297 @@ function allView() {
     g.ids.forEach(function (id) { sec.appendChild(pick(id)); });
     app.appendChild(sec);
   });
+}
+
+/* ---------- steady moments: today's saved bits (aim, count, check-ins) ---------- */
+function plainText(html) { var d = document.createElement("div"); d.innerHTML = html; return d.textContent; }
+function nowClock() { var d = new Date(); return two(d.getHours()) + ":" + two(d.getMinutes()); }
+function wday() { var d = store.get("wday", null); if (!d || d.k !== dayKey()) d = { k: dayKey(), done: 0, aim: "", caught: 0 }; return d; }
+function weatherToday() { var k = dayKey(); return store.get("weather", []).filter(function (r) { return r.k === k; }); }
+function logWeather(v) {
+  var list = store.get("weather", []);
+  list.push({ k: dayKey(), t: nowClock(), v: v });
+  if (list.length > 1000) list = list.slice(-1000);
+  store.set("weather", list);
+}
+// one tap: how is it in here right now?
+function weatherChips() {
+  var wrap = h("div", { class: "grp" });
+  var row = h("div", { class: "row left", role: "group", "aria-label": "Quick check-in" });
+  var msg = h("span", { class: "saved", "aria-live": "polite" });
+  WEATHER.forEach(function (v) {
+    var b = h("button", { class: "opt", type: "button" }, [v]);
+    b.addEventListener("click", function () {
+      logWeather(v);
+      [].forEach.call(row.children, function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true");
+      msg.textContent = "Logged at " + clock12(nowClock()) + ": " + v.toLowerCase() + ".";
+    });
+    row.appendChild(b);
+  });
+  wrap.appendChild(h("span", { class: "label" }, ["Quick check-in: what’s the weather in here?"]));
+  wrap.appendChild(row); wrap.appendChild(msg);
+  return wrap;
+}
+// the particular examen: one habit, counted with taps
+function aimBox() {
+  var d = wday();
+  var wrap = h("div", { class: "note" });
+  var inp = h("input", { id: "w-aim", type: "text", placeholder: "One habit to watch today", autocomplete: "off" });
+  inp.value = d.aim;
+  inp.addEventListener("input", function () { var x = wday(); x.aim = inp.value; store.set("wday", x); });
+  var count = h("span", { class: "saved", "aria-live": "polite" });
+  function draw() { var x = wday(); count.textContent = x.caught ? "Caught " + x.caught + (x.caught === 1 ? " time" : " times") + " today" : "Nothing counted yet today"; }
+  var tap = h("button", { class: "opt", type: "button" }, ["Caught it"]);
+  tap.addEventListener("click", function () { var x = wday(); x.caught++; store.set("wday", x); draw(); });
+  wrap.appendChild(h("label", { for: "w-aim" }, [h("span", { class: "label" }, ["Today’s habit to watch"]), inp]));
+  wrap.appendChild(h("div", { class: "row between" }, [tap, count]));
+  draw();
+  return wrap;
+}
+// the shadow note: a running list of one-liners
+function shadowNotes() {
+  var items = store.get("shadow", []);
+  var wrap = h("div", { class: "note" });
+  var inp = h("input", { id: "w-shadow", type: "text", placeholder: "They… and I don’t let myself…", autocomplete: "off" });
+  var add = h("button", { class: "opt", type: "button" }, ["Add"]);
+  var list = h("ul", { class: "list" });
+  function draw() {
+    list.innerHTML = "";
+    items.slice().reverse().slice(0, 5).forEach(function (it) {
+      var x = h("button", { class: "x", type: "button", "aria-label": "Remove" }, [icon("x")]);
+      x.addEventListener("click", function () { items.splice(items.indexOf(it), 1); store.set("shadow", items); draw(); });
+      list.appendChild(h("li", null, [h("span", null, [h("small", null, [it.d]), it.t]), x]));
+    });
+  }
+  function submit() {
+    if (!inp.value.trim()) { inp.focus(); return; }
+    var d = new Date(); items.push({ t: inp.value.trim(), d: (d.getMonth() + 1) + "/" + d.getDate() }); store.set("shadow", items); inp.value = ""; draw();
+  }
+  add.addEventListener("click", submit);
+  inp.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
+  wrap.appendChild(h("label", { for: "w-shadow" }, [h("span", { class: "label" }, ["What did they do that I don’t let myself do?"]), inp]));
+  wrap.appendChild(h("div", { class: "row left" }, [add]));
+  wrap.appendChild(list); draw();
+  return wrap;
+}
+function lensBox() {
+  var dd = dayInfo();
+  return h("div", { class: "lensbox" }, [h("span", { class: "label" }, [dd.day + "’s lens: " + dd.lens]), h("blockquote", null, [dd.axiom]), h("p", null, [dd.prompt])]);
+}
+function shortOf(p) { return p.tool === "lens" ? dayInfo().prompt : p.short; }
+function everyTool(p) {
+  return p.tool === "weather" ? weatherChips() : p.tool === "aim" ? aimBox() : p.tool === "shadow" ? shadowNotes() : p.tool === "lens" ? lensBox() : null;
+}
+// what the evening review (Raising the Sparks) shows from the day
+function dayReview() {
+  var d = wday(), k = dayKey(), lines = [];
+  if (d.aim) lines.push(["Habit watched", d.aim + (d.caught ? ", caught " + d.caught + (d.caught === 1 ? " time" : " times") : ", none counted")]);
+  if (d.done) lines.push(["Watch pauses", d.done + (d.done === 1 ? " small practice" : " small practices")]);
+  var w = weatherToday();
+  if (w.length) lines.push(["Check-ins", w.map(function (r) { return clock12(r.t) + " " + r.v.toLowerCase(); }).join(" · ")]);
+  var rated = store.get("log", []).filter(function (r) { return r.k === k; });
+  if (rated.length) lines.push(["Rated", rated.map(function (r) { return BOOK.entries[r.n].name + " " + r.b + " → " + r.a; }).join(" · ")]);
+  var parked = store.get("park", []).length;
+  if (parked) lines.push(["Parked thoughts", parked + " waiting"]);
+  var box = h("div", { class: "note dayrev" }, [h("span", { class: "label" }, ["Your day, from what you saved"])]);
+  if (!lines.length) box.appendChild(h("p", { class: "empty" }, ["Nothing saved today. Review from memory."]));
+  else box.appendChild(h("ul", { class: "list" }, lines.map(function (l) { return h("li", null, [h("span", null, [h("small", null, [l[0]]), l[1]])]); })));
+  return box;
+}
+
+/* ---------- Practices: the small practices, by length ---------- */
+function everyFold(p) {
+  var body = h("div", { class: "foldbody" }, [
+    p.tool === "lens" ? null : h("p", { class: "wshort" }, [p.short]),
+    h("p", null, [p.how]),
+    everyTool(p),
+    p.link ? h("a", { class: "linkrow", href: "#/p/" + p.link }, [h("span", null, [h("small", null, ["The full practice"]), h("span", { class: "t1" }, [BOOK.entries[p.link].name])]), icon("chev", "chev")]) : null,
+    h("h3", { class: "subhead" }, ["Why it might help"]), h("p", null, [p.why]),
+    h("h3", { class: "subhead" }, ["Where it comes from"]), h("div", { class: "wfrom", html: p.from })
+  ]);
+  return h("details", { class: "more wp", id: "wp-" + p.id }, [
+    h("summary", null, [h("span", null, [h("span", { class: "sit" }, [p.name]), h("span", { class: "nm" }, [p.cue + " · " + p.trad])]), icon("chev", "chev")]),
+    body
+  ]);
+}
+function steadyView() {
+  topbar({ back: ["Practices", "#/"], sound: true }); tabs("practice");
+  app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["For steady moments"]), h("p", null, ["Small practices for ordinary hours, so the skills are already in use when a hard moment comes."])]));
+  app.appendChild(h("a", { class: "linkrow", href: "#/watch" }, [h("span", null, [h("small", null, ["Keep it open in the background"]), h("span", { class: "t1" }, ["Open the Watch"])]), icon("chev", "chev")]));
+  Object.keys(TIERS).forEach(function (t) {
+    var sec = h("section", { class: "group" }, [h("h2", null, [TIERS[t]])]);
+    EVERY.forEach(function (p) { if (p.tier === t) sec.appendChild(everyFold(p)); });
+    app.appendChild(sec);
+  });
+}
+
+/* ---------- the Watch: a calm page to leave open all day ---------- */
+var WSET_DEFAULT = { every: 30, varied: true, len: "s", drift: 5, speak: "off", awake: false, plain: false };
+var watchOn = false;
+document.addEventListener("visibilitychange", function () { if (watchOn && document.visibilityState === "visible" && store.get("wset", WSET_DEFAULT).awake) holdAwake(); });
+function drifts(plain) {
+  var out = [];
+  LINES.forEach(function (ln) { out.push({ label: "Line", text: ln.t, by: ln.by, href: "#/p/" + ln.n, go: "Try " + BOOK.entries[ln.n].name }); });
+  EVERY.forEach(function (p) { out.push({ label: "Why it might help · " + (plain ? p.plain : p.name), text: p.why, href: "#/steady", go: "All small practices" }); });
+  if (!plain) {
+    BOOK.glossary.forEach(function (g) { out.push({ label: "Glossary", text: g.term + ": " + plainText(g.def), href: "#/read/glossary", go: "Open the glossary" }); });
+    Object.keys(BOOK.entries).forEach(function (n) { out.push({ label: "Go deeper · " + BOOK.entries[n].name, text: plainText(BOOK.entries[n].hole), href: "#/p/" + n, go: "Open the practice" }); });
+    EVERY.forEach(function (p) { out.push({ label: "Where it comes from · " + p.name, text: plainText(p.from), href: "#/steady", go: "All small practices" }); });
+  }
+  // shuffle once per visit
+  for (var i = out.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = out[i]; out[i] = out[j]; out[j] = x; }
+  return out;
+}
+function watchView() {
+  var set = store.get("wset", WSET_DEFAULT);
+  Object.keys(WSET_DEFAULT).forEach(function (k) { if (set[k] === undefined) set[k] = WSET_DEFAULT[k]; });
+  topbar({ back: ["Practices", "#/"], sound: true }); tabs("practice");
+  var dd = dayInfo();
+
+  // head: the day and its planet
+  var head = h("header", { class: "w-head" });
+  function drawHead() {
+    head.innerHTML = "";
+    if (!set.plain) head.appendChild(emblem(dd.key, "tile"));
+    head.appendChild(h("div", null, [
+      h("span", { class: "label" }, [set.plain ? "Watch" : "The Watch"]),
+      h("h1", null, [dd.day]),
+      h("p", null, [set.plain ? dd.theme : dd.planet + " · " + dd.metal + " · " + dd.theme])
+    ]));
+  }
+  drawHead();
+  app.appendChild(head);
+
+  // begin / pause, and when the next bell comes
+  var begin = h("button", { class: "go", type: "button" }, ["Begin the watch"]);
+  var status = h("p", { class: "wstatus", "aria-live": "polite" });
+  app.appendChild(h("section", { class: "wctl" }, [begin, status]));
+
+  // now: one small practice
+  var nowBox = h("section", { class: "card wnow", "aria-label": "Now" });
+  app.appendChild(nowBox);
+  var cur = null, flagged = false;
+  function poolOf() {
+    var ok = { s: ["s"], m: ["s", "m"], l: ["s", "m", "l"] }[set.len] || ["s"];
+    return EVERY.filter(function (p) { return ok.indexOf(p.tier) >= 0 && p.tool !== "weather" && p.tool !== "aim" && (!cur || p.id !== cur.id); });
+  }
+  function drawNow(rung, note) {
+    var pool = poolOf(); cur = pool[Math.floor(Math.random() * pool.length)];
+    var p = cur, done = h("button", { class: "go", type: "button" }, ["Done"]), other = h("button", { class: "opt", type: "button" }, ["Another"]);
+    var msg = h("span", { class: "saved", "aria-live": "polite" }, [note || ""]);
+    done.addEventListener("click", function () { var d = wday(); d.done++; store.set("wday", d); unflag(); drawNow(false, "Done. Here’s the next one, whenever you like."); });
+    other.addEventListener("click", function () { unflag(); drawNow(false); });
+    nowBox.innerHTML = "";
+    nowBox.appendChild(h("div", { class: "wnow-top" }, [h("span", { class: "label" }, [rung ? "Now" : "When you’re ready"]), h("span", { class: "label" }, [TIERS[p.tier]])]));
+    nowBox.appendChild(h("h2", null, [set.plain ? p.plain : p.name]));
+    nowBox.appendChild(h("p", { class: "wshort" }, [shortOf(p)]));
+    var tool = p.tool === "shadow" ? shadowNotes() : null;
+    if (tool) nowBox.appendChild(tool);
+    nowBox.appendChild(h("div", { class: "row left" }, [done, other]));
+    nowBox.appendChild(msg);
+    nowBox.appendChild(h("details", { class: "wwhy" }, [h("summary", null, ["How and why"]),
+      h("div", { class: "foldbody" }, [h("p", null, [p.how]), h("p", null, [p.why]), set.plain ? null : h("div", { class: "wfrom", html: p.from })])]));
+    if (rung && !reduce) { nowBox.classList.remove("lit"); void nowBox.offsetWidth; nowBox.classList.add("lit"); }
+  }
+  function unflag() { if (flagged) { flagged = false; document.title = "Trestleboard"; } }
+
+  // today: check-in and the one habit
+  app.appendChild(h("section", { class: "card wtoday", "aria-label": "Today" }, [weatherChips(), aimBox()]));
+
+  // drift: a slow turn through the app's own reading
+  var pool = drifts(set.plain), di = 0;
+  var dLabel = h("span", { class: "label" }), dText = h("p", { class: "wdtext" }), dBy = h("cite"), dGo = h("a", { class: "try" });
+  var dNext = h("button", { class: "icobtn", type: "button", "aria-label": "Next reading" }, [icon("chev")]);
+  var driftBox = h("section", { class: "card wdrift", "aria-label": "Drift", "aria-live": "polite" }, [dLabel, dText, dBy, h("div", { class: "qrow" }, [dGo, dNext])]);
+  app.appendChild(driftBox);
+  function drawDrift(speakIt) {
+    var it = pool[di % pool.length]; di++;
+    dLabel.textContent = it.label; dText.textContent = it.text; dBy.textContent = it.by || ""; dBy.hidden = !it.by;
+    dGo.setAttribute("href", it.href); dGo.innerHTML = ""; dGo.appendChild(document.createTextNode(it.go)); dGo.appendChild(icon("chev", "chev"));
+    if (!reduce) { driftBox.classList.remove("turn"); void driftBox.offsetWidth; driftBox.classList.add("turn"); }
+    if (speakIt) say(it.text + (it.by ? " " + it.by.replace(/\s*\(.*\)/, "") : ""), true);
+  }
+  dNext.addEventListener("click", function () { driftAt = Date.now() + set.drift * 60000; drawDrift(running && set.speak === "all"); });
+
+  // settings, folded away
+  function chooser(title, opts, key, after) {
+    var row = h("div", { class: "row left" });
+    opts.forEach(function (o) {
+      var b = h("button", { class: "opt", type: "button", "aria-pressed": String(set[key] === o[0]) }, [o[1]]);
+      b.addEventListener("click", function () {
+        set[key] = o[0]; store.set("wset", set);
+        [].forEach.call(row.children, function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true");
+        if (after) after();
+      });
+      row.appendChild(b);
+    });
+    return h("div", { class: "pgroup" }, [h("span", { class: "label" }, [title]), row]);
+  }
+  app.appendChild(h("details", { class: "more" }, [h("summary", null, [h("span", null, ["Watch settings"]), icon("chev", "chev")]),
+    h("div", { class: "foldbody" }, [
+      chooser("Bells", [[0, "Off"], [20, "20 min"], [30, "30 min"], [45, "45 min"], [60, "Hourly"], ["hours", "The old hours"]], "every", function () { if (running) plan(); drawStatus(); }),
+      chooser("Bell timing", [[true, "Varied"], [false, "Even"]], "varied", function () { if (running) plan(); drawStatus(); }),
+      chooser("Practices", [["s", "Seconds only"], ["m", "Up to a minute"], ["l", "Any length"]], "len"),
+      chooser("Read aloud", [["off", "Off"], ["bells", "At bells"], ["all", "Bells and drift"]], "speak"),
+      chooser("Drift", [[0, "Off"], [3, "Every 3 min"], [5, "Every 5 min"], [10, "Every 10 min"]], "drift", function () { driftBox.hidden = !set.drift; driftAt = Date.now() + set.drift * 60000; }),
+      chooser("Keep screen on", [[false, "Off"], [true, "On"]], "awake", function () { if (running && set.awake) holdAwake(); else if (!set.awake) letSleep(); }),
+      chooser("Look", [[false, "Symbols"], [true, "Plain"]], "plain", function () { drawHead(); pool = drifts(set.plain); di = 0; drawNow(false); drawDrift(false); }),
+      h("p", { class: "phelp" }, ["The old hours ring at 6, 9, noon, 3, 6, and 9, the times monks stopped for prayer. Bells ring only while this page is open; on a phone, the screen has to stay on. In a hidden browser tab a bell can come up to a minute late, and some browsers put quiet tabs to sleep; background sound (the speaker at the top) keeps the tab awake."])
+    ])]));
+
+  // the clock
+  var running = false, iv = null, nextAt = 0, nextHour = null, driftAt = 0;
+  function plan() {
+    nextHour = null; nextAt = 0;
+    if (!set.every) { nextAt = 0; return; }
+    var now = new Date();
+    if (set.every === "hours") {
+      for (var d = 0; d < 2 && !nextAt; d++) for (var i = 0; i < HOURS.length; i++) {
+        var t = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d, HOURS[i].h, 0, 0).getTime();
+        if (t > now.getTime()) { nextAt = t; nextHour = HOURS[i]; break; }
+      }
+      return;
+    }
+    var ms = set.every * 60000; if (set.varied) ms *= 0.7 + Math.random() * 0.6;
+    nextAt = now.getTime() + ms;
+  }
+  function drawStatus() {
+    if (!running) { status.textContent = set.every ? "Bells start when you begin. Tap once so the phone allows sound." : "Bells are off. The drift still turns while the watch runs."; return; }
+    if (!nextAt) { status.textContent = "Watching. Bells are off."; return; }
+    var t = new Date(nextAt), hm = clock12(two(t.getHours()) + ":" + two(t.getMinutes()));
+    status.textContent = nextHour ? "Next bell: " + nextHour.name + ", " + hm + "." : "Next bell around " + hm + ".";
+  }
+  function ring() {
+    var hr = nextHour;
+    bell(1); flagged = true; document.title = "◆ Pause · Trestleboard";
+    drawNow(true);
+    if (set.speak !== "off") say((hr ? hr.name + ", " + hr.say + ". " : "") + (set.plain ? cur.plain : cur.name) + ". " + shortOf(cur), true);
+    plan(); drawStatus();
+  }
+  function tick() {
+    var now = Date.now();
+    if (nextAt && now >= nextAt) ring();
+    if (set.drift && now >= driftAt) { driftAt = now + set.drift * 60000; drawDrift(set.speak === "all"); }
+  }
+  function stop() {
+    clearInterval(iv); iv = null; running = false; watchOn = false; letSleep(); unflag();
+    begin.textContent = "Begin the watch"; begin.classList.remove("ghost"); drawStatus();
+  }
+  begin.addEventListener("click", function () {
+    if (running) { stop(); return; }
+    stopActive(); active = { stop: stop };
+    try { ctx(); } catch (e) {}
+    running = true; watchOn = true; chime(528, 0.4, true);
+    if (set.awake) holdAwake();
+    plan(); driftAt = Date.now() + set.drift * 60000;
+    iv = setInterval(tick, 1000);
+    begin.textContent = "Pause the watch"; begin.classList.add("ghost"); drawStatus();
+  });
+
+  drawNow(false);
+  driftBox.hidden = !set.drift;
+  drawDrift(false);
+  drawStatus();
 }
 
 /* ---------- welcome: shown once, on the first open ---------- */
@@ -2265,6 +2732,34 @@ function logView() {
     ]));
   }
 
+  // check-ins from the Watch, by time of day
+  var wx = store.get("weather", []);
+  if (wx.length) {
+    var BANDS = [["Morning", 0, 12], ["Midday", 12, 14], ["Afternoon", 14, 17], ["Evening", 17, 24]];
+    var trs = BANDS.map(function (b) {
+      var c = {}, n = 0;
+      wx.forEach(function (r) { var hr = +r.t.split(":")[0]; if (hr >= b[1] && hr < b[2]) { c[r.v] = (c[r.v] || 0) + 1; n++; } });
+      var txt = n ? WEATHER.filter(function (v) { return c[v]; }).map(function (v) { return v + " " + c[v]; }).join(" · ") : "None yet";
+      return h("tr", null, [h("td", null, [b[0]]), h("td", null, [txt])]);
+    });
+    var days = {}; wx.forEach(function (r) { days[r.k] = 1; });
+    app.appendChild(h("section", { class: "group" }, [
+      h("h2", null, ["Your weather by time of day"]),
+      h("p", { class: "gdesc" }, ["From your quick check-ins on the Watch: " + wx.length + (wx.length === 1 ? " check-in" : " check-ins") + " over " + Object.keys(days).length + (Object.keys(days).length === 1 ? " day" : " days") + ". Patterns take a few weeks to show."]),
+      h("div", { class: "tablewrap" }, [h("table", { class: "log" }, [h("thead", null, [h("tr", null, [h("th", null, ["When"]), h("th", null, ["Check-ins"])])]), h("tbody", null, trs)])])
+    ]));
+  }
+
+  // notes from The Shadow Note
+  var sh = store.get("shadow", []);
+  if (sh.length) {
+    app.appendChild(h("section", { class: "group" }, [
+      h("h2", null, ["Shadow notes"]),
+      h("p", { class: "gdesc" }, ["From The Shadow Note. Look for repeats."]),
+      h("ul", { class: "list" }, sh.slice().reverse().map(function (it) { return h("li", null, [h("span", null, [h("small", null, [it.d]), it.t]), h("span")]); }))
+    ]));
+  }
+
   // backup
   var msg = h("p", { class: "msg", "aria-live": "polite" });
   var input = h("input", { class: "filepick", type: "file", accept: "application/json,.json", id: "restore-file", tabindex: "-1", "aria-hidden": "true" });
@@ -2272,7 +2767,7 @@ function logView() {
   var data = h("section", { class: "group" }, [h("h2", null, ["Your data"]),
     h("div", { class: "card" }, [
       h("h3", null, ["Back up"]),
-      h("p", null, ["Everything you save here (ratings, notes, pinned practices, parked thoughts, settings) lives only on this phone. A backup file keeps a copy somewhere safe, like your Files app or iCloud Drive."]),
+      h("p", null, ["Everything you save here (ratings, notes, pinned practices, parked thoughts, check-ins, settings) lives only on this phone. A backup file keeps a copy somewhere safe, like your Files app or iCloud Drive."]),
       h("div", { class: "btnrow" }, [
         h("button", { class: "go", type: "button", onclick: function () { saveBackup(msg); } }, ["Save a backup"]),
         h("button", { class: "opt", type: "button", onclick: function () { input.click(); } }, ["Restore from a backup"])
@@ -2325,13 +2820,15 @@ window.trestleboardPhrases = allPhrases;
 /* ---------- router ---------- */
 function render() {
   stopActive(); closeDim(); closeSheet(); closeSizePop(); onDone = null;
-  app.innerHTML = ""; topEl.innerHTML = "";
+  app.innerHTML = ""; topEl.innerHTML = ""; document.title = "Trestleboard";
   var hsh = location.hash.replace(/^#\/?/, ""), m;
   if ((m = /^p\/(\d{1,2})$/.exec(hsh)) && E[+m[1]]) practiceView(+m[1]);
   else if ((m = /^r\/(\w+)$/.exec(hsh)) && ROUTINES[m[1]]) routineView(m[1]);
   else if (hsh === "timer") timerView();
   else if ((m = /^g\/([\w-]+)$/.exec(hsh)) && GROUP_BY_KEY[m[1]]) groupView(m[1]);
   else if (hsh === "all") allView();
+  else if (hsh === "watch") watchView();
+  else if (hsh === "steady") steadyView();
   else if (hsh === "read") readHome();
   else if ((m = /^read\/([\w-]+)$/.exec(hsh)) && READ_BY[m[1]]) readerView(m[1]);
   else if (hsh === "log") logView();
