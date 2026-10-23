@@ -608,6 +608,32 @@ html.locked, html.locked body { overflow: hidden; }
 .wbar i { display: block; height: 100%; width: 0; background: var(--slate-mark); }
 .wnext { font-size: var(--t-tiny); color: var(--on-slate-muted); }
 .app > .wstage + .btnrow { margin-top: calc(var(--s5) * -1); }
+/* the intervals on the Watch's start card (and in its settings) */
+.wsetup { display: grid; gap: var(--s2); padding-top: var(--s3); border-top: 1px solid color-mix(in srgb, var(--on-slate-muted) 25%, transparent); }
+.foldbody .wsetup { padding-top: 0; border-top: 0; }
+.wstep { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
+.wsctl { display: flex; align-items: center; gap: var(--s1); }
+.wsb { width: var(--tap); padding: 0; font-size: 1.2rem; }
+.wsb[aria-disabled="true"] { opacity: 0.35; cursor: default; }
+.wsv { min-width: 7.6rem; text-align: center; font-size: var(--t-small); font-weight: 600; font-variant-numeric: tabular-nums; }
+/* the Watch's slim bar above the tabs, while it runs and another page is open; a pause turns it slate */
+.wmini {
+  position: fixed; z-index: 7; max-width: 39rem; margin: 0 auto;
+  left: max(var(--s2), env(safe-area-inset-left, 0px)); right: max(var(--s2), env(safe-area-inset-right, 0px));
+  bottom: calc(var(--tabs-h) + env(safe-area-inset-bottom, 0px) + var(--s2));
+  display: flex; align-items: center; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--r); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+.wmini.on { background: var(--slate); color: var(--on-slate); border-color: var(--slate-mark); }
+.wm-open { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--s3); min-height: 52px; padding: var(--s2) var(--s3); color: inherit; text-decoration: none; }
+.wm-ic { width: 1.5rem; height: 1.5rem; flex: none; color: var(--steel); }
+.wm-ic svg { width: 100%; height: 100%; }
+.wmini.on .wm-ic { color: var(--slate-mark); }
+.wm-txt { display: grid; min-width: 0; line-height: 1.3; }
+.wm-t { font-size: var(--t-small); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wm-s { font-size: var(--t-tiny); color: var(--muted); font-variant-numeric: tabular-nums; }
+.wmini.on .wm-s { color: var(--on-slate-muted); }
+body.wmini-on .app { padding-bottom: calc(var(--tabs-h) + env(safe-area-inset-bottom, 0px) + 4.5rem + var(--s6)); }
 
 /* ---------- motion, skipped when the phone asks for less ---------- */
 .app > * { animation: rise 0.38s ease-out backwards; }
@@ -629,6 +655,8 @@ html.locked, html.locked body { overflow: hidden; }
   .wstage.turn .wmid > * { animation: wfade 0.8s ease-out; }
   .wstage.lit { animation: lit 1.6s ease-out; }
   .wbar i { transition: width 1s linear; }
+  .wmini { animation: wfade 0.3s ease-out; }
+  .wmini.lit { animation: lit 1.6s ease-out; }
 }
 @media (prefers-reduced-motion: reduce) {
   .app > *, .tabs a.fresh::before, .icobtn.pop, .tool.lit, .coin.spin { animation: none; }
@@ -793,8 +821,8 @@ function playClip(kind, key) {
     src.buffer = ab; g.gain.value = guideVol;
     src.connect(g); g.connect(c.destination);
     var me = { src: src, end: c.currentTime + ab.duration };
-    src.onended = function () { if (clip === me) clip = null; };
-    clip = me; src.start();
+    src.onended = function () { if (clip === me) { clip = null; duck(false); } };
+    clip = me; duck(true, ab.duration * 1000 + 1000); src.start();
   }).catch(function () { if (my === clipToken) { clip = null; deviceSay(key); } });
 }
 function deviceSay(key) {
@@ -804,6 +832,8 @@ function deviceSay(key) {
     var u = new SpeechSynthesisUtterance(key);
     var v = pickVoice(); if (v) u.voice = v;
     u.rate = voiceRate; u.pitch = 1; u.volume = guideVol;
+    u.onstart = function () { duck(true, key.length * 90 / voiceRate + 3000); };
+    u.onend = u.onerror = function () { duck(false); };
     speechSynthesis.speak(u);
   } catch (e) {}
 }
@@ -823,7 +853,7 @@ function speaking() {
   try { return !!(window.speechSynthesis && speechSynthesis.speaking); } catch (e) { return false; }
 }
 function hush() {
-  clipToken++;
+  clipToken++; duck(false);
   if (clip) { try { if (clip.src) clip.src.stop(); } catch (e) {} clip = null; }
   try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
 }
@@ -834,6 +864,29 @@ function cue(text, freq, len) { if (guide === "voice") say(text); else chime(fre
 
 /* background sound, generated here (no files) */
 var bg = null;
+// the background sound settles lower under spoken words (bgSpeech) and during a Watch pause (bgDip)
+var bgDip = 1, bgSpeech = 1, duckTimer = null;
+function bgTarget(base) { return Math.max(0.0002, base * bgVol * bgDip * bgSpeech); }
+function bgGlide(sec) {
+  if (!bg) return;
+  try {
+    var g = bg.out.gain, t = actx.currentTime;
+    // browsers without cancelAndHoldAtTime: let the fade-in finish, then move
+    if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t); else t = Math.max(t, bg.settled || 0);
+    g.setTargetAtTime(bgTarget(bg.base), t, sec / 3);
+  } catch (e) {}
+}
+// on: words are starting (ms: how long they should take, in case the device never says it finished).
+// off: the sound comes back only after 3 quiet seconds, so it doesn't rise and fall between cues
+function duck(on, ms) {
+  clearTimeout(duckTimer);
+  if (on) {
+    if (bgSpeech !== 0.45) { bgSpeech = 0.45; bgGlide(0.4); }
+    duckTimer = setTimeout(function () { duck(false); }, ms || 15000);
+  } else if (bgSpeech !== 1) {
+    duckTimer = setTimeout(function () { bgSpeech = 1; bgGlide(1.5); }, 3000);
+  }
+}
 function noiseBuffer(kind) {
   var c = ctx(), len = c.sampleRate * 6, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0), last = 0;
   for (var i = 0; i < len; i++) {
@@ -849,7 +902,7 @@ function noiseBuffer(kind) {
 function startMusic(c) {
   var out = c.createGain(), base = 2.2, t0 = c.currentTime;
   out.gain.setValueAtTime(0.0001, t0);
-  out.gain.exponentialRampToValueAtTime(Math.max(0.0002, base * bgVol), t0 + 4);
+  out.gain.exponentialRampToValueAtTime(bgTarget(base), t0 + 4);
   out.connect(c.destination);
   // a simple room: a burst of fading noise used as the echo
   var len = Math.floor(c.sampleRate * 3.5), ir = c.createBuffer(2, len, c.sampleRate);
@@ -863,7 +916,7 @@ function startMusic(c) {
   // chords in C major (as MIDI note numbers), and bell notes from the five-note scale above them
   var CHORDS = [[48, 55, 64, 71], [45, 52, 60, 67], [41, 48, 57, 64], [43, 50, 59, 62], [40, 47, 55, 62], [41, 53, 57, 60]];
   var BELLS = [72, 74, 76, 79, 81, 84, 86, 88];
-  var ci = 0, nextChord = t0 + 0.2, nextBell = t0 + 5;
+  var ci = 0, nextChord = t0 + 0.2, nextBell = t0 + 5, played = [];
   function pad(notes, t, dur) {
     notes.forEach(function (m, k) {
       var o = c.createOscillator(), g = c.createGain(), lvl = k === 0 ? 0.05 : 0.022;
@@ -887,7 +940,7 @@ function startMusic(c) {
     var until = c.currentTime + 20;
     while (nextChord < until) {
       var r = Math.random(); ci = r < 0.7 ? (ci + 1) % CHORDS.length : r < 0.85 ? (ci + 2) % CHORDS.length : ci;
-      pad(CHORDS[ci], nextChord, 17); nextChord += 12;
+      pad(CHORDS[ci], nextChord, 17); played.push([nextChord, ci]); if (played.length > 8) played.shift(); nextChord += 12;
     }
     while (nextBell < until) {
       ding(bellNote(), nextBell);
@@ -896,19 +949,50 @@ function startMusic(c) {
     }
   }
   ahead();
-  return { out: out, nodes: [tone, room, wet, dry, out], base: base, timer: setInterval(ahead, 2000) };
+  // the chord sounding now, so the Watch's bell can ring in it
+  function chord() {
+    var t = c.currentTime;
+    while (played.length > 1 && played[1][0] <= t) played.shift();
+    return played.length && played[0][0] <= t ? CHORDS[played[0][1]] : CHORDS[0];
+  }
+  return { out: out, nodes: [tone, room, wet, dry, out], base: base, timer: setInterval(ahead, 2000), chord: chord };
+}
+/* the Watch's pause bell: its notes come from the soft music's chord of the moment (or the music's
+   home chord when it isn't playing), so it sounds like part of the music. Which notes, and whether
+   a softer second note follows, changes each time. */
+function watchBell() {
+  var c;
+  function lift(m) { while (m < 60) m += 12; while (m > 72) m -= 12; return m; }
+  function strike(m, t, lvl) {
+    var f = 440 * Math.pow(2, (m - 69) / 12);
+    [[1, 1], [2, 0.45], [3, 0.2], [4, 0.12]].forEach(function (p) {
+      var o = c.createOscillator(), g = c.createGain();
+      o.type = "sine"; o.frequency.value = f * p[0];
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, 0.25 * p[1] * lvl * guideVol), t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 4.5 * (1.1 - p[1] * 0.3));
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + 5);
+    });
+  }
+  try {
+    c = ctx();
+    var notes = (bg && bg.chord ? bg.chord() : [48, 55, 64, 71]).slice();
+    for (var i = notes.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = notes[i]; notes[i] = notes[j]; notes[j] = x; }
+    strike(lift(notes[0]), c.currentTime, 1);
+    if (Math.random() < 0.6) strike(lift(notes[1]) + 12, c.currentTime + 0.9 + Math.random() * 0.6, 0.5);
+  } catch (e) {}
 }
 function startBg(kind) {
   stopBg();
   if (kind === "off") return;
   if (kind === "music") {
-    try { bg = startMusic(ctx()); bgKind = kind; } catch (e) { bg = null; bgKind = "off"; }
+    try { bg = startMusic(ctx()); bg.settled = actx.currentTime + 4; bgKind = kind; } catch (e) { bg = null; bgKind = "off"; }
     return;
   }
   try {
     var c = ctx(), src = c.createBufferSource(), out = c.createGain(), nodes = [src, out];
     src.buffer = noiseBuffer(kind); src.loop = true;
-    var base = { brown: 0.5, ocean: 0.55, rain: 0.09 }[kind], level = Math.max(0.0002, base * bgVol);
+    var base = { brown: 0.5, ocean: 0.55, rain: 0.09 }[kind], level = bgTarget(base);
     var chain = src;
     if (kind === "rain") {
       var hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 900;
@@ -927,22 +1011,24 @@ function startBg(kind) {
     out.gain.setValueAtTime(0.0001, c.currentTime);
     out.gain.exponentialRampToValueAtTime(level, c.currentTime + 2.5);
     src.start();
-    bg = { out: out, nodes: nodes, base: base }; bgKind = kind;
+    bg = { out: out, nodes: nodes, base: base, settled: c.currentTime + 2.5 }; bgKind = kind;
   } catch (e) { bg = null; bgKind = "off"; }
 }
 function setBgVol(v) {
   bgVol = v; store.set("bvol", v);
-  if (bg) try { bg.out.gain.cancelScheduledValues(actx.currentTime); bg.out.gain.setTargetAtTime(Math.max(0.0002, bg.base * v), actx.currentTime, 0.15); } catch (e) {}
+  if (bg) try { bg.out.gain.cancelScheduledValues(actx.currentTime); bg.out.gain.setTargetAtTime(bgTarget(bg.base), actx.currentTime, 0.15); } catch (e) {}
 }
-function stopBg() {
+// sec: how long the fade out takes (the Watch fades slowly when it stops)
+function stopBg(sec) {
+  sec = sec || 1.2;
   if (!bg) { bgKind = "off"; return; }
   var b = bg; bg = null; bgKind = "off";
   if (b.timer) clearInterval(b.timer);
   try {
     var t = actx.currentTime;
     b.out.gain.cancelScheduledValues(t); b.out.gain.setValueAtTime(b.out.gain.value, t);
-    b.out.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
-    setTimeout(function () { b.nodes.forEach(function (n) { try { if (n.stop) n.stop(); n.disconnect(); } catch (e) {} }); }, 1400);
+    b.out.gain.exponentialRampToValueAtTime(0.0001, t + sec);
+    setTimeout(function () { b.nodes.forEach(function (n) { try { if (n.stop) n.stop(); n.disconnect(); } catch (e) {} }); }, sec * 1000 + 200);
   } catch (e) {}
 }
 
@@ -966,8 +1052,9 @@ function closeDim() { if (dim) { dim.el.remove(); dim = null; } }
 function mirror(a, b) { if (!dim) return; dim.big.textContent = a; dim.small.textContent = b || ""; }
 
 var wake = null;
-function holdAwake() { try { if (navigator.wakeLock) navigator.wakeLock.request("screen").then(function (w) { wake = w; }).catch(function () {}); } catch (e) {} }
-function letSleep() { try { if (wake) wake.release(); } catch (e) {} wake = null; }
+function holdAwake() { if (wake && !wake.released) return; try { if (navigator.wakeLock) navigator.wakeLock.request("screen").then(function (w) { wake = w; }).catch(function () {}); } catch (e) {} }
+// a running Watch set to keep the screen on holds it, whatever other tools start and stop
+function letSleep() { if (W.running && W.set.awake) return; try { if (wake) wake.release(); } catch (e) {} wake = null; }
 
 /* ---------- tiny DOM helper ---------- */
 function h(tag, attrs, kids) {
@@ -1461,7 +1548,7 @@ function soundPanel(onChange) {
 
   // background sound
   panel.appendChild(h("div", { class: "psec" }, [head("waves", "Background"),
-    choice([["off", "Off"], ["music", "Soft music"], ["brown", "Brown noise"], ["ocean", "Ocean"], ["rain", "Rain"]], function () { return bgKind; }, function (v) { startBg(v); }),
+    choice([["off", "Off"], ["music", "Soft music"], ["brown", "Brown noise"], ["ocean", "Ocean"], ["rain", "Rain"]], function () { return bgKind; }, function (v) { startBg(v); W.ownSound = false; }),
     slider("Volume", "bvol-r", bgVol, setBgVol),
     h("p", { class: "phelp" }, ["Plays quietly under everything until you turn it off. Made by the app itself, so it works offline."])
   ]));
@@ -2425,6 +2512,9 @@ function steadyView() {
 // speak: "off" | "bells" (pauses only) | "all" (pauses and readings). sound: what plays underneath while it runs.
 var WSET_DEFAULT = { every: 20, varied: true, len: "s", drift: 5, speak: "off", awake: true, plain: false, sound: "music" };
 var SOUND_NAMES = { music: "Soft music", rain: "Rain", ocean: "Ocean", brown: "Brown noise" };
+// the steps the interval controls move through, 5 minutes apart
+var W_EVERY = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, "hours"];
+var W_DRIFT = [0, 5, 10, 15, 20, 25, 30];
 var watchOn = false;
 // coming back to the page: the screen lock and the sound may have been interrupted, so pick them up again
 document.addEventListener("visibilitychange", function () {
@@ -2445,48 +2535,267 @@ function drifts(plain) {
   for (var i = out.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = out[i]; out[i] = out[j]; out[j] = x; }
   return out;
 }
-function watchView() {
+/* The running Watch lives here, outside the page, so it keeps going while you read elsewhere in the app.
+   The Watch page and the slim bar above the tabs are two views of it. Everything runs on clock time. */
+var W = { running: false, set: null, seg: null, iv: null, raf: null, nextAt: 0, nextHour: null, pauses: 0, cur: null, flagged: false, ownSound: false, pool: [], di: 0, view: null };
+var B_LEAD = 6000, B_ROUNDS = 6, B_TAIL = 5000;
+function wNearest(values, v) {
+  if (values.indexOf(v) >= 0 || typeof v !== "number") return values.indexOf(v) >= 0 ? v : values[0];
+  var best = values[0];
+  values.forEach(function (x) { if (typeof x === "number" && Math.abs(x - v) < Math.abs(best - v)) best = x; });
+  return best;
+}
+function wSettings() {
   var set = store.get("wset", WSET_DEFAULT);
   Object.keys(WSET_DEFAULT).forEach(function (k) { if (set[k] === undefined) set[k] = WSET_DEFAULT[k]; });
-  topbar({ back: ["Practices", "#/"], sound: true }); tabs("practice");
+  // a value saved between steps (such as an older 3-minute reading) uses the nearest step
+  set.every = wNearest(W_EVERY, set.every); set.drift = wNearest(W_DRIFT, set.drift);
+  return set;
+}
+function wReadMs() { return W.set.drift ? W.set.drift * 60000 : 0; }
+function wIsPause(kind) { return kind === "breathe" || kind === "practice" || kind === "checkin"; }
+function wInPause() { return !!W.seg && wIsPause(W.seg.kind); }
+// pauses wait while a practice, a routine, or the timer is on screen, so two things don't talk at once
+function wHeld() { return /^#\/(p\/|r\/|timer)/.test(location.hash); }
+function wHm(t) { var d = new Date(t); return clock12(two(d.getHours()) + ":" + two(d.getMinutes())); }
+function wHourTag(s) { return s.hour ? s.hour.name + " · " : ""; }
+function wBegin(kind, ms, extra) {
+  W.seg = { kind: kind, start: Date.now(), end: ms ? Date.now() + ms : 0, hour: null, said: false };
+  if (extra) for (var k in extra) W.seg[k] = extra[k];
+  // the background sound settles lower during a pause and comes back after
+  bgDip = wIsPause(kind) ? 0.6 : 1; bgGlide(2);
+}
+function wFlag() { W.flagged = true; document.title = "◆ Pause · Trestleboard"; }
+function wUnflag() { if (W.flagged) { W.flagged = false; document.title = "Trestleboard"; } }
+// the Watch speaks only while its page is open; elsewhere a pause is just the bell and the bar
+function wSay(text) { if (W.view) { W.seg.said = true; say(text, true); } }
+function wPauseLine(s) {
+  var lead = s.hour ? s.hour.name + ", " + s.hour.say + ". " : "";
+  if (s.kind === "breathe") return lead + "A minute to breathe. Follow the circle, or just listen.";
+  if (s.kind === "practice") return lead + (W.set.plain ? s.p.plain : s.p.name) + ". " + WATCH_SAYS[s.p.id].t;
+  return lead + "Check-in. How are you right now?";
+}
+function wSayPause() { if (W.set.speak !== "off" && wInPause() && !W.seg.said) wSay(wPauseLine(W.seg)); }
+function wShow() { if (W.view) W.view.draw(true); else wMiniDraw(true); }
+function wShowFoot() { if (W.view) W.view.foot(); else wMiniFoot(); }
+
+// what's on between pauses: the day's question first, then readings from the app's own pages
+function wDay(speakIt) {
   var dd = dayInfo();
+  wBegin("day", wReadMs()); wShow();
+  if (speakIt) wSay(dd.day + "’s question. " + dd.q + " " + dd.prompt);
+}
+function wRead(speakIt) {
+  var it = W.pool[W.di % W.pool.length]; W.di++;
+  wBegin("read", wReadMs(), { item: it }); wShow();
+  if (speakIt) wSay((it.title ? it.title + ". " : "") + it.text + (it.by ? " " + it.by.replace(/\s*\(.*\)/, "") : ""));
+}
+function wBackToReading() { wUnflag(); wRead(false); }
+
+// pause 1: a minute of slow breathing (about six breaths a minute)
+function wBreathe(fromBell, hour) {
+  var B = P.resonance;
+  wBegin("breathe", B_LEAD + B_ROUNDS * (B[0].s + B[1].s) * 1000 + B_TAIL, { hour: hour || null });
+  wFlag(); wShow();
+  if (fromBell) watchBell();
+  wSayPause();
+}
+// pause 2: one small practice, put so it makes sense on its own
+function wPracticePool() {
+  var ok = { s: ["s"], m: ["s", "m"], l: ["s", "m", "l"] }[W.set.len] || ["s"];
+  return EVERY.filter(function (p) { return WATCH_SAYS[p.id] && ok.indexOf(p.tier) >= 0 && (!W.cur || p.id !== W.cur.id); });
+}
+function wPractice(fromBell, hour) {
+  var list = wPracticePool(), p = list[Math.floor(Math.random() * list.length)], w = WATCH_SAYS[p.id];
+  W.cur = p;
+  wBegin("practice", Math.max(90000, (w.count || 0) * 1000 + 60000), { hour: hour || null, p: p });
+  wFlag(); wShow();
+  if (fromBell) watchBell();
+  wSayPause();
+}
+// pause 3: a one-tap check-in, skipped if there was one in the last hour and a half
+function wRecentCheckin() {
+  var w = weatherToday(); if (!w.length) return false;
+  var p = w[w.length - 1].t.split(":"), d = new Date(); d.setHours(+p[0], +p[1], 0, 0);
+  return Date.now() - d.getTime() < 90 * 60000;
+}
+function wCheckin(fromBell, hour) {
+  wBegin("checkin", 90000, { hour: hour || null });
+  wFlag(); wShow();
+  if (fromBell) watchBell();
+  wSayPause();
+}
+// pauses take turns: breathe, practice, breathe, check-in
+function wPause(fromBell, hour) {
+  var k = W.pauses % 4; W.pauses++;
+  if (k === 0 || k === 2) wBreathe(fromBell, hour);
+  else if (k === 3 && !wRecentCheckin()) wCheckin(fromBell, hour);
+  else wPractice(fromBell, hour);
+}
+
+// the clock: everything runs on clock time, so a slowed background tab catches up
+function wPlan() {
+  W.nextHour = null; W.nextAt = 0;
+  if (!W.set.every) return;
+  var now = new Date();
+  if (W.set.every === "hours") {
+    for (var d = 0; d < 2 && !W.nextAt; d++) for (var i = 0; i < HOURS.length; i++) {
+      var t = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d, HOURS[i].h, 0, 0).getTime();
+      if (t > now.getTime()) { W.nextAt = t; W.nextHour = HOURS[i]; break; }
+    }
+    return;
+  }
+  var ms = W.set.every * 60000; if (W.set.varied) ms *= 0.7 + Math.random() * 0.6;
+  W.nextAt = now.getTime() + ms;
+}
+function wNextText(now) {
+  if (!W.nextAt) return "Pauses are off.";
+  if (now >= W.nextAt && wHeld()) return "The next pause waits until you leave this page.";
+  return W.nextHour ? "Next pause: " + W.nextHour.name + ", " + wHm(W.nextAt) + "." : "Next pause around " + wHm(W.nextAt) + ".";
+}
+function wTick() {
+  var now = Date.now();
+  if (W.view) W.view.step();
+  if (W.seg.end && now >= W.seg.end) {
+    if (wInPause()) wBackToReading();
+    else wRead(W.set.speak === "all");
+  }
+  if (W.nextAt && now >= W.nextAt && !wInPause() && !wHeld()) { var hr = W.nextHour; wPause(true, hr); wPlan(); }
+  wShowFoot();
+}
+function watchStart() {
+  if (!W.set) W.set = wSettings();
+  try { ctx(); } catch (e) {}
+  W.running = true; watchOn = true;
+  if (W.set.sound !== "off") { startBg(W.set.sound); W.ownSound = true; if (redrawSound) redrawSound(); }
+  if (W.set.awake) holdAwake();
+  chime(528, 0.4, true);
+  W.pool = drifts(W.set.plain); W.di = 0;
+  wPlan(); W.pauses = 0;
+  wDay(W.set.speak === "all");
+  W.iv = setInterval(wTick, 1000);
+  wShowFoot();
+}
+function watchStop() {
+  clearInterval(W.iv); W.iv = null; if (W.raf) cancelAnimationFrame(W.raf); W.raf = null;
+  W.running = false; watchOn = false; W.seg = null; wUnflag();
+  // a practice or the timer on screen may be holding the screen on or speaking; leave those alone
+  if (!wHeld()) letSleep();
+  if (W.view) hush();
+  bgDip = 1;
+  if (W.ownSound) { stopBg(5); W.ownSound = false; if (redrawSound) redrawSound(); }
+  if (W.view) W.view.ready();
+  wMiniDraw(false);
+}
+// leaving the Watch page: the Watch keeps going, only its page goes away
+function watchDetach() { if (W.raf) cancelAnimationFrame(W.raf); W.raf = null; W.view = null; }
+
+/* the slim bar above the tabs, shown on other pages while the Watch runs; a pause lights it up */
+var wMini = null;
+function wMiniMake() {
+  var title = h("span", { class: "wm-t", "aria-live": "polite" }), sub = h("span", { class: "wm-s" });
+  var open = h("a", { class: "wm-open", href: "#/watch" }, [
+    h("span", { class: "wm-ic", "aria-hidden": "true", html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + EMB.watch + "</svg>" }),
+    h("span", { class: "wm-txt" }, [title, sub])
+  ]);
+  var el = h("div", { class: "wmini", role: "region", "aria-label": "The Watch" }, [open]);
+  el.hidden = true;
+  document.body.insertBefore(el, tabsEl);
+  return { el: el, title: title, sub: sub };
+}
+function wMiniDraw(fresh) {
+  var show = W.running && !W.view;
+  document.body.classList.toggle("wmini-on", show);
+  if (!show) { if (wMini) wMini.el.hidden = true; return; }
+  if (!wMini) wMini = wMiniMake();
+  var s = W.seg, pause = wInPause();
+  wMini.el.hidden = false;
+  wMini.el.classList.toggle("on", pause);
+  var t = !pause ? "The Watch" : wHourTag(s) + (s.kind === "breathe" ? "A minute to breathe" : s.kind === "practice" ? "A small practice: " + (W.set.plain ? s.p.plain : s.p.name) : "Check-in");
+  if (wMini.title.textContent !== t) wMini.title.textContent = t;
+  if (W.flagged) document.title = "◆ Pause · Trestleboard";
+  if (fresh && pause && !reduce) { wMini.el.classList.remove("lit"); void wMini.el.offsetWidth; wMini.el.classList.add("lit"); }
+  wMiniFoot();
+}
+function wMiniFoot() {
+  if (!wMini || !W.running || W.view) return;
+  var now = Date.now();
+  wMini.sub.textContent = wInPause() ? "Tap to join · " + Math.max(1, Math.ceil((W.seg.end - now) / 1000)) + " seconds left" : wNextText(now);
+}
+
+/* the interval controls: − and + through a fixed list of steps */
+function wStepper(title, values, key, fmt, after) {
+  var val = h("span", { class: "wsv", "aria-live": "polite" });
+  var lb = h("button", { class: "opt wsb", type: "button", "aria-label": title + ": step down" }, ["−"]);
+  var mb = h("button", { class: "opt wsb", type: "button", "aria-label": title + ": step up" }, ["+"]);
+  function at() { return Math.max(0, values.indexOf(wNearest(values, W.set[key]))); }
+  // at either end the button says it's unavailable but keeps focus, so a screen reader doesn't lose its place
+  function draw() { var i = at(); val.textContent = fmt(values[i]); lb.setAttribute("aria-disabled", String(i <= 0)); mb.setAttribute("aria-disabled", String(i >= values.length - 1)); }
+  function move(d) {
+    var i = Math.max(0, Math.min(values.length - 1, at() + d));
+    if (values[i] === W.set[key]) return;
+    W.set[key] = values[i]; store.set("wset", W.set);
+    if (after) after();
+  }
+  lb.addEventListener("click", function () { move(-1); });
+  mb.addEventListener("click", function () { move(1); });
+  draw();
+  var row = h("div", { class: "wstep", role: "group", "aria-label": title }, [h("span", { class: "label" }, [title]), h("div", { class: "wsctl" }, [lb, val, mb])]);
+  return { el: row, draw: draw };
+}
+
+/* the Watch page: a view of the running Watch, or the setup before it starts */
+function watchView() {
+  if (!W.running) W.set = wSettings();
+  var set = W.set;
+  topbar({ back: ["Practices", "#/"], sound: true }); tabs("practice");
   app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["The Watch"])]));
 
   // the screen: what's on now, the clock, and how long until it moves on
   var stLabel = h("span", { class: "label" }), stClock = h("span", { class: "label wclock" });
   var mid = h("div", { class: "wmid", "aria-live": "polite" });
   var barI = h("i"), foot = h("p", { class: "wnext" });
+  // the intervals, set before starting (and in Watch settings while it runs)
+  var steps = [];
+  function intervals() {
+    var a = wStepper("Pauses", W_EVERY, "every", function (v) { return v === 0 ? "Off" : v === "hours" ? "The old hours" : "Every " + v + " min"; }, function () {
+      if (W.running) { wPlan(); wShowFoot(); } else drawReady();
+      redrawSteps();
+    });
+    var b = wStepper("Readings", W_DRIFT, "drift", function (v) { return v ? "Every " + v + " min" : "Only on Next"; }, function () {
+      if (W.running && W.seg && !wInPause()) { W.seg.start = Date.now(); W.seg.end = wReadMs() ? Date.now() + wReadMs() : 0; wShowFoot(); }
+      else if (!W.running) drawReady();
+      redrawSteps();
+    });
+    steps.push(a, b);
+    return h("div", { class: "wsetup" }, [a.el, b.el]);
+  }
+  function redrawSteps() { steps.forEach(function (x) { x.draw(); }); }
+  var setup = intervals();
   var stage = h("section", { class: "wstage", "aria-label": "Now showing" }, [
-    h("div", { class: "wtop" }, [stLabel, stClock]), mid, h("div", { class: "wfoot" }, [h("div", { class: "wbar" }, [barI]), foot])
+    h("div", { class: "wtop" }, [stLabel, stClock]), mid, setup, h("div", { class: "wfoot" }, [h("div", { class: "wbar" }, [barI]), foot])
   ]);
   app.appendChild(stage);
   var startB = h("button", { class: "go", type: "button" }, ["Start"]);
   var nextB = h("button", { class: "opt", type: "button", "aria-label": "Skip to the next reading" }, ["Next"]);
   var breatheB = h("button", { class: "opt", type: "button" }, ["Breathe now"]);
-  nextB.hidden = breatheB.hidden = true;
   app.appendChild(h("div", { class: "btnrow" }, [startB, nextB, breatheB]));
 
-  var running = false, iv = null, raf = null, seg = null, nextAt = 0, nextHour = null, hourNow = null;
-  var pauses = 0, cur = null, flagged = false, ownSound = false;
-  var pool = drifts(set.plain), di = 0;
-  var orb = null, bPhase = null, bSub = null, lastB = -1, cnt = null, cntLeft = -1;
-
-  function readMs() { return set.drift ? set.drift * 60000 : 0; }
-  function begin(kind, ms) { seg = { kind: kind, start: Date.now(), end: ms ? Date.now() + ms : 0 }; mid.setAttribute("aria-live", "polite"); }
-  function inPause() { return seg && (seg.kind === "breathe" || seg.kind === "practice" || seg.kind === "checkin"); }
-  function hourTag() { return hourNow ? hourNow.name + " · " : ""; }
-  function hourSay() { return hourNow ? hourNow.name + ", " + hourNow.say + ". " : ""; }
-  function flag() { flagged = true; document.title = "◆ Pause · Trestleboard"; }
-  function unflag() { if (flagged) { flagged = false; document.title = "Trestleboard"; } }
+  var orb = null, bPhase = null, bSub = null, lastB = -1, cnt = null, cntLeft = -1, quietCue = false;
   function turn() { if (!reduce) { stage.classList.remove("turn"); void stage.offsetWidth; stage.classList.add("turn"); } }
   function lit() { if (!reduce) { stage.classList.remove("lit"); void stage.offsetWidth; stage.classList.add("lit"); } }
   function fold(title, kids) { return h("details", { class: "wwhy" }, [h("summary", null, [title]), h("div", { class: "foldbody" }, kids)]); }
-  function hm(t) { var d = new Date(t); return clock12(two(d.getHours()) + ":" + two(d.getMinutes())); }
+  function buttons() {
+    startB.textContent = W.running ? "Stop" : "Start"; startB.classList.toggle("ghost", W.running);
+    nextB.hidden = breatheB.hidden = !W.running;
+  }
 
   // before it starts: say plainly what will happen
   function pauseWhat() { return "a slow minute of breathing, a small practice, or a one-tap check-in."; }
   function drawReady() {
+    buttons(); setup.hidden = false; orb = null; cnt = null;
     stLabel.textContent = "Ready"; stClock.textContent = clock12(nowClock());
+    mid.setAttribute("aria-live", "off");
     mid.innerHTML = "";
     mid.appendChild(h("h2", { class: "wtitle" }, ["Press Start, then leave it running."]));
     mid.appendChild(h("ul", { class: "wplan" }, [
@@ -2495,46 +2804,51 @@ function watchView() {
       set.drift ? "In between, a short reading changes every " + set.drift + " minutes." : "In between, a short reading stays until you tap Next.",
       set.speak === "off" ? null : set.speak === "bells" ? "Pauses are read aloud." : "Pauses and readings are read aloud."
     ].map(function (t) { return t ? h("li", null, [t]) : null; })));
-    foot.textContent = "Nothing needs a tap once it’s going. Keep this page open; on a phone, the screen has to stay on, and locking it or switching apps pauses everything.";
+    foot.textContent = "Nothing needs a tap once it’s going, and you can move to other pages. On a phone, the screen has to stay on; locking it or switching apps pauses everything.";
     barI.style.width = "0";
   }
 
-  // the day's question opens each watch
-  function showDay(speakIt) {
-    hourNow = null; begin("day", readMs());
-    stLabel.textContent = dd.day + "’s question";
+  // whatever is on now, drawn from the running Watch (fresh: it just began, rather than coming back to the page)
+  function draw(fresh) {
+    var s = W.seg; if (!s) return;
+    buttons(); setup.hidden = true; orb = null; cnt = null;
+    mid.setAttribute("aria-live", "polite");
     mid.innerHTML = "";
+    quietCue = !fresh && set.speak !== "off" && !s.said;
+    if (s.kind === "day") drawDay();
+    else if (s.kind === "read") drawRead(s.item);
+    else if (s.kind === "breathe") drawBreathe(s);
+    else if (s.kind === "practice") drawPractice(s);
+    else drawCheckin(s);
+    turn();
+    if (fresh && wInPause()) lit();
+    if (!fresh) wSayPause(); // joining a pause that began on another page
+    drawFoot();
+  }
+  // the day's question opens each watch
+  function drawDay() {
+    var dd = dayInfo();
+    stLabel.textContent = dd.day + "’s question";
     if (!set.plain) mid.appendChild(h("div", { class: "wday" }, [emblem(dd.key, "tile"), h("span", null, [dd.planet + "’s day · " + dd.theme])]));
     mid.appendChild(h("h2", { class: "wtitle" }, [dd.q]));
     mid.appendChild(h("p", { class: "wtext" }, [dd.prompt]));
     mid.appendChild(fold("Where this comes from", [h("blockquote", null, [dd.axiom]), h("p", null, [dayAbout(dd)])]));
-    turn();
-    if (speakIt) say(dd.day + "’s question. " + dd.q + " " + dd.prompt, true);
   }
   // a reading from the app's own pages
-  function showRead(speakIt) {
-    hourNow = null; cnt = null;
-    var it = pool[di % pool.length]; di++;
-    begin("read", readMs());
+  function drawRead(it) {
     stLabel.textContent = it.label;
-    mid.innerHTML = "";
     if (it.title) mid.appendChild(h("h2", { class: "wtitle sm" }, [it.title]));
     mid.appendChild(h(it.quote ? "blockquote" : "p", { class: it.quote ? "wquote" : "wtext" }, [it.text]));
     if (it.by) mid.appendChild(h("cite", null, [it.by]));
     mid.appendChild(h("a", { class: "wgo", href: it.href }, [it.go, icon("chev", "chev")]));
-    turn();
-    if (speakIt) say((it.title ? it.title + ". " : "") + it.text + (it.by ? " " + it.by.replace(/\s*\(.*\)/, "") : ""), true);
   }
 
-  // pause 1: a minute of slow breathing (about six breaths a minute)
-  var B_LEAD = 6000, B_ROUNDS = 6, B_TAIL = 5000, B = P.resonance;
-  var B_CYCLE = (B[0].s + B[1].s) * 1000;
+  // pause 1: the breathing circle
   function setScale(v) { if (orb) orb.setAttribute("transform", "translate(50 50) scale(" + v.toFixed(3) + ") translate(-50 -50)"); }
   function ease(x) { return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; }
-  function showBreathe(fromBell) {
-    cnt = null; begin("breathe", B_LEAD + B_ROUNDS * B_CYCLE + B_TAIL);
-    stLabel.textContent = hourTag() + "A minute to breathe";
-    mid.innerHTML = "";
+  function drawBreathe(sg) {
+    var B = P.resonance;
+    stLabel.textContent = wHourTag(sg) + "A minute to breathe";
     var svg = s("svg", { viewBox: "0 0 100 100", "aria-hidden": "true" });
     svg.appendChild(s("circle", { class: "ring", cx: 50, cy: 50, r: 46 }));
     orb = s("circle", { class: "orb", cx: 50, cy: 50, r: 45, transform: "translate(50 50) scale(" + B[1].to + ") translate(-50 -50)" });
@@ -2543,150 +2857,78 @@ function watchView() {
     bSub = h("p", { class: "wtext" }, ["Breathe in as the circle grows and out as it shrinks. Or just listen."]);
     mid.appendChild(h("div", { class: "worb" }, [svg])); mid.appendChild(bPhase); mid.appendChild(bSub);
     // let a screen reader announce the pause once, not every breath
-    setTimeout(function () { if (seg && seg.kind === "breathe") mid.setAttribute("aria-live", "off"); }, 1500);
-    lastB = -1;
-    if (fromBell) bell(1);
-    if (set.speak !== "off") say(hourSay() + "A minute to breathe. Follow the circle, or just listen.", true);
-    flag(); lit(); frame();
+    setTimeout(function () { if (W.seg === sg) mid.setAttribute("aria-live", "off"); }, 1500);
+    lastB = -1; frame();
   }
   function stepBreath() {
-    if (!seg || seg.kind !== "breathe") return;
-    var el = Date.now() - seg.start - B_LEAD;
+    var s = W.seg; if (!s || s.kind !== "breathe" || !orb) return;
+    var B = P.resonance, C = (B[0].s + B[1].s) * 1000, el = Date.now() - s.start - B_LEAD;
     if (el < 0) return;
-    if (el >= B_ROUNDS * B_CYCLE) {
-      if (lastB !== -2) { lastB = -2; bPhase.textContent = "Done"; bSub.textContent = "Notice how you feel now."; setScale(B[1].to); chime(396, 1.6, true); }
+    if (el >= B_ROUNDS * C) {
+      if (lastB !== -2) { var watched = lastB >= 0; lastB = -2; bPhase.textContent = "Done"; bSub.textContent = "Notice how you feel now."; setScale(B[1].to); if (watched) chime(396, 1.6, true); }
       return;
     }
-    var pos = el % B_CYCLE, i = pos < B[0].s * 1000 ? 0 : 1;
+    var pos = el % C, i = pos < B[0].s * 1000 ? 0 : 1;
     var frac = i === 0 ? pos / (B[0].s * 1000) : (pos - B[0].s * 1000) / (B[1].s * 1000);
-    var idx = Math.floor(el / B_CYCLE) * 2 + i;
+    var idx = Math.floor(el / C) * 2 + i;
     if (idx !== lastB) {
-      lastB = idx; bPhase.textContent = B[i].label; bSub.textContent = "Breath " + (Math.floor(el / B_CYCLE) + 1) + " of " + B_ROUNDS;
-      if (set.speak !== "off") say(B[i].say, true); else chime(B[i].hz, i === 0 ? 1.4 : 1.8, true);
+      lastB = idx; bPhase.textContent = B[i].label; bSub.textContent = "Breath " + (Math.floor(el / C) + 1) + " of " + B_ROUNDS;
+      if (quietCue) quietCue = false;
+      else if (set.speak !== "off") say(B[i].say, true); else chime(B[i].hz, i === 0 ? 1.4 : 1.8, true);
     }
     if (!reduce) { var from = B[1 - i].to, to = B[i].to; setScale(from + (to - from) * ease(frac)); }
   }
-  function frame() { if (raf) cancelAnimationFrame(raf); raf = null; if (!seg || seg.kind !== "breathe") return; stepBreath(); raf = requestAnimationFrame(frame); }
-
-  // pause 2: one small practice, put so it makes sense on its own
-  function poolOf() {
-    var ok = { s: ["s"], m: ["s", "m"], l: ["s", "m", "l"] }[set.len] || ["s"];
-    return EVERY.filter(function (p) { return WATCH_SAYS[p.id] && ok.indexOf(p.tier) >= 0 && (!cur || p.id !== cur.id); });
+  function frame() {
+    if (W.raf) cancelAnimationFrame(W.raf); W.raf = null;
+    if (!W.seg || W.seg.kind !== "breathe" || !orb) return;
+    stepBreath(); W.raf = requestAnimationFrame(frame);
   }
-  function showPractice(fromBell) {
-    var list = poolOf(); cur = list[Math.floor(Math.random() * list.length)];
-    var p = cur, w = WATCH_SAYS[p.id];
-    begin("practice", Math.max(90000, (w.count || 0) * 1000 + 60000));
-    stLabel.textContent = hourTag() + "A small practice";
-    mid.innerHTML = "";
+
+  // pause 2: one small practice
+  function drawPractice(s) {
+    var p = s.p, w = WATCH_SAYS[p.id];
+    stLabel.textContent = wHourTag(s) + "A small practice";
     mid.appendChild(h("h2", { class: "wtitle" }, [set.plain ? p.plain : p.name]));
     if (!set.plain) mid.appendChild(h("p", { class: "wsub" }, [p.plain + " · " + p.trad]));
     mid.appendChild(h("p", { class: "wtext" }, [w.t]));
-    cnt = null; cntLeft = -1;
+    cntLeft = -1;
     if (w.count) { cnt = h("div", { class: "wcount", "aria-hidden": "true" }, [String(w.count)]); mid.appendChild(cnt); }
     if (p.tool === "shadow") mid.appendChild(shadowNotes());
     var done = h("button", { class: "opt", type: "button" }, ["Done"]);
-    done.addEventListener("click", function () { var d = wday(); d.done++; store.set("wday", d); unflag(); showRead(false); drawFoot(); });
+    done.addEventListener("click", function () { var d = wday(); d.done++; store.set("wday", d); wBackToReading(); drawFoot(); });
     mid.appendChild(h("div", { class: "row left" }, [done]));
     mid.appendChild(fold("How and why", [h("p", null, [p.how]), h("p", null, [p.why]), set.plain ? null : h("div", { class: "wfrom", html: p.from })]));
-    if (fromBell) bell(1);
-    if (set.speak !== "off") say(hourSay() + (set.plain ? p.plain : p.name) + ". " + w.t, true);
-    flag(); lit();
   }
   // a countdown, when the practice has one; it waits a few seconds so there's time to read first
   function stepCount() {
-    if (!cnt || !seg || seg.kind !== "practice") return;
-    var w = WATCH_SAYS[cur.id], el = (Date.now() - seg.start) / 1000 - 8;
+    var s = W.seg; if (!cnt || !s || s.kind !== "practice") return;
+    var w = WATCH_SAYS[s.p.id], el = (Date.now() - s.start) / 1000 - 8;
     var left = el < 0 ? w.count : Math.max(0, Math.ceil(w.count - el));
     if (left === cntLeft) return;
+    var watched = cntLeft > 0;
     cntLeft = left; cnt.textContent = left ? String(left) : "✓";
-    if (!left) chime(396, 1.6, true);
+    if (!left && watched) chime(396, 1.6, true);
   }
 
-  // pause 3: a one-tap check-in, skipped if there was one in the last hour and a half
-  function recentCheckin() {
-    var w = weatherToday(); if (!w.length) return false;
-    var p = w[w.length - 1].t.split(":"), d = new Date(); d.setHours(+p[0], +p[1], 0, 0);
-    return Date.now() - d.getTime() < 90 * 60000;
-  }
-  function showCheckin(fromBell) {
-    cnt = null; begin("checkin", 90000);
-    stLabel.textContent = hourTag() + "Check-in";
-    mid.innerHTML = "";
+  // pause 3: the check-in
+  function drawCheckin(s) {
+    stLabel.textContent = wHourTag(s) + "Check-in";
     mid.appendChild(h("h2", { class: "wtitle" }, ["How are you right now?"]));
     mid.appendChild(h("p", { class: "wtext" }, ["One tap, if you like; it goes to My Log, where you can see how your days tend to run. If not, this moves on by itself."]));
-    mid.appendChild(weatherChips(function () { setTimeout(function () { if (seg && seg.kind === "checkin") { unflag(); showRead(false); drawFoot(); } }, 2500); }, true));
-    if (fromBell) bell(1);
-    if (set.speak !== "off") say(hourSay() + "Check-in. How are you right now?", true);
-    flag(); lit();
-  }
-  // pauses take turns: breathe, practice, breathe, check-in
-  function pause(fromBell) {
-    var k = pauses % 4; pauses++;
-    if (k === 0 || k === 2) showBreathe(fromBell);
-    else if (k === 3 && !recentCheckin()) showCheckin(fromBell);
-    else showPractice(fromBell);
+    mid.appendChild(weatherChips(function () { setTimeout(function () { if (W.seg === s) { wBackToReading(); drawFoot(); } }, 2500); }, true));
   }
 
-  // the clock: everything runs on clock time, so a slowed background tab catches up
-  function plan() {
-    nextHour = null; nextAt = 0;
-    if (!set.every) return;
-    var now = new Date();
-    if (set.every === "hours") {
-      for (var d = 0; d < 2 && !nextAt; d++) for (var i = 0; i < HOURS.length; i++) {
-        var t = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d, HOURS[i].h, 0, 0).getTime();
-        if (t > now.getTime()) { nextAt = t; nextHour = HOURS[i]; break; }
-      }
-      return;
-    }
-    var ms = set.every * 60000; if (set.varied) ms *= 0.7 + Math.random() * 0.6;
-    nextAt = now.getTime() + ms;
-  }
   function drawFoot() {
-    if (!running || !seg) return;
-    var now = Date.now();
+    if (!W.running || !W.seg) return;
+    var now = Date.now(), s = W.seg;
     stClock.textContent = clock12(nowClock());
-    barI.style.width = seg.end ? Math.min(100, (now - seg.start) / (seg.end - seg.start) * 100).toFixed(1) + "%" : "0";
-    if (inPause()) { foot.textContent = "Back to the readings in " + Math.max(1, Math.ceil((seg.end - now) / 1000)) + " seconds."; return; }
-    foot.textContent = !nextAt ? "Pauses are off." : nextHour ? "Next pause: " + nextHour.name + ", " + hm(nextAt) + "." : "Next pause around " + hm(nextAt) + ".";
+    barI.style.width = s.end ? Math.min(100, (now - s.start) / (s.end - s.start) * 100).toFixed(1) + "%" : "0";
+    if (wInPause()) { foot.textContent = "Back to the readings in " + Math.max(1, Math.ceil((s.end - now) / 1000)) + " seconds."; return; }
+    foot.textContent = wNextText(now);
   }
-  function ring() { hourNow = nextHour; pause(true); plan(); }
-  function tick() {
-    var now = Date.now();
-    stepBreath(); stepCount();
-    if (seg.end && now >= seg.end) {
-      if (inPause()) { unflag(); showRead(false); }
-      else showRead(set.speak === "all");
-    }
-    if (nextAt && now >= nextAt && !inPause()) ring();
-    drawFoot();
-  }
-  function start() {
-    stopActive(); active = { stop: stop };
-    try { ctx(); } catch (e) {}
-    running = true; watchOn = true;
-    if (set.sound !== "off") { startBg(set.sound); ownSound = true; if (redrawSound) redrawSound(); }
-    if (set.awake) holdAwake();
-    chime(528, 0.4, true);
-    plan(); pauses = 0;
-    showDay(set.speak === "all");
-    iv = setInterval(tick, 1000);
-    startB.textContent = "Stop"; startB.classList.add("ghost");
-    nextB.hidden = breatheB.hidden = false;
-    drawFoot();
-  }
-  function stop() {
-    clearInterval(iv); iv = null; if (raf) cancelAnimationFrame(raf); raf = null;
-    running = false; watchOn = false; seg = null; letSleep(); unflag(); hush();
-    if (ownSound) { stopBg(); ownSound = false; if (redrawSound) redrawSound(); }
-    startB.textContent = "Start"; startB.classList.remove("ghost");
-    nextB.hidden = breatheB.hidden = true;
-    drawReady();
-  }
-  startB.addEventListener("click", function () { if (running) stop(); else start(); });
-  nextB.addEventListener("click", function () { var was = inPause(); unflag(); showRead(!was && set.speak === "all"); drawFoot(); });
-  breatheB.addEventListener("click", function () { hourNow = null; showBreathe(false); drawFoot(); });
+  startB.addEventListener("click", function () { if (W.running) watchStop(); else watchStart(); });
+  nextB.addEventListener("click", function () { var was = wInPause(); wUnflag(); wRead(!was && set.speak === "all"); drawFoot(); });
+  breatheB.addEventListener("click", function () { wBreathe(false, null); drawFoot(); });
 
   // your day: the check-in and the one habit, folded away
   app.appendChild(h("details", { class: "more" }, [h("summary", null, [h("span", null, ["Your day: check-in and one habit"]), icon("chev", "chev")]),
@@ -2701,7 +2943,7 @@ function watchView() {
         set[key] = o[0]; store.set("wset", set);
         [].forEach.call(row.children, function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true");
         if (after) after();
-        if (!running) drawReady();
+        if (!W.running) drawReady();
       });
       row.appendChild(b);
     });
@@ -2710,21 +2952,21 @@ function watchView() {
   app.appendChild(h("details", { class: "more" }, [h("summary", null, [h("span", null, ["Watch settings"]), icon("chev", "chev")]),
     h("div", { class: "foldbody" }, [
       chooser("Background sound", [["music", "Soft music"], ["rain", "Rain"], ["ocean", "Ocean"], ["brown", "Brown noise"], ["off", "None"]], "sound", function () {
-        if (!running) return;
-        if (set.sound === "off") { if (ownSound) stopBg(); ownSound = false; } else { startBg(set.sound); ownSound = true; }
+        if (!W.running) return;
+        if (set.sound === "off") { if (W.ownSound) stopBg(); W.ownSound = false; } else { startBg(set.sound); W.ownSound = true; }
         if (redrawSound) redrawSound();
       }),
-      chooser("Pauses", [[0, "Off"], [20, "Every 20 min"], [30, "30 min"], [45, "45 min"], [60, "Hourly"], ["hours", "The old hours"]], "every", function () { if (running) { plan(); drawFoot(); } }),
-      chooser("Pause timing", [[true, "Varied"], [false, "Even"]], "varied", function () { if (running) { plan(); drawFoot(); } }),
+      intervals(),
+      chooser("Pause timing", [[true, "Varied"], [false, "Even"]], "varied", function () { if (W.running) { wPlan(); drawFoot(); } }),
       chooser("Small practices", [["s", "Seconds only"], ["m", "Up to a minute"], ["l", "Any length"]], "len"),
-      chooser("Readings change", [[0, "Only on Next"], [3, "Every 3 min"], [5, "5 min"], [10, "10 min"]], "drift", function () { if (running && seg && !inPause()) { seg.start = Date.now(); seg.end = readMs() ? Date.now() + readMs() : 0; drawFoot(); } }),
       chooser("Read aloud", [["off", "Off"], ["bells", "Pauses only"], ["all", "Pauses and readings"]], "speak"),
-      chooser("Keep screen on", [[false, "Off"], [true, "On"]], "awake", function () { if (running && set.awake) holdAwake(); else if (!set.awake) letSleep(); }),
-      chooser("Look", [[false, "Symbols"], [true, "Plain"]], "plain", function () { pool = drifts(set.plain); di = 0; if (running && !inPause()) showRead(false); }),
-      h("p", { class: "phelp" }, ["The old hours ring at 6, 9, noon, 3, 6, and 9, the times monks stopped for prayer. Bells ring only while this page is open; on a phone, the screen has to stay on. In a hidden browser tab a bell can come up to a minute late, and some browsers put quiet tabs to sleep; a background sound keeps the tab awake."])
+      chooser("Keep screen on", [[false, "Off"], [true, "On"]], "awake", function () { if (W.running && set.awake) holdAwake(); else if (!set.awake) letSleep(); }),
+      chooser("Look", [[false, "Symbols"], [true, "Plain"]], "plain", function () { W.pool = drifts(set.plain); W.di = 0; if (W.running && !wInPause()) wRead(false); }),
+      h("p", { class: "phelp" }, ["The old hours ring at 6, 9, noon, 3, 6, and 9, the times monks stopped for prayer. Bells ring only while the app is open; on a phone, the screen has to stay on. In a hidden browser tab a bell can come up to a minute late, and some browsers put quiet tabs to sleep; a background sound keeps the tab awake."])
     ])]));
 
-  drawReady();
+  W.view = { draw: draw, foot: drawFoot, step: function () { stepBreath(); stepCount(); }, ready: drawReady };
+  if (W.running) draw(false); else drawReady();
 }
 
 /* ---------- welcome: shown once, on the first open ---------- */
@@ -3102,7 +3344,7 @@ window.trestleboardPhrases = allPhrases;
 
 /* ---------- router ---------- */
 function render() {
-  stopActive(); closeDim(); closeSheet(); closeSizePop(); onDone = null;
+  stopActive(); watchDetach(); closeDim(); closeSheet(); closeSizePop(); onDone = null;
   app.innerHTML = ""; topEl.innerHTML = ""; document.title = "Trestleboard";
   var hsh = location.hash.replace(/^#\/?/, ""), m;
   if ((m = /^p\/(\d{1,2})$/.exec(hsh)) && E[+m[1]]) practiceView(+m[1]);
@@ -3116,6 +3358,7 @@ function render() {
   else if ((m = /^read\/([\w-]+)$/.exec(hsh)) && READ_BY[m[1]]) readerView(m[1]);
   else if (hsh === "log") logView();
   else homeView();
+  wMiniDraw(false);
   window.scrollTo(0, 0); onScroll();
 }
 document.body.setAttribute("data-size", store.get("size", "m"));
