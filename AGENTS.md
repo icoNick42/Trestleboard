@@ -21,9 +21,9 @@ If something I ask conflicts with this file, do what I asked and mention the con
 - Git: I commit and publish with GitHub Desktop myself. Don't commit, push, or publish.
 
 ## Don't break these
-- Saved data: everything I save lives on my phone in localStorage under `tb:` keys, read and written only through `store.get`/`store.set` (they add the prefix and include the data in backups). Never rename, remove, or change the format of those keys. Saved items point to practices by number and to note fields by position: don't renumber practices or insert note fields in the middle; add new ones at the end.
+- Saved data: everything I save lives on my phone in localStorage under `tb:` keys, read and written only through `store.get`/`store.set` (they add the prefix). The one exception is the backup and restore code, which copies every `tb:` key as-is; leave it that way. Never rename, remove, or change the format of those keys. Saved items point to practices by number and to note fields by position: don't renumber practices or insert note fields in the middle; add new ones at the end.
 - Offline updates: when you change any file the app loads (not README.md or this file), update `CACHE` in `sw.js` before previewing: add 1 to the number and use today's date (e.g. `trestleboard-v10-2026-10-19` → `trestleboard-v11-<today>`). Keep the `trestleboard-` start, because old copies are deleted by that name.
-- `FILES` in `sw.js`: every path must exist and look like `icons/x.png` (no leading slash). One bad path silently stops the phone from ever updating. Never list `voices/` there.
+- `FILES` in `sw.js`: every path must exist and look like `icons/x.png` (no leading slash), apart from `./`, which stands for the front page; keep it. One bad path silently stops the phone from ever updating. Never list `voices/` there.
 - Voices: the built-in voices are recordings of exact lines, and the tools that made them are gone. Changing any text the app speaks (practice names and steps, routines, timer prompts, the line of the day) makes that line fall back to the phone's own voice; tell me which lines changed. To check whether a line is spoken, search the list that `trestleboardPhrases()` returns in the browser console. Don't change the voice files or `VOICE_CACHE` without asking.
 - Book text: the `id="book"` block is one JSON line about 190,000 characters long. Change it only with exact find-and-replace (never by rewriting the block with a JSON tool), keep every `<\/` as written, and reload to confirm the app still opens. One stray quote or comma blanks the whole app.
 - Offline use: the app loads nothing from the internet. Keep it that way: anything new (fonts, scripts, images) goes into the project. Links out to reading sources are fine.
@@ -47,11 +47,11 @@ If something I ask conflicts with this file, do what I asked and mention the con
 - Don't leave commented-out code, debug prints, or unused files behind.
 
 ## Interface and design
-- Navigation (the bottom bar, moving between pages) should feel smooth and fluid. When working on it, short transitions like the existing ones and icons that match the tab icons are fine. Put any new animation inside the existing `@media (prefers-reduced-motion: no-preference)` block, and make scripted motion (such as smooth scrolling) respect the existing `reduce` variable.
+- Navigation (the bottom bar, moving between pages) should feel smooth and fluid. When working on it, short transitions like the existing ones and icons that match the tab icons are fine. Put any new animation inside the existing `@media (prefers-reduced-motion: no-preference)` block, even though older animations are switched off in a separate `reduce` block instead (leave those as they are), and make scripted motion (such as smooth scrolling) respect the existing `reduce` variable.
 - Pages should be calm: nothing overwhelming or distracting. No decorative animation, stacked menus, extra tabs, or crowded layouts on reading and practice pages.
 - Don't add taglines, helper text, or extra labels to explain a confusing screen; fix the layout instead. Leave existing helper text as it is.
-- New drawings and icons should match the existing line style: outline only (`fill="none" stroke="currentColor"`), rounded corners, `aria-hidden="true"`, and the same size and stroke width as their neighbours.
-- Design for iPhone first: about 390 pixels wide, in both light and dark mode (dark mode follows the phone). Nothing may make the page slide sideways. Wide tables already stack into cards on narrow screens; a new table needs a `<thead>` row for that to work.
+- New drawings and icons should match the existing line style: outline only (`fill="none" stroke="currentColor"`), apart from small solid dots and the solid star that marks a pinned practice; rounded corners, `aria-hidden="true"`, and the same size and stroke width as their neighbours.
+- Design for iPhone first: about 390 pixels wide, in both light and dark mode (dark mode follows the phone). Nothing may make the page slide sideways. Tables on the Read pages already stack into cards on narrow screens; a new table there needs a `<thead>` row and the same `<div class="table"><div class="tablewrap">` wrapper the book's tables use.
 - Every control needs a label VoiceOver (the iPhone screen reader) can announce.
 
 ## Checking your work
