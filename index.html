@@ -567,8 +567,6 @@ html.locked, html.locked body { overflow: hidden; }
 .wday .emb.tile { background: transparent; color: var(--slate-mark); border-color: color-mix(in srgb, var(--on-slate-muted) 45%, transparent); }
 .wwhy > summary { cursor: pointer; color: var(--steel); font-size: var(--t-small); min-height: var(--tap); display: flex; align-items: center; }
 .wwhy .foldbody { display: grid; gap: var(--s2); font-size: var(--t-small); color: var(--muted); }
-.wtoday { gap: var(--s5); }
-.wtoday .grp { display: grid; gap: var(--s2); }
 .dayrev { margin-top: var(--s2); }
 
 /* the Watch's screen: slate, like a player, with what's on now in the middle */
@@ -2388,7 +2386,7 @@ function logWeather(v) {
   store.set("weather", list);
 }
 // one tap: how are you right now?
-function weatherChips(onLog, noLabel) {
+function weatherChips() {
   var wrap = h("div", { class: "grp" });
   var row = h("div", { class: "row left", role: "group", "aria-label": "Quick check-in" });
   var msg = h("span", { class: "saved", "aria-live": "polite" });
@@ -2398,11 +2396,10 @@ function weatherChips(onLog, noLabel) {
       logWeather(v);
       [].forEach.call(row.children, function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true");
       msg.textContent = "Logged at " + clock12(nowClock()) + ": " + wxName(v).toLowerCase() + ".";
-      if (onLog) onLog();
     });
     row.appendChild(b);
   });
-  if (!noLabel) wrap.appendChild(h("span", { class: "label" }, ["Quick check-in: how are you right now?"]));
+  wrap.appendChild(h("span", { class: "label" }, ["Quick check-in: how are you right now?"]));
   wrap.appendChild(row); wrap.appendChild(msg);
   return wrap;
 }
@@ -2507,18 +2504,19 @@ function steadyView() {
 
 /* ---------- the Watch: a screen to leave running in the background ---------- */
 // It runs on its own, like a video left playing: a background sound, a pause every so often
-// (a minute of breathing, a small practice, or a check-in), and short readings in between.
-// every: minutes between pauses, or "hours" for the old monastic hours. drift: minutes per reading (0 = only on Next).
+// (a minute of breathing or a small practice), and short readings in between.
+// every: minutes between pauses, or "hours" for the old monastic hours. drift: minutes per reading.
 // speak: "off" | "bells" (pauses only) | "all" (pauses and readings). sound: what plays underneath while it runs.
 var WSET_DEFAULT = { every: 20, varied: true, len: "s", drift: 5, speak: "off", awake: true, plain: false, sound: "music" };
 var SOUND_NAMES = { music: "Soft music", rain: "Rain", ocean: "Ocean", brown: "Brown noise" };
 // the steps the interval controls move through, 5 minutes apart
 var W_EVERY = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, "hours"];
-var W_DRIFT = [0, 5, 10, 15, 20, 25, 30];
+var W_DRIFT = [5, 10, 15, 20, 25, 30];
 var watchOn = false;
 // coming back to the page: the screen lock and the sound may have been interrupted, so pick them up again
 document.addEventListener("visibilitychange", function () {
   if (!watchOn || document.visibilityState !== "visible") return;
+  if (W.view && W.seg) W.seg.seen = true;
   if (store.get("wset", WSET_DEFAULT).awake) holdAwake();
   try { if (actx && actx.state !== "running") actx.resume(); } catch (e) {}
 });
@@ -2552,15 +2550,15 @@ function wSettings() {
   set.every = wNearest(W_EVERY, set.every); set.drift = wNearest(W_DRIFT, set.drift);
   return set;
 }
-function wReadMs() { return W.set.drift ? W.set.drift * 60000 : 0; }
-function wIsPause(kind) { return kind === "breathe" || kind === "practice" || kind === "checkin"; }
+function wReadMs() { return W.set.drift * 60000; }
+function wIsPause(kind) { return kind === "breathe" || kind === "practice"; }
 function wInPause() { return !!W.seg && wIsPause(W.seg.kind); }
 // pauses wait while a practice, a routine, or the timer is on screen, so two things don't talk at once
 function wHeld() { return /^#\/(p\/|r\/|timer)/.test(location.hash); }
 function wHm(t) { var d = new Date(t); return clock12(two(d.getHours()) + ":" + two(d.getMinutes())); }
 function wHourTag(s) { return s.hour ? s.hour.name + " · " : ""; }
 function wBegin(kind, ms, extra) {
-  W.seg = { kind: kind, start: Date.now(), end: ms ? Date.now() + ms : 0, hour: null, said: false };
+  W.seg = { kind: kind, start: Date.now(), end: Date.now() + ms, hour: null, said: false };
   if (extra) for (var k in extra) W.seg[k] = extra[k];
   // the background sound settles lower during a pause and comes back after
   bgDip = wIsPause(kind) ? 0.6 : 1; bgGlide(2);
@@ -2572,8 +2570,7 @@ function wSay(text) { if (W.view) { W.seg.said = true; say(text, true); } }
 function wPauseLine(s) {
   var lead = s.hour ? s.hour.name + ", " + s.hour.say + ". " : "";
   if (s.kind === "breathe") return lead + "A minute to breathe. Follow the circle, or just listen.";
-  if (s.kind === "practice") return lead + (W.set.plain ? s.p.plain : s.p.name) + ". " + WATCH_SAYS[s.p.id].t;
-  return lead + "Check-in. How are you right now?";
+  return lead + (W.set.plain ? s.p.plain : s.p.name) + ". " + WATCH_SAYS[s.p.id].t;
 }
 function wSayPause() { if (W.set.speak !== "off" && wInPause() && !W.seg.said) wSay(wPauseLine(W.seg)); }
 function wShow() { if (W.view) W.view.draw(true); else wMiniDraw(true); }
@@ -2591,6 +2588,11 @@ function wRead(speakIt) {
   if (speakIt) wSay((it.title ? it.title + ". " : "") + it.text + (it.by ? " " + it.by.replace(/\s*\(.*\)/, "") : ""));
 }
 function wBackToReading() { wUnflag(); wRead(false); }
+// a small practice counts toward the evening review if it was on a visible screen, when its pause ends or Next is tapped
+function wCount() {
+  var s = W.seg;
+  if (s && s.kind === "practice" && s.seen && !s.counted) { s.counted = true; var d = wday(); d.done++; store.set("wday", d); }
+}
 
 // pause 1: a minute of slow breathing (about six breaths a minute)
 function wBreathe(fromBell, hour) {
@@ -2613,24 +2615,10 @@ function wPractice(fromBell, hour) {
   if (fromBell) watchBell();
   wSayPause();
 }
-// pause 3: a one-tap check-in, skipped if there was one in the last hour and a half
-function wRecentCheckin() {
-  var w = weatherToday(); if (!w.length) return false;
-  var p = w[w.length - 1].t.split(":"), d = new Date(); d.setHours(+p[0], +p[1], 0, 0);
-  return Date.now() - d.getTime() < 90 * 60000;
-}
-function wCheckin(fromBell, hour) {
-  wBegin("checkin", 90000, { hour: hour || null });
-  wFlag(); wShow();
-  if (fromBell) watchBell();
-  wSayPause();
-}
-// pauses take turns: breathe, practice, breathe, check-in
+// pauses take turns: breathe, then a small practice
 function wPause(fromBell, hour) {
-  var k = W.pauses % 4; W.pauses++;
-  if (k === 0 || k === 2) wBreathe(fromBell, hour);
-  else if (k === 3 && !wRecentCheckin()) wCheckin(fromBell, hour);
-  else wPractice(fromBell, hour);
+  var k = W.pauses % 2; W.pauses++;
+  if (k === 0) wBreathe(fromBell, hour); else wPractice(fromBell, hour);
 }
 
 // the clock: everything runs on clock time, so a slowed background tab catches up
@@ -2656,7 +2644,8 @@ function wNextText(now) {
 function wTick() {
   var now = Date.now();
   if (W.view) W.view.step();
-  if (W.seg.end && now >= W.seg.end) {
+  if (now >= W.seg.end) {
+    wCount();
     if (wInPause()) wBackToReading();
     else wRead(W.set.speak === "all");
   }
@@ -2711,7 +2700,7 @@ function wMiniDraw(fresh) {
   var s = W.seg, pause = wInPause();
   wMini.el.hidden = false;
   wMini.el.classList.toggle("on", pause);
-  var t = !pause ? "The Watch" : wHourTag(s) + (s.kind === "breathe" ? "A minute to breathe" : s.kind === "practice" ? "A small practice: " + (W.set.plain ? s.p.plain : s.p.name) : "Check-in");
+  var t = !pause ? "The Watch" : wHourTag(s) + (s.kind === "breathe" ? "A minute to breathe" : "A small practice: " + (W.set.plain ? s.p.plain : s.p.name));
   if (wMini.title.textContent !== t) wMini.title.textContent = t;
   if (W.flagged) document.title = "◆ Pause · Trestleboard";
   if (fresh && pause && !reduce) { wMini.el.classList.remove("lit"); void wMini.el.offsetWidth; wMini.el.classList.add("lit"); }
@@ -2720,7 +2709,7 @@ function wMiniDraw(fresh) {
 function wMiniFoot() {
   if (!wMini || !W.running || W.view) return;
   var now = Date.now();
-  wMini.sub.textContent = wInPause() ? "Tap to join · " + Math.max(1, Math.ceil((W.seg.end - now) / 1000)) + " seconds left" : wNextText(now);
+  wMini.sub.textContent = wInPause() ? Math.max(1, Math.ceil((W.seg.end - now) / 1000)) + " seconds left" : wNextText(now);
 }
 
 /* the interval controls: − and + through a fixed list of steps */
@@ -2762,8 +2751,8 @@ function watchView() {
       if (W.running) { wPlan(); wShowFoot(); } else drawReady();
       redrawSteps();
     });
-    var b = wStepper("Readings", W_DRIFT, "drift", function (v) { return v ? "Every " + v + " min" : "Only on Next"; }, function () {
-      if (W.running && W.seg && !wInPause()) { W.seg.start = Date.now(); W.seg.end = wReadMs() ? Date.now() + wReadMs() : 0; wShowFoot(); }
+    var b = wStepper("Readings", W_DRIFT, "drift", function (v) { return "Every " + v + " min"; }, function () {
+      if (W.running && W.seg && !wInPause()) { W.seg.start = Date.now(); W.seg.end = Date.now() + wReadMs(); wShowFoot(); }
       else if (!W.running) drawReady();
       redrawSteps();
     });
@@ -2791,7 +2780,7 @@ function watchView() {
   }
 
   // before it starts: say plainly what will happen
-  function pauseWhat() { return "a slow minute of breathing, a small practice, or a one-tap check-in."; }
+  function pauseWhat() { return "a slow minute of breathing or a small practice."; }
   function drawReady() {
     buttons(); setup.hidden = false; orb = null; cnt = null;
     stLabel.textContent = "Ready"; stClock.textContent = clock12(nowClock());
@@ -2801,7 +2790,7 @@ function watchView() {
     mid.appendChild(h("ul", { class: "wplan" }, [
       set.sound !== "off" ? SOUND_NAMES[set.sound] + " plays quietly the whole time." : "No background sound.",
       set.every ? (set.every === "hours" ? "At the old monastic hours (6, 9, noon, 3, 6, and 9)" : "About every " + set.every + " minutes") + ", a bell rings for a pause: " + pauseWhat() : "No pauses.",
-      set.drift ? "In between, a short reading changes every " + set.drift + " minutes." : "In between, a short reading stays until you tap Next.",
+      "In between, a short reading changes every " + set.drift + " minutes.",
       set.speak === "off" ? null : set.speak === "bells" ? "Pauses are read aloud." : "Pauses and readings are read aloud."
     ].map(function (t) { return t ? h("li", null, [t]) : null; })));
     foot.textContent = "Nothing needs a tap once it’s going, and you can move to other pages. On a phone, the screen has to stay on; locking it or switching apps pauses everything.";
@@ -2815,11 +2804,11 @@ function watchView() {
     mid.setAttribute("aria-live", "polite");
     mid.innerHTML = "";
     quietCue = !fresh && set.speak !== "off" && !s.said;
+    if (document.visibilityState === "visible") s.seen = true;
     if (s.kind === "day") drawDay();
     else if (s.kind === "read") drawRead(s.item);
     else if (s.kind === "breathe") drawBreathe(s);
-    else if (s.kind === "practice") drawPractice(s);
-    else drawCheckin(s);
+    else drawPractice(s);
     turn();
     if (fresh && wInPause()) lit();
     if (!fresh) wSayPause(); // joining a pause that began on another page
@@ -2894,9 +2883,6 @@ function watchView() {
     cntLeft = -1;
     if (w.count) { cnt = h("div", { class: "wcount", "aria-hidden": "true" }, [String(w.count)]); mid.appendChild(cnt); }
     if (p.tool === "shadow") mid.appendChild(shadowNotes());
-    var done = h("button", { class: "opt", type: "button" }, ["Done"]);
-    done.addEventListener("click", function () { var d = wday(); d.done++; store.set("wday", d); wBackToReading(); drawFoot(); });
-    mid.appendChild(h("div", { class: "row left" }, [done]));
     mid.appendChild(fold("How and why", [h("p", null, [p.how]), h("p", null, [p.why]), set.plain ? null : h("div", { class: "wfrom", html: p.from })]));
   }
   // a countdown, when the practice has one; it waits a few seconds so there's time to read first
@@ -2910,29 +2896,17 @@ function watchView() {
     if (!left && watched) chime(396, 1.6, true);
   }
 
-  // pause 3: the check-in
-  function drawCheckin(s) {
-    stLabel.textContent = wHourTag(s) + "Check-in";
-    mid.appendChild(h("h2", { class: "wtitle" }, ["How are you right now?"]));
-    mid.appendChild(h("p", { class: "wtext" }, ["One tap, if you like; it goes to My Log, where you can see how your days tend to run. If not, this moves on by itself."]));
-    mid.appendChild(weatherChips(function () { setTimeout(function () { if (W.seg === s) { wBackToReading(); drawFoot(); } }, 2500); }, true));
-  }
-
   function drawFoot() {
     if (!W.running || !W.seg) return;
     var now = Date.now(), s = W.seg;
     stClock.textContent = clock12(nowClock());
-    barI.style.width = s.end ? Math.min(100, (now - s.start) / (s.end - s.start) * 100).toFixed(1) + "%" : "0";
+    barI.style.width = Math.min(100, (now - s.start) / (s.end - s.start) * 100).toFixed(1) + "%";
     if (wInPause()) { foot.textContent = "Back to the readings in " + Math.max(1, Math.ceil((s.end - now) / 1000)) + " seconds."; return; }
     foot.textContent = wNextText(now);
   }
   startB.addEventListener("click", function () { if (W.running) watchStop(); else watchStart(); });
-  nextB.addEventListener("click", function () { var was = wInPause(); wUnflag(); wRead(!was && set.speak === "all"); drawFoot(); });
+  nextB.addEventListener("click", function () { var was = wInPause(); wCount(); wUnflag(); wRead(!was && set.speak === "all"); drawFoot(); });
   breatheB.addEventListener("click", function () { wBreathe(false, null); drawFoot(); });
-
-  // your day: the check-in and the one habit, folded away
-  app.appendChild(h("details", { class: "more" }, [h("summary", null, [h("span", null, ["Your day: check-in and one habit"]), icon("chev", "chev")]),
-    h("div", { class: "foldbody wtoday" }, [weatherChips(), aimBox()])]));
 
   // settings, folded away
   function chooser(title, opts, key, after) {
@@ -3257,7 +3231,7 @@ function logView() {
     ]));
   }
 
-  // check-ins from the Watch, by time of day
+  // quick check-ins, by time of day
   var wx = store.get("weather", []);
   if (wx.length) {
     var BANDS = [["Morning", 0, 12], ["Midday", 12, 14], ["Afternoon", 14, 17], ["Evening", 17, 24]];
@@ -3270,7 +3244,7 @@ function logView() {
     var days = {}; wx.forEach(function (r) { days[r.k] = 1; });
     app.appendChild(h("section", { class: "group" }, [
       h("h2", null, ["Your check-ins by time of day"]),
-      h("p", { class: "gdesc" }, ["From your quick check-ins on the Watch: " + wx.length + (wx.length === 1 ? " check-in" : " check-ins") + " over " + Object.keys(days).length + (Object.keys(days).length === 1 ? " day" : " days") + ". Patterns take a few weeks to show."]),
+      h("p", { class: "gdesc" }, ["From your quick check-ins: " + wx.length + (wx.length === 1 ? " check-in" : " check-ins") + " over " + Object.keys(days).length + (Object.keys(days).length === 1 ? " day" : " days") + ". Patterns take a few weeks to show."]),
       h("div", { class: "tablewrap" }, [h("table", { class: "log" }, [h("thead", null, [h("tr", null, [h("th", null, ["When"]), h("th", null, ["Check-ins"])])]), h("tbody", null, trs)])])
     ]));
   }
