@@ -2268,8 +2268,6 @@ function stackTables(root) {
   });
 }
 
-function secSvg(n) { for (var i = 0; i < BOOK.sections.length; i++) if (BOOK.sections[i].n === n) return BOOK.sections[i].svg || ""; return ""; }
-
 /* ---------- top bar + bottom tabs ---------- */
 var lastTab = null;
 function tabs(current) {
@@ -2455,7 +2453,6 @@ function allView() {
 }
 
 /* ---------- steady moments: today's saved bits (aim, count, check-ins) ---------- */
-function plainText(html) { var d = document.createElement("div"); d.innerHTML = html; return d.textContent; }
 function nowClock() { var d = new Date(); return two(d.getHours()) + ":" + two(d.getMinutes()); }
 function wday() { var d = store.get("wday", null); if (!d || d.k !== dayKey()) d = { k: dayKey(), done: 0, aim: "", caught: 0 }; return d; }
 function weatherToday() { var k = dayKey(); return store.get("weather", []).filter(function (r) { return r.k === k; }); }

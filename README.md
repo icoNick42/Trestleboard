@@ -1,6 +1,6 @@
 # Trestleboard
 
-Twenty-four practices borrowed from old traditions, *A Field Guide to the Western Mysteries*, and a log of what works for you, in one app for your phone.
+Twenty-four practices borrowed from old traditions, *A Field Guide to the Western Mysteries*, and a log of what works for you, in one app for your phone or computer.
 
 Everything in it comes from free or public-domain sources.
 
@@ -20,7 +20,7 @@ Open it once with internet so the phone saves its copy. After that it opens with
 - **My Log**: your before-and-after ratings, parked thoughts, your check-ins by time of day, shadow notes, and a backup button. The evening review (Raising the Sparks) also shows what you saved that day.
 - **Voices**: two built-in voices, Heart and Michael, so guidance sounds the same on a phone or a computer and works offline. You can also use your device's own voice.
 
-Your ratings, notes, and pins are saved only on your phone. They are never uploaded here.
+Your ratings, notes, and pins are saved only on the device you use them on. They are never uploaded here.
 
 ## Files
 
