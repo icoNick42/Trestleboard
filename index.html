@@ -50,7 +50,7 @@
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
   --r: 12px; --r-s: 8px;
   --tap: 44px;
-  --fs: var(--t-body);    /* reading size; the Aa control changes it */
+  --fs: var(--t-body);    /* reading size */
   --tabs-h: 3.6rem;
 
   /* names the practice tools were written against */
@@ -78,8 +78,9 @@ body {
   font-family: var(--body); font-size: var(--t-body); line-height: 1.55;
   -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased;
 }
-body[data-size="s"] { --fs: 0.97rem; }
-body[data-size="l"] { --fs: 1.22rem; }
+/* the Aa control's text size scales the whole app (everything sized in rem); reading text lands where it did before */
+html[data-size="s"] { font-size: 91.3%; }
+html[data-size="l"] { font-size: 114.8%; }
 [hidden] { display: none !important; }
 a { color: var(--steel); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
 button { font: inherit; color: inherit; cursor: pointer; }
@@ -614,10 +615,13 @@ html.locked, html.locked body { overflow: hidden; }
   border: 1px solid var(--rule); border-radius: var(--r); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 .wm-open { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--s3); min-height: 52px; padding: var(--s2) var(--s3); color: inherit; text-decoration: none; }
-.wm-ic { width: 1.5rem; height: 1.5rem; flex: none; color: var(--steel); }
-.wm-ic svg { width: 100%; height: 100%; }
+.wm-ic { width: 2.25rem; height: 2.25rem; flex: none; }
+.wm-ic svg { width: 100%; height: 100%; overflow: visible; }
+.wm-ic .sq { stroke-width: 5; }
+.wm-ic .sq-side { stroke-width: 9; }
+.wm-ic .ring { stroke-width: 3; }
 .wm-txt { display: grid; min-width: 0; line-height: 1.3; }
-.wm-t { font-size: var(--t-small); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wm-t { font-size: var(--t-body); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wm-s { font-size: var(--t-tiny); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wm-pause { flex: none; width: 52px; height: 52px; display: grid; place-items: center; background: transparent; color: var(--steel); border: 0; border-left: 1px solid var(--rule); border-radius: 0 var(--r) var(--r) 0; cursor: pointer; }
 .wm-pause .ico { width: 1.4rem; height: 1.4rem; }
@@ -679,8 +683,7 @@ var store = {
 var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 // guidance: "off" | "tones" | "voice"; background sound is never auto-started (needs a tap)
 var guide = store.get("guide", store.get("sound", false) ? "tones" : "off");
-var bgKind = "off";
-var guideVol = store.get("gvol", 0.8), bgVol = store.get("bvol", 0.5);
+var guideVol = store.get("gvol", 0.8);
 var voiceName = store.get("voice", ""), voiceRate = store.get("rate", 0.85);
 
 /* ---------- sound + wake lock ---------- */
@@ -849,28 +852,17 @@ var COLLECT = null;
 function cue(text, freq, len) { if (guide === "voice") say(text); else chime(freq, len); }
 
 /* background sound, generated here (no files) */
-var bg = null;
-// the background sound (and the Watch's) settles lower under spoken words
+// the background sound settles lower under spoken words
 var bgSpeech = 1, duckTimer = null;
-function bgTarget(base) { return Math.max(0.0002, base * bgVol * bgSpeech); }
-function bgGlide(sec) {
-  if (!bg) return;
-  try {
-    var g = bg.out.gain, t = actx.currentTime;
-    // browsers without cancelAndHoldAtTime: let the fade-in finish, then move
-    if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t); else t = Math.max(t, bg.settled || 0);
-    g.setTargetAtTime(bgTarget(bg.base), t, sec / 3);
-  } catch (e) {}
-}
 // on: words are starting (ms: how long they should take, in case the device never says it finished).
 // off: the sound comes back only after 3 quiet seconds, so it doesn't rise and fall between cues
 function duck(on, ms) {
   clearTimeout(duckTimer);
   if (on) {
-    if (bgSpeech !== 0.45) { bgSpeech = 0.45; bgGlide(0.4); wGlide(0.4); }
+    if (bgSpeech !== 0.45) { bgSpeech = 0.45; wGlide(0.4); }
     duckTimer = setTimeout(function () { duck(false); }, ms || 15000);
   } else if (bgSpeech !== 1) {
-    duckTimer = setTimeout(function () { bgSpeech = 1; bgGlide(1.5); wGlide(1.5); }, 3000);
+    duckTimer = setTimeout(function () { bgSpeech = 1; wGlide(1.5); }, 3000);
   }
 }
 function noiseBuffer(kind) {
@@ -885,12 +877,12 @@ function noiseBuffer(kind) {
   return buf;
 }
 /* soft music, made here: slow chords with a few bell notes over them, never quite the same twice.
-   dest and level: where it plays and how loud (the Watch's own sound); otherwise it's the background sound */
+   dest and level: where it plays (its layer's volume) and how loud */
 function startMusic(c, dest, level) {
-  var out = c.createGain(), base = 2.2, t0 = c.currentTime;
+  var out = c.createGain(), t0 = c.currentTime;
   out.gain.setValueAtTime(0.0001, t0);
-  out.gain.exponentialRampToValueAtTime(dest ? level : bgTarget(base), t0 + 4);
-  out.connect(dest || c.destination);
+  out.gain.exponentialRampToValueAtTime(level, t0 + 4);
+  out.connect(dest);
   // a simple room: a burst of fading noise used as the echo
   var len = Math.floor(c.sampleRate * 3.5), ir = c.createBuffer(2, len, c.sampleRate);
   for (var ch = 0; ch < 2; ch++) { var d = ir.getChannelData(ch); for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
@@ -942,7 +934,7 @@ function startMusic(c, dest, level) {
     while (played.length > 1 && played[1][0] <= t) played.shift();
     return played.length && played[0][0] <= t ? CHORDS[played[0][1]] : CHORDS[0];
   }
-  return { out: out, nodes: [tone, room, wet, dry, out], base: base, timer: setInterval(ahead, 2000), chord: chord };
+  return { nodes: [tone, room, wet, dry, out], timer: setInterval(ahead, 2000), chord: chord };
 }
 /* the Watch's bell, at the start of each set: its notes come from the soft music's chord of the moment (or the
    music's home chord when it isn't playing), so it sounds like part of the music. Which notes, and whether
@@ -969,59 +961,15 @@ function watchBell(dest, at) {
     if (Math.random() < 0.6) strike(lift(notes[1]) + 12, at + 0.9 + Math.random() * 0.6, 0.5);
   } catch (e) {}
 }
-function startBg(kind) {
-  stopBg();
-  if (kind === "off") return;
-  if (kind === "music") {
-    try { bg = startMusic(ctx()); bg.settled = actx.currentTime + 4; bgKind = kind; } catch (e) { bg = null; bgKind = "off"; }
-    return;
-  }
-  try {
-    var c = ctx(), src = c.createBufferSource(), out = c.createGain(), nodes = [src, out];
-    src.buffer = noiseBuffer(kind); src.loop = true;
-    var base = { brown: 0.5, ocean: 0.55, rain: 0.09 }[kind], level = bgTarget(base);
-    var chain = src;
-    if (kind === "rain") {
-      var hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 900;
-      var lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 5500;
-      chain.connect(hp); hp.connect(lp); chain = lp; nodes.push(hp, lp);
-    }
-    if (kind === "ocean") {
-      var lp2 = c.createBiquadFilter(); lp2.type = "lowpass"; lp2.frequency.value = 700;
-      var swell = c.createGain(); swell.gain.value = 0.55;
-      var lfo = c.createOscillator(); lfo.frequency.value = 0.09;
-      var depth = c.createGain(); depth.gain.value = 0.45;
-      lfo.connect(depth); depth.connect(swell.gain); lfo.start();
-      chain.connect(lp2); lp2.connect(swell); chain = swell; nodes.push(lp2, swell, lfo, depth);
-    }
-    chain.connect(out); out.connect(c.destination);
-    out.gain.setValueAtTime(0.0001, c.currentTime);
-    out.gain.exponentialRampToValueAtTime(level, c.currentTime + 2.5);
-    src.start();
-    bg = { out: out, nodes: nodes, base: base, settled: c.currentTime + 2.5 }; bgKind = kind;
-  } catch (e) { bg = null; bgKind = "off"; }
-}
-function setBgVol(v) {
-  bgVol = v; store.set("bvol", v);
-  if (bg) try { bg.out.gain.cancelScheduledValues(actx.currentTime); bg.out.gain.setTargetAtTime(bgTarget(bg.base), actx.currentTime, 0.15); } catch (e) {}
-}
-// sec: how long the fade out takes (the Watch fades slowly when it stops)
-function stopBg(sec) {
-  sec = sec || 1.2;
-  if (!bg) { bgKind = "off"; return; }
-  var b = bg; bg = null; bgKind = "off";
-  if (b.timer) clearInterval(b.timer);
-  try {
-    var t = actx.currentTime;
-    b.out.gain.cancelScheduledValues(t); b.out.gain.setValueAtTime(b.out.gain.value, t);
-    b.out.gain.exponentialRampToValueAtTime(0.0001, t + sec);
-    setTimeout(function () { b.nodes.forEach(function (n) { try { if (n.stop) n.stop(); n.disconnect(); } catch (e) {} }); }, sec * 1000 + 200);
-  } catch (e) {}
-}
 
-/* the Watch's sound layers, made here (no files). Each plays into dest at full level; the Watch sets each
-   layer's volume on its own gain. Returns { stop }, plus chord() for the music. */
-var W_LAYERS = [["music", "Soft music"], ["tones", "Breath tones"], ["rain", "Rain"], ["wind", "Wind"], ["fire", "Fire"], ["storm", "Thunderstorm"], ["brown", "Brown noise"]];
+/* the sound layers, made here (no files). The top bar's sound settings and the Watch's "Sound and screen" are
+   two views of one mix: the same layers at the same volumes. Each layer plays into dest at full level, and
+   its volume is set on its own gain. Returns { stop }, plus chord() for the music. */
+var W_LAYERS = [["music", "Soft music"], ["tones", "Breath tones"], ["rain", "Rain"], ["ocean", "Ocean"], ["wind", "Wind"], ["fire", "Fire"], ["storm", "Thunderstorm"], ["brown", "Brown noise"]];
+// the volumes start from the Watch's defaults each time the app opens; nothing plays until the sound is
+// turned on in the top bar or the Watch starts. Breath tones only sound while the Watch runs.
+var mixVol = {}, mixOn = false;
+W_LAYERS.forEach(function (l) { mixVol[l[0]] = l[0] === "music" || l[0] === "tones" ? 0.5 : 0; });
 // a fire's crackle: short clicks and the odd pop over a quiet hiss, made once and looped
 function crackleBuffer(c) {
   var len = Math.floor(c.sampleRate * 9.7), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0), i;
@@ -1048,6 +996,8 @@ function wLayer(kind, c, dest) {
   function chain(list) { for (var i = 0; i < list.length - 1; i++) list[i].connect(list[i + 1]); list[list.length - 1].connect(dest); }
   if (kind === "brown") chain([loop(noiseBuffer("brown")), amp(0.5)]);
   if (kind === "rain") chain([loop(noiseBuffer("rain")), filt("highpass", 900), filt("lowpass", 5500), amp(0.09)]);
+  // slow swells of filtered noise
+  if (kind === "ocean") { var swell = amp(0.55); sway(swell.gain, 0.09, 0.45); chain([loop(noiseBuffer("brown")), filt("lowpass", 700), swell, amp(0.55)]); }
   if (kind === "wind") {
     var air = loop(noiseBuffer("rain"));
     [[480, 0.9, 0.061, 0.083], [950, 1.6, 0.107, 0.047]].forEach(function (p) {
@@ -1145,6 +1095,8 @@ function icon(name, cls) {
 function s(tag, attrs) { var el = document.createElementNS(SVGNS, tag); for (var k in attrs) el.setAttribute(k, attrs[k]); return el; }
 
 var active = null; // the running tool, so leaving a page stops it
+// a tool that stops or finishes on its own lets go of active (the Watch waits only while one runs)
+function quit(stop) { if (active && active.stop === stop) active = null; }
 /* practice days + completion hook (routines listen to it) */
 function dayKey(d) { d = d || new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
 function markDay() { var days = store.get("days", {}); days[dayKey()] = (days[dayKey()] || 0) + 1; store.set("days", days); }
@@ -1237,7 +1189,7 @@ function breath(cfg) {
     mirror("Done", sub.textContent); cue("Done. " + sub.textContent, 396, 1.2); toolDone();
   }
   function stop() {
-    if (raf) cancelAnimationFrame(raf); raf = null; lastIdx = -1; hush();
+    if (raf) cancelAnimationFrame(raf); raf = null; lastIdx = -1; hush(); quit(stop);
     btn.textContent = "Start"; btn.classList.remove("ghost"); setScale(0.35); letSleep(); stage.classList.add("idle");
     sides.forEach(function (l) { l.classList.remove("on"); });
     if (dot) { dot.setAttribute("cx", 12); dot.setAttribute("cy", 88); }
@@ -1289,7 +1241,7 @@ function steps(cfg) {
     mirror(st.label, String(st.s));
   }
   function done() {
-    clearInterval(timer); timer = null; letSleep();
+    clearInterval(timer); timer = null; letSleep(); quit(stop);
     label.textContent = cfg.doneLabel || "Done"; big.textContent = cfg.doneBig || "✓";
     bar.firstChild.style.width = "100%"; sub.textContent = cfg.doneText || "";
     btn.textContent = "Again"; btn.classList.remove("ghost");
@@ -1298,7 +1250,7 @@ function steps(cfg) {
     if (cfg.then) { after.innerHTML = ""; after.appendChild(cfg.then()); }
   }
   function stop() {
-    clearInterval(timer); timer = null; letSleep(); idx = 0; hush();
+    clearInterval(timer); timer = null; letSleep(); idx = 0; hush(); quit(stop);
     label.textContent = cfg.ready || "Ready"; big.textContent = cfg.showFirst === false ? "" : String(cfg.steps[0].s);
     bar.firstChild.style.width = "0"; sub.textContent = cfg.hint || "";
     btn.textContent = cfg.start || "Start"; btn.classList.remove("ghost");
@@ -1454,16 +1406,16 @@ function switcher() {
   var sub = h("div", { class: "sub", "aria-live": "polite" }, ["Set a warning for a switch you know is coming"]);
   var timer = null, end = 0, mark2 = false;
   function fmt(sec) { var m = Math.floor(sec / 60), x = sec % 60; return m + ":" + (x < 10 ? "0" : "") + x; }
-  function stop() { clearInterval(timer); timer = null; big.textContent = "—"; sub.textContent = "Set a warning for a switch you know is coming"; }
+  function stop() { clearInterval(timer); timer = null; quit(stop); big.textContent = "—"; sub.textContent = "Set a warning for a switch you know is coming"; }
   function start(min) {
-    stopActive(); active = { stop: stop }; end = Date.now() + min * 60000; mark2 = min <= 2;
+    stopActive(); active = { stop: stop, quiet: true }; end = Date.now() + min * 60000; mark2 = min <= 2;
     sub.textContent = min + "-minute warning running. Write your parking note below.";
     clearInterval(timer);
     timer = setInterval(function () {
       var left = Math.max(0, Math.round((end - Date.now()) / 1000));
       big.textContent = fmt(left);
       if (!mark2 && left <= 120) { mark2 = true; sub.textContent = "Two minutes. Finish your sentence, write the note."; cue(sub.textContent, 528, 0.8); }
-      if (left === 0) { clearInterval(timer); timer = null; sub.textContent = "Time to switch. Palms on the doorframe, breathe out, step through."; cue(sub.textContent, 396, 1.4); }
+      if (left === 0) { clearInterval(timer); timer = null; quit(stop); sub.textContent = "Time to switch. Palms on the doorframe, breathe out, step through."; cue(sub.textContent, 396, 1.4); }
     }, 250);
   }
   var b10 = h("button", { class: "go", type: "button" }, ["10 min"]);
@@ -1567,10 +1519,10 @@ var START_HERE = { "starting": 2, "foggy": 4, "too-much": 7, "heated": 10, "loop
 /* ---------- views ---------- */
 var app = document.getElementById("app");
 var sheet = null;
-function soundOn() { return guide !== "off" || bgKind !== "off" || wSounding(); }
+function soundOn() { return guide !== "off" || mixSounding(); }
 function soundLabel() {
   var g = { off: "Off", tones: "Tones", voice: "Voice" }[guide];
-  return "Sound: " + g + (bgKind !== "off" ? " + " + { brown: "noise", ocean: "ocean", rain: "rain", music: "music" }[bgKind] : "") + (wSounding() ? " + the Watch" : "");
+  return "Sound: " + g + (mixSounding() ? (W.running ? " + the Watch" : " + background") : "");
 }
 function soundPanel(onChange) {
   var panel = h("section", { class: "panel", "aria-label": "Sound settings" });
@@ -1604,12 +1556,17 @@ function soundPanel(onChange) {
   vbox.appendChild(voiceChooser());
   panel.appendChild(g);
 
-  // background sound
-  panel.appendChild(h("div", { class: "psec" }, [head("waves", "Background"),
-    choice([["off", "Off"], ["music", "Soft music"], ["brown", "Brown noise"], ["ocean", "Ocean"], ["rain", "Rain"]], function () { return bgKind; }, function (v) { startBg(v); }),
-    slider("Volume", "bvol-r", bgVol, setBgVol),
-    h("p", { class: "phelp" }, ["Plays quietly under everything until you turn it off. Made by the app itself, so it works offline."])
-  ]));
+  // background sound: the same mix the Watch plays (breath tones only while it runs)
+  var onRow = h("div", { class: "row", role: "group", "aria-label": "Background sound" });
+  [[false, "Off"], [true, "On"]].forEach(function (o) {
+    var b = h("button", { class: "opt", type: "button", "data-mixon": String(o[0]), "aria-pressed": String(mixOn === o[0]) }, [o[1]]);
+    b.addEventListener("click", function () { if (o[0]) mixStart(); else mixStop(1.2); if (onChange) onChange(); });
+    onRow.appendChild(b);
+  });
+  panel.appendChild(h("div", { class: "psec" }, [head("waves", "Background"), onRow].concat(
+    W_LAYERS.filter(function (l) { return l[0] !== "tones" || W.running; }).map(function (l) { return mixSlider(l[0], l[1], "mx-" + l[0], function () { return true; }); }),
+    [h("p", { class: "phelp" }, ["Plays quietly under everything until you turn it off. Made by the app itself, so it works offline."])]
+  )));
   panel.appendChild(h("p", { class: "phelp" }, ["Hearing nothing? Turn the device volume up. On an iPhone, also check the silent switch."]));
   return panel;
 }
@@ -2020,7 +1977,7 @@ function timerView() {
   var timer = null, end = 0, warmEnd = 0, lastBell = 0, started = 0;
   function fmt(sec) { var m = Math.floor(sec / 60), x = sec % 60; return m + ":" + (x < 10 ? "0" : "") + x; }
   function reset() { if (timer) return; big.textContent = fmt(cfg.min * 60); label.textContent = "Ready"; }
-  function stop() { clearInterval(timer); timer = null; letSleep(); btn.textContent = "Begin"; btn.classList.remove("ghost"); reset(); }
+  function stop() { clearInterval(timer); timer = null; letSleep(); quit(stop); btn.textContent = "Begin"; btn.classList.remove("ghost"); reset(); }
   function tick() {
     var now = Date.now();
     if (now < warmEnd) { var w = Math.ceil((warmEnd - now) / 1000); big.textContent = String(w); label.textContent = "Settle in"; mirror("Settle in", String(w)); return; }
@@ -2029,7 +1986,7 @@ function timerView() {
     big.textContent = fmt(left); mirror("", fmt(left));
     if (cfg.every && now - lastBell >= cfg.every * 60000 && left > 5) { lastBell += cfg.every * 60000; bell(1); }
     if (left === 0) {
-      clearInterval(timer); timer = null; letSleep(); bell(3); markDay();
+      clearInterval(timer); timer = null; letSleep(); quit(stop); bell(3); markDay();
       label.textContent = "Time"; mirror("Time", ""); btn.textContent = "Again"; btn.classList.remove("ghost");
     }
   }
@@ -2264,7 +2221,7 @@ function displayControl() {
       return row;
     }
     pop.appendChild(choices("Text", "", "size", [["s", "Smaller text", "A", "0.85rem"], ["m", "Normal text", "A", "1.05rem"], ["l", "Larger text", "A", "1.3rem"]], "m",
-      function (v) { document.body.setAttribute("data-size", v); }));
+      function (v) { document.documentElement.setAttribute("data-size", v); }));
     pop.appendChild(choices("Look", "look", "theme", [["auto", "Match the device", "Device"], ["light", "Light", "Light"], ["dark", "Dark", "Dark"]], "auto", applyTheme));
     topEl.appendChild(pop); sizePop = pop; aa.setAttribute("aria-expanded", "true");
   });
@@ -2368,8 +2325,7 @@ function practicesView() {
   // where to start
   app.appendChild(h("section", { class: "group" }, [
     h("h2", null, ["Where to start"]),
-    h("p", { class: "gdesc" }, ["Steady right now? Open the Watch. Something in the way? Find it below and begin with the one marked Start here."]),
-    h("a", { class: "linkrow", href: "#/watch" }, [h("span", null, [h("small", null, ["For steady moments"]), h("span", { class: "t1" }, ["Open the Watch"])]), icon("chev", "chev")])
+    h("p", { class: "gdesc" }, ["Something in the way? Find it below and begin with the one marked Start here."])
   ]));
 
   var f = favs();
@@ -2515,7 +2471,6 @@ function everyFold(p) {
 function steadyView() {
   topbar({ back: ["Practices", "#/practices"], sound: true }); tabs("practices");
   app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["For steady moments"]), h("p", null, ["Small practices for ordinary hours, so the skills are already in use when a hard moment comes."])]));
-  app.appendChild(h("a", { class: "linkrow", href: "#/watch" }, [h("span", null, [h("small", null, ["Keep it open in the background"]), h("span", { class: "t1" }, ["Open the Watch"])]), icon("chev", "chev")]));
   Object.keys(TIERS).forEach(function (t) {
     var sec = h("section", { class: "group" }, [h("h2", null, [TIERS[t]])]);
     EVERY.forEach(function (p) { if (p.tier === t) sec.appendChild(everyFold(p)); });
@@ -2554,10 +2509,9 @@ var W_MIXES = {
 var W_LEAD = 4000;
 function wRest(sg) { return Math.min(30000, Math.max(12000, (sg.end - sg.start) / 4)); }
 function wFresh() {
-  var rounds = {}, vol = {};
+  var rounds = {};
   WB_ORDER.forEach(function (k) { rounds[k] = WB[k].def; });
-  W_LAYERS.forEach(function (l) { vol[l[0]] = l[0] === "music" || l[0] === "tones" ? 0.5 : 0; });
-  return { pats: ["vessel"], mix: null, order: "picked", rounds: rounds, vol: vol, awake: true, dim: 0 };
+  return { pats: ["vessel"], mix: null, order: "picked", rounds: rounds, awake: true, dim: 0 };
 }
 function wName(k) { return BOOK.entries[WB[k].n].name; }
 // the patterns this setup uses, in the order picked (a mix uses its own)
@@ -2569,8 +2523,9 @@ function wUses(set) { return set.mix ? WB_ORDER.filter(function (k) { return W_M
 var W = { running: false, set: null, segs: [], iv: null, raf: null, paused: false, held: false, frozenAt: 0, off: 0, last: null, bag: [], pi: 0,
   master: null, gains: {}, layers: {}, chord: null, toneTo: 0, tones: [], view: null };
 function wNow() { return (W.frozenAt || Date.now()) - W.off; }
-// pauses wait while a practice, a routine, or the timer is on screen, so two guides don't talk at once
-function wHeld() { return /^#\/(p\/|r\/|timer)/.test(location.hash); }
+// breathing waits while a practice's tool is running (apart from a quiet one, such as the switch countdown), or while a routine or the timer is on screen, so two
+// guides don't talk at once; a practice page that is only being read leaves it breathing
+function wHeld() { return !!(active && !active.quiet) || /^#\/(r\/|timer)/.test(location.hash); }
 function wCycle(k) { var c = 0; WB[k].phases.forEach(function (p) { c += p.s * 1000; }); return c; }
 function wPick() {
   var set = W.set, k, list = wUses(set);
@@ -2615,15 +2570,15 @@ function wWhere(sg, now) {
   return { i: i, frac: (pos - acc) / (ph[i].s * 1000), round: Math.floor(el / sg.C) + 1, left: sg.end - now };
 }
 
-/* sound: every layer has its own volume and runs through one master volume, which Pause fades */
+/* sound: every layer has its own volume and runs through one master volume, which the Watch's Pause fades */
 function wGlide(sec) {
   if (!W.master) return;
-  var lvl = W.paused ? 0.0001 : (W.held ? 0.5 : 1) * bgSpeech;
+  var lvl = W.running && W.paused ? 0.0001 : (W.running && W.held ? 0.5 : 1) * bgSpeech;
   try { var g = W.master.gain, t = actx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(lvl, t, sec / 3); } catch (e) {}
 }
 function wVol(kind, v) {
-  W.set.vol[kind] = v;
-  if (!W.running || !W.master) return;
+  mixVol[kind] = v; mixSync();
+  if (!mixOn || !W.master) { if (redrawSound) redrawSound(); return; }
   var c = actx, g = W.gains[kind];
   if (!g) { g = W.gains[kind] = c.createGain(); g.gain.value = 0.0001; g.connect(W.master); }
   try { g.gain.cancelScheduledValues(c.currentTime); g.gain.setTargetAtTime(Math.max(0.0001, v), c.currentTime, 0.15); } catch (e) {}
@@ -2636,7 +2591,50 @@ function wVol(kind, v) {
   }
   if (redrawSound) redrawSound();
 }
-function wSounding() { return W.running && W_LAYERS.some(function (l) { return l[0] !== "tones" && W.set.vol[l[0]] > 0; }); }
+function mixSounding() { return mixOn && W_LAYERS.some(function (l) { return mixVol[l[0]] > 0 && (l[0] !== "tones" || W.running); }); }
+// turning the mix on and off (a tap has to start it on a phone)
+function mixStart() {
+  if (mixOn && W.master) return;
+  try {
+    ctx();
+    W.master = actx.createGain(); W.master.gain.value = 0.0001; W.master.connect(actx.destination);
+    mixOn = true;
+    W_LAYERS.forEach(function (l) { wVol(l[0], mixVol[l[0]]); });
+    wGlide(3);
+  } catch (e) { W.master = null; mixOn = false; }
+  mixSync();
+  if (redrawSound) redrawSound();
+}
+// sec: how long the fade out takes (slower when the Watch stops)
+function mixStop(sec) {
+  wUntone();
+  var m = W.master, layers = W.layers, gains = W.gains;
+  mixOn = false; W.master = null; W.layers = {}; W.gains = {}; W.chord = null;
+  if (m) {
+    try { m.gain.cancelScheduledValues(actx.currentTime); m.gain.setValueAtTime(m.gain.value, actx.currentTime); m.gain.setTargetAtTime(0.0001, actx.currentTime, sec / 3); } catch (e) {}
+    setTimeout(function () {
+      Object.keys(layers).forEach(function (k) { if (layers[k]) layers[k].stop(); });
+      Object.keys(gains).forEach(function (k) { try { gains[k].disconnect(); } catch (e) {} });
+      try { m.disconnect(); } catch (e) {}
+    }, sec * 1500);
+  }
+  mixSync();
+  if (redrawSound) redrawSound();
+}
+// a volume slider for one layer; every slider for that layer, here or in the top bar, moves together.
+// wake: whether moving it up turns the sound on (always for the top bar's sliders; the Watch's only once it runs)
+function mixSlider(kind, name, id, wake) {
+  var el = slider(name, id, mixVol[kind], function (v) { if (wake && wake() && v > 0 && !mixOn) mixStart(); wVol(kind, v); });
+  el.querySelector("input").setAttribute("data-mix", kind);
+  return el;
+}
+function mixSync() {
+  [].forEach.call(document.querySelectorAll("input[data-mix]"), function (r) {
+    var v = mixVol[r.getAttribute("data-mix")];
+    if (+r.value !== v) { r.value = v; r.nextSibling.textContent = Math.round(v * 100) + "%"; }
+  });
+  [].forEach.call(document.querySelectorAll("[data-mixon]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-mixon") === String(mixOn))); });
+}
 // a soft tone at each change of breath, picked from the soft music's chord of the moment so it sounds like part of it
 // (or the music's home chord when it isn't playing): the top note to breathe in, the bottom one to breathe out,
 // one between for a hold, and the bottom note an octave up to top off a breath
@@ -2709,13 +2707,8 @@ function wShow(fresh) { if (W.view) W.view.draw(fresh); else wMiniDraw(); }
 function watchStart() {
   try { ctx(); } catch (e) {}
   W.running = true; W.paused = false; W.held = false; W.frozenAt = 0; W.off = 0; W.last = null; W.bag = []; W.pi = 0; W.toneTo = 0; W.tones = [];
-  // the Watch's own sound takes the place of the background sound, so two kinds of music don't play at once
-  if (bgKind !== "off") stopBg();
-  try {
-    W.master = actx.createGain(); W.master.gain.value = 0.0001; W.master.connect(actx.destination);
-    W_LAYERS.forEach(function (l) { wVol(l[0], W.set.vol[l[0]]); });
-    wGlide(3);
-  } catch (e) { W.master = null; }
+  // the Watch plays the same mix as the background sound: whatever is already on carries straight on
+  if (!mixOn) mixStart(); else { W_LAYERS.forEach(function (l) { wVol(l[0], mixVol[l[0]]); }); wGlide(2); }
   if (W.set.awake) holdAwake();
   var first = wPick(), now = wNow();
   W.segs = [{ kind: "lead", k: first, start: now, end: now + W_LEAD }];
@@ -2730,17 +2723,8 @@ function watchStop() {
   wUntone();
   // a practice or the timer on screen may be holding the screen on; leave those alone
   if (!wHeld()) letSleep();
-  var m = W.master, layers = W.layers, gains = W.gains;
-  W.master = null; W.layers = {}; W.gains = {}; W.chord = null;
-  if (m) {
-    try { m.gain.cancelScheduledValues(actx.currentTime); m.gain.setValueAtTime(m.gain.value, actx.currentTime); m.gain.setTargetAtTime(0.0001, actx.currentTime, 1); } catch (e) {}
-    setTimeout(function () {
-      Object.keys(layers).forEach(function (k) { if (layers[k]) layers[k].stop(); });
-      Object.keys(gains).forEach(function (k) { try { gains[k].disconnect(); } catch (e) {} });
-      try { m.disconnect(); } catch (e) {}
-    }, 4500);
-  }
-  if (redrawSound) redrawSound();
+  // Stop ends the sound too, with a slow fade
+  mixStop(3);
   if (W.view) W.view.ready();
   wMiniDraw();
 }
@@ -2748,8 +2732,8 @@ function watchStop() {
 function watchDetach() { if (W.raf) cancelAnimationFrame(W.raf); W.raf = null; W.view = null; if (wDimEl) { wDimEl.remove(); wDimEl = null; } }
 // coming back to the app: the screen lock and the sound may have been interrupted, so pick them up again
 document.addEventListener("visibilitychange", function () {
-  if (!W.running || document.visibilityState !== "visible") return;
-  if (W.set.awake) holdAwake();
+  if (!(W.running || mixOn) || document.visibilityState !== "visible") return;
+  if (W.running && W.set.awake) holdAwake();
   try { if (actx && actx.state !== "running") actx.resume(); } catch (e) {}
 });
 
@@ -2757,7 +2741,7 @@ document.addEventListener("visibilitychange", function () {
 function wStatus() {
   var sg = W.segs[0], now = wNow();
   if (W.paused) return { top: "Paused", t: "Paused", s: "Resume picks up where you left off." };
-  if (W.held) return { top: "Waiting", t: "Waiting while this page is open", s: "Breathing picks up when you leave it." };
+  if (W.held) return { top: "Waiting", t: "Waiting while another guide runs", s: "Breathing picks up when it stops." };
   if (sg.kind === "lead") return { top: "Starting", t: "Get ready", s: wName(sg.k) };
   if (sg.kind === "rest") { var sec = Math.max(1, Math.ceil((sg.end - now) / 1000)); return { top: "Rest", t: "Rest", s: "Breathe however you like. " + wName(sg.k) + " in " + sec + " seconds." }; }
   var at = wWhere(sg, now), ph = WB[sg.k].phases[at.i];
@@ -2765,37 +2749,79 @@ function wStatus() {
 }
 function wLeft(ms) { var s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ":" + two(s % 60); }
 
-/* the slim bar above the tabs, shown on other pages while the Watch runs, with its own pause button */
-var wMini = null;
+/* the slim bar above the tabs, shown on other pages while the Watch runs: a small copy of the breathing shape,
+   what to do now, and its own pause button, so you can read elsewhere and keep breathing with it */
+var wMini = null, wMiniRaf = null; // wMiniRaf: the timer for the next move of the small shape
 function wMiniMake() {
-  var title = h("span", { class: "wm-t", "aria-live": "polite" }), sub = h("span", { class: "wm-s" });
-  var open = h("a", { class: "wm-open", href: "#/watch" }, [
-    h("span", { class: "wm-ic", "aria-hidden": "true", html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + EMB.watch + "</svg>" }),
-    h("span", { class: "wm-txt" }, [title, sub])
-  ]);
+  var title = h("span", { class: "wm-t" }), sub = h("span", { class: "wm-s" }), ic = h("span", { class: "wm-ic", "aria-hidden": "true" });
+  // what a screen reader announces: the pattern or the state, not every breath
+  var live = h("span", { class: "vh", "aria-live": "polite" });
+  var open = h("a", { class: "wm-open", href: "#/watch" }, [ic, h("span", { class: "wm-txt" }, [title, sub, live])]);
   var pb = h("button", { class: "wm-pause", type: "button" });
   pb.addEventListener("click", function () { watchPause(!W.paused); });
   var el = h("div", { class: "wmini", role: "region", "aria-label": "The Watch" }, [open, pb]);
   el.hidden = true;
   document.body.insertBefore(el, tabsEl);
-  return { el: el, title: title, sub: sub, pb: pb };
+  return { el: el, title: title, sub: sub, live: live, pb: pb, ic: ic, k: null, orb: null, dot: null, sides: [] };
+}
+// the same shapes as the Watch page: a circle that grows and shrinks, or a square traced side by side
+function wMiniShape(k) {
+  var m = wMini, svg = s("svg", { viewBox: "0 0 100 100" });
+  m.orb = m.dot = null; m.sides = [];
+  if (WB[k].shape === "square") {
+    svg.appendChild(s("rect", { class: "sq", x: 12, y: 12, width: 76, height: 76 }));
+    [[12, 88, 12, 12], [12, 12, 88, 12], [88, 12, 88, 88], [88, 88, 12, 88]].forEach(function (p) { var l = s("line", { class: "sq-side", x1: p[0], y1: p[1], x2: p[2], y2: p[3] }); m.sides.push(l); svg.appendChild(l); });
+    m.dot = s("circle", { class: "dot", cx: 12, cy: 88, r: 9 }); svg.appendChild(m.dot);
+  } else {
+    svg.appendChild(s("circle", { class: "ring", cx: 50, cy: 50, r: 46 }));
+    m.orb = s("circle", { class: "orb", cx: 50, cy: 50, r: 45 }); svg.appendChild(m.orb);
+  }
+  m.ic.innerHTML = ""; m.ic.appendChild(svg); m.k = k;
+}
+// moves the small shape; smooth only while a set is breathing and the page can be seen (saves battery)
+function wMiniStep() {
+  wMiniRaf = null;
+  if (!wMini || !W.running || W.view) return;
+  var sg = W.segs[0], m = wMini, scale = 0.35;
+  if (m.k !== sg.k) wMiniShape(sg.k);
+  if (sg.kind === "set") {
+    var at = wWhere(sg, wNow()), ph = WB[sg.k].phases, from = ph[(at.i - 1 + ph.length) % ph.length].to, to = ph[at.i].to;
+    var x = reduce ? 1 : at.frac, e = x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+    scale = from + (to - from) * e;
+    m.sides.forEach(function (l, j) { l.classList.toggle("on", j === at.i); });
+    if (m.dot) {
+      var c = [[12, 88], [12, 12], [88, 12], [88, 88], [12, 88]], f = reduce ? 0 : at.frac;
+      m.dot.setAttribute("cx", c[at.i][0] + (c[at.i + 1][0] - c[at.i][0]) * f);
+      m.dot.setAttribute("cy", c[at.i][1] + (c[at.i + 1][1] - c[at.i][1]) * f);
+    }
+  } else m.sides.forEach(function (l) { l.classList.remove("on"); });
+  if (m.orb) m.orb.setAttribute("transform", "translate(50 50) scale(" + scale.toFixed(3) + ") translate(-50 -50)");
+  // about 30 moves a second is smooth at this size and lighter on the battery than every frame
+  if (!reduce && !W.frozenAt && sg.kind === "set" && document.visibilityState === "visible") wMiniRaf = setTimeout(wMiniStep, 33);
 }
 function wMiniDraw() {
   var show = W.running && !W.view;
   document.body.classList.toggle("wmini-on", show);
-  if (!show) { if (wMini) wMini.el.hidden = true; return; }
+  if (!show) { if (wMiniRaf) clearTimeout(wMiniRaf); wMiniRaf = null; if (wMini) wMini.el.hidden = true; return; }
   if (!wMini) wMini = wMiniMake();
   wMini.el.hidden = false;
   var sg = W.segs[0], t = W.paused ? "The Watch is paused" : W.held ? "The Watch is waiting" : sg.kind === "rest" ? "Rest · next: " + wName(sg.k) : wName(sg.k);
-  if (wMini.title.textContent !== t) wMini.title.textContent = t;
+  if (wMini.live.textContent !== t) wMini.live.textContent = t;
   wMini.pb.innerHTML = ""; wMini.pb.appendChild(icon(W.paused ? "play" : "pause"));
   wMini.pb.setAttribute("aria-label", W.paused ? "Resume the Watch" : "Pause the Watch");
   wMiniFoot();
 }
+// the words: what to do now, large; the pattern and how far along, small
 function wMiniFoot() {
   if (!wMini || !W.running || W.view) return;
-  var st = wStatus(), s = W.paused || W.held ? st.s : W.segs[0].kind === "set" ? st.t + " · " + st.s : st.s;
-  if (wMini.sub.textContent !== s) wMini.sub.textContent = s;
+  var st = wStatus(), sg = W.segs[0], t, sub;
+  if (W.paused || W.held) { t = W.paused ? "Paused" : "Waiting"; sub = st.s; }
+  else if (sg.kind === "set") { t = st.t; sub = wName(sg.k) + " · " + st.s; }
+  else if (sg.kind === "rest") { t = "Rest"; sub = wName(sg.k) + " in " + Math.max(1, Math.ceil((sg.end - wNow()) / 1000)) + " seconds"; }
+  else { t = "Get ready"; sub = wName(sg.k); }
+  if (wMini.title.textContent !== t) wMini.title.textContent = t;
+  if (wMini.sub.textContent !== sub) wMini.sub.textContent = sub;
+  if (!wMiniRaf) wMiniStep();
 }
 
 /* a − and + control for one number */
@@ -2983,7 +3009,7 @@ function watchView() {
   stopB.addEventListener("click", function () { watchStop(); mainB.focus(); });
 
   // sound and screen: live while it runs, too
-  var sliders = W_LAYERS.map(function (l) { return slider(l[1], "wv-" + l[0], set.vol[l[0]], function (v) { wVol(l[0], v); }); });
+  var sliders = W_LAYERS.map(function (l) { return mixSlider(l[0], l[1], "wv-" + l[0], function () { return W.running; }); });
   function chooser(title, opts, key, after) {
     var row = h("div", { class: "row left" });
     opts.forEach(function (o) {
@@ -3466,7 +3492,7 @@ window.trestleboardPhrases = allPhrases;
 function render() {
   stopActive(); watchDetach(); closeDim(); closeSheet(); closeSizePop(); onDone = null;
   savePos(); curRead = null;
-  document.body.setAttribute("data-size", store.get("size", "m")); applyTheme(store.get("theme", "auto"));
+  document.documentElement.setAttribute("data-size", store.get("size", "m")); applyTheme(store.get("theme", "auto"));
   app.innerHTML = ""; topEl.innerHTML = ""; document.title = "Trestleboard";
   var hsh = location.hash.replace(/^#\/?/, ""), m;
   if ((m = /^p\/(\d{1,2})$/.exec(hsh)) && E[+m[1]]) practiceView(+m[1]);
