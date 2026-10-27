@@ -1,6 +1,6 @@
 # Trestleboard
 
-Twenty-four practices borrowed from old traditions, *A Field Guide to the Western Mysteries*, and a log of what works for you, in one app for your phone or computer.
+Twenty-four practices borrowed from old traditions, a breathing companion called the Watch, and *A Field Guide to the Western Mysteries*, in one app for your phone or computer.
 
 Everything in it comes from free or public-domain sources.
 
@@ -14,13 +14,14 @@ Open it once with internet so the phone saves its copy. After that it opens with
 
 ## What's in it
 
-- **Practices**: a short welcome the first time you open it, "How are you right now?" with eight groups (Starting, Foggy, Too Much, Heated, Looping, Deciding, People, Winding Down), a line for today with the practice that goes with it, three routines, a quiet timer, and all 24 practices with their tools (breathing guides, timers, voice guidance, background sounds and soft music, and a dim screen for bedtime).
-- **For steady moments**: 18 small practices for ordinary hours, sorted by length (seconds, about a minute, a few minutes), and the Watch, a breathing companion to leave running in the background like a video. Pick one or more of four breathing patterns from the practices (slow breathing, a long exhale, box breathing, or the double-inhale sigh), or a mix of them, press Start, and it breathes with you set after set, with short rests between, until you pause or stop it. While each pattern runs, it shows where the pattern comes from and why it might help. Underneath, it can play any blend of soft music, breath tones, rain, wind, fire, a thunderstorm, and brown noise, each with its own volume and all made by the app itself. It can keep the screen on and dim it. It keeps running while you move to other pages, with a slim bar above the tabs that has its own pause button (breathing waits while a practice, a routine, or the timer is on screen; the app has to stay open, and on a phone the screen has to stay on).
-- **Read**: About (the preface, "Where the Threads Cross," and "Reading the Fine Print"); the Field Guide (all of *A Field Guide to the Western Mysteries*); and Extras (one combined glossary and the Free Shelf).
-- **My Log**: your before-and-after ratings, parked thoughts, your check-ins by time of day, shadow notes, and a backup button. The evening review (Raising the Sparks) also shows what you saved that day.
+- **Home**: a short welcome the first time you open it, the Watch, "What's in the way?" with eight groups (Inertia, Low energy, Overload, Reactivity, Rumination, Indecision, Friction, Transitions), a line for today with the practice that goes with it, and Your data (backup and restore).
+- **Watch**: a breathing companion to leave running in the background like a video. Pick one or more of four breathing patterns from the practices (slow breathing, a long exhale, box breathing, or the double-inhale sigh), or a mix of them, press Start, and it breathes with you set after set, with short rests between, until you pause or stop it. While each pattern runs, it shows where the pattern comes from and why it might help. Underneath, it can play any blend of soft music, breath tones, rain, wind, fire, a thunderstorm, and brown noise, each with its own volume and all made by the app itself. It can keep the screen on while it runs, and dim it. It keeps running while you move to other pages, with a slim bar above the tabs that has its own pause button (breathing waits while a practice, a routine, or the timer is on screen; the app has to stay open, and on a phone the screen has to stay on).
+- **Practices**: where to start, then all 24 practices by group, with one in each group marked "Start here," each with its tools (breathing guides, timers, voice guidance, background sounds and soft music, and a dim screen for bedtime); 18 small practices for ordinary hours, sorted by length (seconds, about a minute, a few minutes); three routines; and a quiet timer. The evening review (Raising the Sparks) also shows what you saved that day.
+- **Read**: About (the preface, "Where the Threads Cross," and "Reading the Fine Print"); the Field Guide (all of *A Field Guide to the Western Mysteries*); and Extras (one combined glossary, where each word lists the pages that use it, and the Free Shelf). Glossary words are underlined in the reading and the practices; tap one for its definition. Each reading page remembers where you left off.
+- **Aa**: on every page, text size and light or dark (or match the device).
 - **Voices**: two built-in voices, Heart and Michael, so guidance sounds the same on a phone or a computer and works offline. You can also use your device's own voice.
 
-Your ratings, notes, and pins are saved only on the device you use them on. They are never uploaded here.
+Your notes, pins, and settings are saved only on the device you use them on. They are never uploaded here.
 
 ## Files
 

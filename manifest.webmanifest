@@ -1,7 +1,7 @@
 {
   "name": "Trestleboard",
   "short_name": "Trestleboard",
-  "description": "Practices from old traditions, a field guide to where they came from, and a log of what works for you.",
+  "description": "Practices from old traditions, a breathing companion, and a field guide to where they came from.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
