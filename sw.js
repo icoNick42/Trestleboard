@@ -1,8 +1,7 @@
 /* Keeps a copy of the Trestleboard on the phone so it opens with no internet.
    With signal, it checks for a newer version first (giving up after 3 seconds);
    without signal, it uses the saved copy. */
-var CACHE = "trestleboard-v22-2026-10-27";
-var VOICE_CACHE = "tbvoices-1";
+var CACHE = "trestleboard-v23-2026-10-27";
 var FILES = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", function (e) {
@@ -10,7 +9,7 @@ self.addEventListener("install", function (e) {
 });
 self.addEventListener("activate", function (e) {
   e.waitUntil(caches.keys().then(function (keys) {
-    return Promise.all(keys.filter(function (k) { return (k.indexOf("trestleboard-") === 0 && k !== CACHE) || (k.indexOf("tbvoices-") === 0 && k !== VOICE_CACHE); }).map(function (k) { return caches.delete(k); }));
+    return Promise.all(keys.filter(function (k) { return (k.indexOf("trestleboard-") === 0 && k !== CACHE) || k.indexOf("tbvoices-") === 0; }).map(function (k) { return caches.delete(k); }));
   }).then(function () { return self.clients.claim(); }));
 });
 function fromNetwork(req, ms) {
@@ -28,15 +27,6 @@ self.addEventListener("fetch", function (e) {
       var copy = r.clone(); caches.open(CACHE).then(function (c) { c.put("index.html", copy); });
       return r;
     }).catch(function () { return caches.match("index.html"); }));
-    return;
-  }
-  if (new URL(req.url).pathname.indexOf("/voices/") >= 0) {
-    // voice recordings: kept in their own store so app updates don't download them again
-    e.respondWith(caches.open(VOICE_CACHE).then(function (c) {
-      return c.match(req).then(function (hit) {
-        return hit || fetch(req).then(function (r) { if (r.ok) c.put(req, r.clone()); return r; });
-      });
-    }));
     return;
   }
   e.respondWith(caches.match(req).then(function (hit) {

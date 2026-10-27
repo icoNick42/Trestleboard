@@ -108,7 +108,6 @@ p { margin: 0; }
 .top .brand { display: flex; align-items: center; gap: var(--s2); color: var(--on-slate); text-decoration: none; min-width: 0; min-height: var(--tap); padding: 0 var(--s1); }
 .top .brand svg { width: 1.4rem; height: 1.4rem; color: var(--slate-mark); flex: none; }
 .top .brand span { font-family: var(--display); font-size: var(--t-body); font-weight: 600; }
-.top .ttl { font-family: var(--display); font-size: var(--t-card); font-weight: 600; flex: 1; padding: 0 var(--s1); }
 .top .spacer { flex: 1; }
 .tb {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--s1);
@@ -206,9 +205,6 @@ p { margin: 0; }
 .prose .fold { margin: var(--s2) 0; }
 .prose .fold > summary { font-weight: 600; }
 .more > .foldbody { display: grid; gap: var(--s3); padding: var(--s4); background: var(--surface); border: 1px solid var(--rule); border-top: 0; border-radius: 0 0 var(--r) var(--r); }
-.howto { margin-top: var(--s2); }
-.howto > summary { min-height: var(--tap); padding: var(--s2) var(--s3); font-size: var(--t-small); }
-.howto ol { margin: 0; padding: var(--s3) var(--s3) var(--s3) calc(var(--s3) + 1.2rem); display: grid; gap: var(--s1); font-size: var(--t-small); color: var(--muted); background: var(--surface); border: 1px solid var(--rule); border-top: 0; border-radius: 0 0 var(--r) var(--r); }
 
 /* ---------- cards ---------- */
 .card { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s4); display: grid; gap: var(--s3); }
@@ -228,9 +224,7 @@ p { margin: 0; }
 /* a line for today */
 .linecard { gap: var(--s3); }
 .linecard .quote { margin: 0; border: 0; padding: 0; font-style: italic; font-size: var(--t-card); line-height: 1.45; }
-.linecard .qrow { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); margin-top: calc(var(--s2) * -1); }
-.linecard cite { font-style: normal; font-size: var(--t-tiny); color: var(--muted); }
-.linecard .icobtn { margin-right: calc(var(--s2) * -1); }
+.linecard cite { font-style: normal; font-size: var(--t-tiny); color: var(--muted); margin-top: calc(var(--s2) * -1); }
 .linecard .linkrow { background: var(--paper); }
 .minis .gtile { background: transparent; }
 .minis .emb svg { width: 1.35rem; height: 1.35rem; }
@@ -269,7 +263,6 @@ p { margin: 0; }
 .p-meta .dotsep { opacity: 0.6; }
 .when { font-size: var(--t-body); }
 .methodbox { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s3) var(--s4) var(--s4); display: grid; gap: var(--s2); }
-.mhead { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); margin-right: calc(var(--s2) * -1); }
 .mhead h2, .fields dt, .subhead { font-family: var(--body); font-size: var(--t-body); font-weight: 600; line-height: 1.3; }
 .methodbox .mtext { display: grid; gap: var(--s2); }
 .apptip { font-size: var(--t-small); color: var(--muted); border-top: 1px solid var(--rule); padding-top: var(--s2); }
@@ -351,17 +344,6 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 .psec .row { justify-content: flex-start; }
 .pgroup { display: grid; gap: var(--s2); }
 .pgroup .row { justify-content: flex-start; }
-.vbox { display: grid; gap: var(--s3); }
-.voices { display: grid; gap: var(--s2); }
-.vbtn { display: grid; grid-template-columns: 1.3rem minmax(0, 1fr) auto; align-items: center; gap: var(--s3); width: 100%; text-align: left; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s2) var(--s3); min-height: 52px; transition: border-color 0.2s, background 0.2s; }
-.vbtn .ck { width: 1.1rem; height: 1.1rem; border-radius: 50%; border: 1.5px solid var(--muted); }
-.vbtn[aria-pressed="true"] { border-color: var(--steel); background: var(--steel-soft); }
-.vbtn[aria-pressed="true"] .ck { border-color: var(--steel); background: var(--steel); box-shadow: inset 0 0 0 3px var(--steel-soft); }
-.vbtn .vname { display: grid; min-width: 0; }
-.vbtn .vname small { color: var(--muted); font-size: var(--t-tiny); }
-.vbtn .hear { font-size: var(--t-tiny); color: var(--steel); white-space: nowrap; font-weight: 600; }
-.vstatus:empty { display: none; }
-.devbox { display: grid; gap: var(--s3); padding-left: var(--s3); border-left: 2px solid var(--rule); }
 .slider { display: grid; grid-template-columns: minmax(0, 1fr) 3rem; gap: var(--s1) var(--s3); align-items: center; }
 .slider .label { grid-column: 1 / -1; }
 .slider input { width: 100%; min-width: 0; min-height: var(--tap); accent-color: var(--steel); }
@@ -375,11 +357,6 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 .dim-x { font-size: var(--t-small); background: transparent; color: #5c5240; border: 1px solid #2a2619; border-radius: 999px; padding: 0 var(--s5); min-height: var(--tap); margin-top: var(--s6); }
 
 /* ---------- Read: contents ---------- */
-.cover { background: var(--slate); color: var(--on-slate); display: grid; gap: var(--s2); padding: var(--s4) var(--s5); border-radius: var(--r); }
-.cover .label { color: var(--slate-mark); }
-.cover h1 { font-size: var(--t-head); }
-.cover .row { justify-content: flex-start; margin-top: var(--s1); }
-.cover .go { background: var(--slate-mark); color: var(--slate); border-color: var(--slate-mark); }
 .toc { display: grid; gap: var(--s6); }
 .toc-group { display: grid; gap: var(--s1); }
 .toc-group .gnote { font-size: var(--t-small); color: var(--muted); margin-bottom: var(--s2); }
@@ -534,11 +511,7 @@ html.locked, html.locked body { overflow: hidden; }
 .w-note { color: var(--on-slate-muted); font-size: var(--t-small); font-style: italic; }
 .welcome .go { background: var(--slate-mark); color: var(--slate); border-color: var(--slate-mark); min-width: 12rem; }
 
-/* ---------- small practices and the Watch ---------- */
-.wp > .foldbody .wfrom blockquote { margin: var(--s2) 0; }
-.wshort { font-size: var(--t-body); }
-.wp > summary .sit { display: block; }
-.wp > summary .nm { display: block; font-size: var(--t-small); color: var(--muted); }
+/* ---------- the day's question and the Watch ---------- */
 .foldbody .subhead { margin-top: var(--s2); }
 .lensbox { display: grid; gap: var(--s2); text-align: left; }
 .lensq { font-size: var(--t-card); font-weight: 600; line-height: 1.35; }
@@ -681,10 +654,10 @@ var store = {
   set: function (k, v) { try { localStorage.setItem("tb:" + k, JSON.stringify(v)); } catch (e) {} }
 };
 var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-// guidance: "off" | "tones" | "voice"; background sound is never auto-started (needs a tap)
-var guide = store.get("guide", store.get("sound", false) ? "tones" : "off");
+// practice tones, saved as "tones" or "off" under guide (an old "voice" setting counts as on);
+// background sound is never auto-started (needs a tap)
+var tonesOn = store.get("guide", store.get("sound", false) ? "tones" : "off") !== "off";
 var guideVol = store.get("gvol", 0.8);
-var voiceName = store.get("voice", ""), voiceRate = store.get("rate", 0.85);
 
 /* ---------- sound + wake lock ---------- */
 var actx = null;
@@ -693,178 +666,23 @@ function ctx() {
   if (actx.state === "suspended") actx.resume();
   return actx;
 }
+// a practice's tone at each step: a higher note to breathe in, a lower one to breathe out or let go.
+// While the soft music plays, the note comes from its chord of the moment, so the tone sounds like part of it
 function chime(freq, len, force) {
-  if (guide !== "tones" && !force) return;
+  if (!tonesOn && !force) return;
   try {
     ctx();
-    var o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime;
-    o.type = "sine"; o.frequency.value = freq || 528;
+    var o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime, f = freq || 528;
+    if (W.chord) f = 440 * Math.pow(2, (chordTone(f) - 69) / 12);
+    o.type = "sine"; o.frequency.value = f;
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(Math.max(0.0002, 0.22 * guideVol), t + 0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, t + (len || 0.6));
     o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + (len || 0.6) + 0.05);
   } catch (e) {}
 }
-/* voice: use the most natural voice the device has; the person can override it */
-var NOVELTY = /^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Eddy|Flo|Fred|Good News|Grandma|Grandpa|Hysterical|Jester|Junior|Kathy|Organ|Pipe Organ|Princess|Ralph|Reed|Rocko|Sandy|Shelley|Superstar|Trinoids|Whisper|Wobble|Zarvox)\b/i;
-function voiceScore(v) {
-  var n = v.name, sc = 0;
-  if (/premium/i.test(n)) sc += 6;
-  if (/enhanced/i.test(n)) sc += 4;
-  if (/natural|neural|online/i.test(n)) sc += 4;          // Edge/Windows natural voices
-  if (/^Google/i.test(n)) sc += 2;                         // Chrome's network voices
-  if (/^(Ava|Zoe|Evan|Nathan|Samantha|Allison|Susan|Serena|Daniel|Karen|Moira|Tessa|Joelle|Noelle)/i.test(n)) sc += 1;
-  if (/en[-_](US|GB|AU|IE|CA|NZ)/i.test(v.lang)) sc += 1;
-  return sc;
-}
-function englishVoices() {
-  try {
-    return speechSynthesis.getVoices()
-      .filter(function (v) { return /^en/i.test(v.lang) && !NOVELTY.test(v.name); })
-      .sort(function (a, b) { return voiceScore(b) - voiceScore(a) || a.name.localeCompare(b.name); });
-  } catch (e) { return []; }
-}
-var voicePick = null;
-function pickVoice() {
-  if (voicePick) return voicePick;
-  var vs = englishVoices();
-  if (voiceName) for (var i = 0; i < vs.length; i++) if (vs[i].name === voiceName) return (voicePick = vs[i]);
-  return (voicePick = vs[0] || null);
-}
-var voiceListeners = [];
-function voicesChanged() { voicePick = null; voiceListeners.forEach(function (f) { try { f(); } catch (e) {} }); }
-try {
-  if (window.speechSynthesis) {
-    if (speechSynthesis.addEventListener) speechSynthesis.addEventListener("voiceschanged", voicesChanged);
-    else speechSynthesis.onvoiceschanged = voicesChanged;
-    speechSynthesis.getVoices(); // asks the device to start loading its list
-  }
-} catch (e) {}
-// iPhones hand over their voice list late, and sometimes never announce it: keep asking for a few seconds
-function waitForDeviceVoices(done) {
-  var tries = 0;
-  (function again() {
-    var n = englishVoices().length;
-    if (n || tries++ > 16) { voicesChanged(); if (done) done(n); return; }
-    setTimeout(again, 300);
-  })();
-}
-
-/* ---------- built-in voices: recordings that ship with the app ---------- */
-// Each spoken line was recorded once with Kokoro (an open-source voice, Apache 2.0)
-// and packed into one file per voice. Lines not in the pack use the device's own voice.
-var VOICES = {
-  heart: { name: "Heart", desc: "Warm and steady", file: "voices/heart-1.bin" },
-  michael: { name: "Michael", desc: "Low and calm", file: "voices/michael-1.bin" }
-};
-var voiceKind = store.get("vkind", "heart");
-if (voiceKind !== "device" && !VOICES[voiceKind]) voiceKind = "heart";
-var packs = {}, packLoads = {};
-function phraseKey(t) { return String(t).replace(/ · /g, ", ").replace(/[“”]/g, "").replace(/…/g, ",").replace(/\s+/g, " ").trim(); }
-function phraseId(t) { var h = 0x811c9dc5; for (var i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return ("0000000" + h.toString(16)).slice(-8); }
-function loadPack(kind, onProgress) {
-  if (packs[kind]) return Promise.resolve(packs[kind]);
-  if (packLoads[kind]) return packLoads[kind];
-  var v = VOICES[kind]; if (!v) return Promise.reject(new Error("no voice"));
-  packLoads[kind] = fetch(v.file).then(function (r) {
-    if (!r.ok) throw new Error("missing");
-    var total = +r.headers.get("content-length") || 0;
-    if (!r.body || !r.body.getReader || !onProgress) return r.arrayBuffer();
-    var rd = r.body.getReader(), parts = [], got = 0;
-    return (function pump() {
-      return rd.read().then(function (x) {
-        if (x.done) { var out = new Uint8Array(got), o = 0; parts.forEach(function (p) { out.set(p, o); o += p.length; }); return out.buffer; }
-        parts.push(x.value); got += x.value.length; if (total) onProgress(got / total);
-        return pump();
-      });
-    })();
-  }).then(function (buf) {
-    var n = new DataView(buf).getUint32(0, true);
-    var index = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 4, n)));
-    packs[kind] = { buf: buf, base: 4 + n, index: index, cache: {}, order: [] };
-    return packs[kind];
-  });
-  packLoads[kind].catch(function () { delete packLoads[kind]; });
-  return packLoads[kind];
-}
-function packHas(kind, key) { var p = packs[kind]; return !!(p && p.index[phraseId(key)]); }
-var clip = null, clipToken = 0;
-function decodeClip(p, id) {
-  if (p.cache[id]) return Promise.resolve(p.cache[id]);
-  var at = p.index[id], c = ctx();
-  var bytes = p.buf.slice(p.base + at[0], p.base + at[0] + at[1]);
-  return new Promise(function (res, rej) {
-    var pr = c.decodeAudioData(bytes, res, rej); if (pr && pr.then) pr.then(res, rej);
-  }).then(function (ab) {
-    p.cache[id] = ab; p.order.push(id);
-    if (p.order.length > 40) delete p.cache[p.order.shift()];
-    return ab;
-  });
-}
-function playClip(kind, key) {
-  var p = packs[kind], id = phraseId(key), my = ++clipToken;
-  clip = { src: null, pending: true };
-  decodeClip(p, id).then(function (ab) {
-    if (my !== clipToken) return;
-    var c = ctx(), src = c.createBufferSource(), g = c.createGain();
-    src.buffer = ab; g.gain.value = guideVol;
-    src.connect(g); g.connect(c.destination);
-    var me = { src: src, end: c.currentTime + ab.duration };
-    src.onended = function () { if (clip === me) { clip = null; duck(false); } };
-    clip = me; duck(true, ab.duration * 1000 + 1000); src.start();
-  }).catch(function () { if (my === clipToken) { clip = null; deviceSay(key); } });
-}
-function deviceSay(key) {
-  try {
-    if (!window.speechSynthesis) return;
-    speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(key);
-    var v = pickVoice(); if (v) u.voice = v;
-    u.rate = voiceRate; u.pitch = 1; u.volume = guideVol;
-    u.onstart = function () { duck(true, key.length * 90 / voiceRate + 3000); };
-    u.onend = u.onerror = function () { duck(false); };
-    speechSynthesis.speak(u);
-  } catch (e) {}
-}
-function say(text, force) {
-  if (guide !== "voice" && !force) return;
-  if (COLLECT) { COLLECT.push(text); return; }
-  var key = phraseKey(text);
-  hush();
-  if (voiceKind !== "device") {
-    if (packHas(voiceKind, key)) { playClip(voiceKind, key); return; }
-    if (!packs[voiceKind]) loadPack(voiceKind).catch(function () {});
-  }
-  deviceSay(key);
-}
-function speaking() {
-  if (clip) return true;
-  try { return !!(window.speechSynthesis && speechSynthesis.speaking); } catch (e) { return false; }
-}
-function hush() {
-  clipToken++; duck(false);
-  if (clip) { try { if (clip.src) clip.src.stop(); } catch (e) {} clip = null; }
-  try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
-}
-// when collecting the list of lines to record, tools report what they would say
-var COLLECT = null;
-// one call for every cue: spoken words in voice mode, a tone in tones mode
-function cue(text, freq, len) { if (guide === "voice") say(text); else chime(freq, len); }
 
 /* background sound, generated here (no files) */
-// the background sound settles lower under spoken words
-var bgSpeech = 1, duckTimer = null;
-// on: words are starting (ms: how long they should take, in case the device never says it finished).
-// off: the sound comes back only after 3 quiet seconds, so it doesn't rise and fall between cues
-function duck(on, ms) {
-  clearTimeout(duckTimer);
-  if (on) {
-    if (bgSpeech !== 0.45) { bgSpeech = 0.45; wGlide(0.4); }
-    duckTimer = setTimeout(function () { duck(false); }, ms || 15000);
-  } else if (bgSpeech !== 1) {
-    duckTimer = setTimeout(function () { bgSpeech = 1; wGlide(1.5); }, 3000);
-  }
-}
 function noiseBuffer(kind) {
   var c = ctx(), len = c.sampleRate * 6, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0), last = 0;
   for (var i = 0; i < len; i++) {
@@ -1103,7 +921,7 @@ function markDay() { var days = store.get("days", {}); days[dayKey()] = (days[da
 var onDone = null;
 function toolDone() { markDay(); var f = onDone;
   if (!reduce) { var tl = document.querySelector("section.tool"); if (tl) { tl.classList.remove("lit"); void tl.offsetWidth; tl.classList.add("lit"); } } if (f) setTimeout(function () { if (onDone === f) f(); }, 1800); }
-function stopActive() { if (active && active.stop) active.stop(); active = null; letSleep(); hush(); }
+function stopActive() { if (active && active.stop) active.stop(); active = null; letSleep(); }
 // starts the tool if needed, then darkens the screen; the dim view has its own Stop
 function dimButton(start, stop) {
   var b = h("button", { class: "opt", type: "button" }, ["Start with dim screen"]);
@@ -1114,10 +932,6 @@ function dimButton(start, stop) {
 /* ---------- tool: breathing pacer ---------- */
 // phases: {label, s, to (circle scale 0.35-1)}; square shape uses 4 phases as 4 sides.
 function breath(cfg) {
-  if (COLLECT) {
-    (cfg.variants ? cfg.variants.map(function (v) { return v.phases; }) : [cfg.phases]).forEach(function (ph) { ph.forEach(function (x) { COLLECT.push(x.say || x.label); }); });
-    COLLECT.push("Done. " + (cfg.done || "Notice how you feel now."));
-  }
   var wrap = h("div", { class: "chips", style: "justify-items:center" });
   var variant = 0, length = cfg.lengths ? cfg.lengths[0] : null;
   var stage = h("div", { class: "stage idle" });
@@ -1165,7 +979,7 @@ function breath(cfg) {
     var pos = el % C, i = 0, acc = 0;
     while (pos >= acc + ph[i].s) { acc += ph[i].s; i++; }
     var frac = (pos - acc) / ph[i].s, p = ph[i];
-    if (i !== lastIdx) { lastIdx = i; phase.textContent = p.label; cue(p.say || p.label, p.hz || 528, 0.35); }
+    if (i !== lastIdx) { lastIdx = i; phase.textContent = p.label; chime(p.hz || 528, 0.35); }
     var round = Math.floor(el / C) + 1;
     var left = Math.ceil(p.s - (pos - acc));
     sub.textContent = length ? (left + "s · " + Math.max(0, Math.ceil((total - el) / 60)) + " min left") : (left + "s · round " + round + " of " + (cfg.rounds || 3));
@@ -1186,10 +1000,10 @@ function breath(cfg) {
   }
   function finish() {
     stop(); phase.textContent = "Done"; sub.textContent = cfg.done || "Notice how you feel now.";
-    mirror("Done", sub.textContent); cue("Done. " + sub.textContent, 396, 1.2); toolDone();
+    mirror("Done", sub.textContent); chime(396, 1.2); toolDone();
   }
   function stop() {
-    if (raf) cancelAnimationFrame(raf); raf = null; lastIdx = -1; hush(); quit(stop);
+    if (raf) cancelAnimationFrame(raf); raf = null; lastIdx = -1; quit(stop);
     btn.textContent = "Start"; btn.classList.remove("ghost"); setScale(0.35); letSleep(); stage.classList.add("idle");
     sides.forEach(function (l) { l.classList.remove("on"); });
     if (dot) { dot.setAttribute("cx", 12); dot.setAttribute("cy", 88); }
@@ -1207,10 +1021,6 @@ function breath(cfg) {
 
 /* ---------- tool: timed steps (timers, countdowns, guided sequences) ---------- */
 function steps(cfg) {
-  if (COLLECT) {
-    cfg.steps.forEach(function (st) { COLLECT.push(st.say || st.label); });
-    COLLECT.push((cfg.doneLabel || "Done") + ". " + (cfg.doneText || ""));
-  }
   var wrap = h("div", { class: "chips", style: "justify-items:center" });
   var label = h("div", { class: "phase", "aria-live": "polite" }, [cfg.ready || "Ready"]);
   var big = h("div", { class: "big" }, [cfg.showFirst === false ? "" : String(cfg.steps[0].s)]);
@@ -1218,7 +1028,7 @@ function steps(cfg) {
   var sub = h("div", { class: "sub" }, [cfg.hint || ""]);
   var btn = h("button", { class: "go", type: "button" }, [cfg.start || "Start"]);
   var after = h("div", { class: "chips" });
-  var timer = null, idx = 0, t0 = 0, lastSaid = null;
+  var timer = null, idx = 0, t0 = 0;
   function tick() {
     var st = cfg.steps[idx], el = (performance.now() - t0) / 1000;
     if (el >= st.s) {
@@ -1229,15 +1039,13 @@ function steps(cfg) {
     var left = Math.ceil(st.s - el);
     big.textContent = String(left);
     bar.firstChild.style.width = ((el / st.s) * 100).toFixed(1) + "%";
-    // spoken count for short countdowns, after the step's own words have had a second
-    if (guide === "voice" && st.count && left !== lastSaid && el > 1.2) { lastSaid = left; say(String(left)); }
     mirror(st.label, String(left));
   }
   function show() {
-    var st = cfg.steps[idx]; lastSaid = null;
+    var st = cfg.steps[idx];
     label.textContent = st.label; big.textContent = String(st.s);
     sub.textContent = cfg.steps.length > 1 ? ("Step " + (idx + 1) + " of " + cfg.steps.length) : (cfg.hint || "");
-    cue(st.say || st.label, st.hz || 528, 0.4);
+    chime(st.hz || 528, 0.4);
     mirror(st.label, String(st.s));
   }
   function done() {
@@ -1245,12 +1053,12 @@ function steps(cfg) {
     label.textContent = cfg.doneLabel || "Done"; big.textContent = cfg.doneBig || "✓";
     bar.firstChild.style.width = "100%"; sub.textContent = cfg.doneText || "";
     btn.textContent = "Again"; btn.classList.remove("ghost");
-    cue((cfg.doneLabel || "Done") + ". " + (cfg.doneText || ""), 396, 1.2);
+    chime(396, 1.2);
     mirror(cfg.doneLabel || "Done", cfg.doneText || ""); toolDone();
     if (cfg.then) { after.innerHTML = ""; after.appendChild(cfg.then()); }
   }
   function stop() {
-    clearInterval(timer); timer = null; letSleep(); idx = 0; hush(); quit(stop);
+    clearInterval(timer); timer = null; letSleep(); idx = 0; quit(stop);
     label.textContent = cfg.ready || "Ready"; big.textContent = cfg.showFirst === false ? "" : String(cfg.steps[0].s);
     bar.firstChild.style.width = "0"; sub.textContent = cfg.hint || "";
     btn.textContent = cfg.start || "Start"; btn.classList.remove("ghost");
@@ -1344,7 +1152,7 @@ function parking() {
   }
   function submit() {
     if (!thought.value.trim()) { thought.focus(); return; }
-    items.push({ t: thought.value.trim(), at: time.value }); store.set(key, items); thought.value = ""; draw(); cue("Parked. Not now.", 440, 0.3);
+    items.push({ t: thought.value.trim(), at: time.value }); store.set(key, items); thought.value = ""; draw(); chime(440, 0.3);
   }
   add.addEventListener("click", submit);
   thought.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
@@ -1365,7 +1173,7 @@ function reps() {
   var plus = h("button", { class: "opt", type: "button" }, ["Target +"]);
   var reset = h("button", { class: "opt", type: "button" }, ["Reset"]);
   function draw() { tap.textContent = String(n); sub.textContent = n >= target ? "Set done. Start the next task now." : "Tap once per rep · target " + target; }
-  tap.addEventListener("click", function () { n++; if (n === target) cue("Set done. Start the next task now.", 396, 1); else if (guide === "voice") say(String(n)); draw(); });
+  tap.addEventListener("click", function () { n++; if (n === target) chime(396, 1); draw(); });
   minus.addEventListener("click", function () { target = Math.max(1, target - 5); store.set("reps", target); draw(); });
   plus.addEventListener("click", function () { target += 5; store.set("reps", target); draw(); });
   reset.addEventListener("click", function () { n = 0; draw(); });
@@ -1388,7 +1196,7 @@ function coin() {
     var pick = Math.random() < 0.5 ? A : B;
     face.classList.remove("spin"); void face.offsetWidth; face.classList.add("spin");
     res.textContent = "";
-    setTimeout(function () { face.textContent = pick; res.textContent = "Relief or disappointment? That reaction is your answer."; cue(pick, 528, 0.5); }, reduce ? 0 : 900);
+    setTimeout(function () { face.textContent = pick; res.textContent = "Relief or disappointment? That reaction is your answer."; chime(528, 0.5); }, reduce ? 0 : 900);
   });
   wrap.appendChild(rule);
   wrap.appendChild(h("div", { class: "note" }, [
@@ -1414,8 +1222,8 @@ function switcher() {
     timer = setInterval(function () {
       var left = Math.max(0, Math.round((end - Date.now()) / 1000));
       big.textContent = fmt(left);
-      if (!mark2 && left <= 120) { mark2 = true; sub.textContent = "Two minutes. Finish your sentence, write the note."; cue(sub.textContent, 528, 0.8); }
-      if (left === 0) { clearInterval(timer); timer = null; quit(stop); sub.textContent = "Time to switch. Palms on the doorframe, breathe out, step through."; cue(sub.textContent, 396, 1.4); }
+      if (!mark2 && left <= 120) { mark2 = true; sub.textContent = "Two minutes. Finish your sentence, write the note."; chime(528, 0.8); }
+      if (left === 0) { clearInterval(timer); timer = null; quit(stop); sub.textContent = "Time to switch. Palms on the doorframe, breathe out, step through."; chime(396, 1.4); }
     }, 250);
   }
   var b10 = h("button", { class: "go", type: "button" }, ["10 min"]);
@@ -1430,16 +1238,16 @@ function switcher() {
 /* ---------- breathing patterns ---------- */
 var IN = 528, OUT = 440, HOLD = 495;
 var P = {
-  resonance: [{ label: "Breathe in", say: "Breathe in…", s: 5, to: 1, hz: IN }, { label: "Breathe out", say: "and out…", s: 5.5, to: 0.35, hz: OUT }],
-  box4: [{ label: "In", say: "Breathe in", s: 4, hz: IN }, { label: "Hold", say: "Hold", s: 4, hz: HOLD }, { label: "Out", say: "Breathe out", s: 4, hz: OUT }, { label: "Hold", say: "Hold", s: 4, hz: HOLD }],
-  box2: [{ label: "In", say: "Breathe in", s: 4, hz: IN }, { label: "Hold", say: "Hold", s: 2, hz: HOLD }, { label: "Out", say: "Breathe out", s: 4, hz: OUT }, { label: "Hold", say: "Hold", s: 2, hz: HOLD }],
-  sigh: [{ label: "Inhale", say: "In", s: 2, to: 0.85, hz: IN }, { label: "Top it off", say: "Again", s: 1, to: 1, hz: 594 }, { label: "Long exhale · shake out", say: "Long exhale. Shake out your hands.", s: 6, to: 0.35, hz: OUT }],
-  exhale: [{ label: "Let the breath come", say: "Let the breath come in on its own…", s: 3.5, to: 0.8, hz: IN }, { label: "Long, slow out", say: "now a long, slow breath out, through the lips…", s: 7, to: 0.35, hz: OUT }],
-  nose: [{ label: "In through the nose", say: "In through the nose…", s: 4, to: 1, hz: IN }, { label: "Out, slow", say: "and slowly out…", s: 5, to: 0.35, hz: OUT }]
+  resonance: [{ label: "Breathe in", s: 5, to: 1, hz: IN }, { label: "Breathe out", s: 5.5, to: 0.35, hz: OUT }],
+  box4: [{ label: "In", s: 4, hz: IN }, { label: "Hold", s: 4, hz: HOLD }, { label: "Out", s: 4, hz: OUT }, { label: "Hold", s: 4, hz: HOLD }],
+  box2: [{ label: "In", s: 4, hz: IN }, { label: "Hold", s: 2, hz: HOLD }, { label: "Out", s: 4, hz: OUT }, { label: "Hold", s: 2, hz: HOLD }],
+  sigh: [{ label: "Inhale", s: 2, to: 0.85, hz: IN }, { label: "Top it off", s: 1, to: 1, hz: 594 }, { label: "Long exhale · shake out", s: 6, to: 0.35, hz: OUT }],
+  exhale: [{ label: "Let the breath come", s: 3.5, to: 0.8, hz: IN }, { label: "Long, slow out", s: 7, to: 0.35, hz: OUT }],
+  nose: [{ label: "In through the nose", s: 4, to: 1, hz: IN }, { label: "Out, slow", s: 5, to: 0.35, hz: OUT }]
 };
 function pmrSteps() {
-  var parts = ["feet", "calves", "thighs", "hands", "shoulders", "face"], out = [{ label: "Lie back. Close your eyes.", say: "Lie on your back, and close your eyes. We'll start at the feet.", s: 6, hz: 440 }];
-  parts.forEach(function (p) { out.push({ label: "Tense your " + p, say: "Tense your " + p + ".", s: 5, hz: 528 }); out.push({ label: "Release your " + p, say: "And release. Let the " + p + " go completely.", s: 10, hz: 396 }); });
+  var parts = ["feet", "calves", "thighs", "hands", "shoulders", "face"], out = [{ label: "Lie back. Close your eyes.", s: 6, hz: 440 }];
+  parts.forEach(function (p) { out.push({ label: "Tense your " + p, s: 5, hz: 528 }); out.push({ label: "Release your " + p, s: 10, hz: 396 }); });
   return out;
 }
 
@@ -1456,7 +1264,7 @@ var SECTIONS = [
 ];
 var E = {
   1: { name: "The Foundation Stone", trad: "Freemasonry", sit: "Sitting down to start",
-    tool: function () { return steps({ steps: [{ label: "Press down", s: 10, count: true }], doneText: "The stone is set. Begin." }); } },
+    tool: function () { return steps({ steps: [{ label: "Press down", s: 10 }], doneText: "The stone is set. Begin." }); } },
   2: { name: "The Ashlar's Blueprint", trad: "Freemasonry", sit: "Can't get started",
     tool: function () { var w = h("div", { class: "chips" }); w.appendChild(note("e2", [{ label: "First physical action", ph: "Open the file" }])); w.appendChild(steps({ steps: [{ label: "Do only that", s: 120 }], start: "Start 2 minutes", doneText: "You started. Keep going or stop, either counts." })); return w; } },
   3: { name: "Vessel Expansion", trad: "Lurianic Kabbalah", sit: "A calm moment worth using",
@@ -1469,29 +1277,29 @@ var E = {
     tool: function () {
       var w = h("div", { class: "chips" }), word = store.get("word6", "Go");
       w.appendChild(chips([{ name: "Your word", items: ["Now", "This", "Go"] }], "Word: " + word, function (it) { store.set("word6", it); return "Word: " + it; }));
-      w.appendChild(steps({ steps: [{ label: "Say the word. Count down.", say: "Breathe in. On the exhale, say your word.", s: 5, count: true }], doneBig: "Go", doneLabel: "Move", doneText: "Do the smallest piece now." }));
+      w.appendChild(steps({ steps: [{ label: "Say the word. Count down.", s: 5 }], doneBig: "Go", doneLabel: "Move", doneText: "Do the smallest piece now." }));
       return w; } },
   7: { name: "Tzimtzum", trad: "Lurianic Kabbalah", sit: "Too much noise, light, or input",
     tool: function () { return breath({ phases: P.exhale, rounds: 3, idle: "Eyes closed or on one spot" }); } },
   8: { name: "The Shattering of the Vessels", trad: "Lurianic Kabbalah", sit: "A plan fell apart",
-    tool: function () { return steps({ dim: true, steps: [{ label: "Rub your palms", s: 5 }, { label: "Palms over closed eyes", say: "Cup your palms over your closed eyes. Don't press.", s: 15 }], doneLabel: "Open your eyes", doneText: "Now write the two lines.",
+    tool: function () { return steps({ dim: true, steps: [{ label: "Rub your palms", s: 5 }, { label: "Palms over closed eyes", s: 15 }], doneLabel: "Open your eyes", doneText: "Now write the two lines.",
       then: function () { return note("e8", [{ label: "What changed", ph: "The meeting moved" }, { label: "New plan for the next hour", ph: "Finish the report first" }]); } }); } },
   9: { name: "The Law of Containment", trad: "Hermeticism", sit: "Many tasks competing",
     tool: function () { return note("e9", [{ label: "First", ph: "" }, { label: "Second", ph: "" }, { label: "Third", ph: "" }, { label: "Everything else gets looked at", type: "time" }]); } },
   10: { name: "The Tyler's Sword", trad: "Freemasonry · Stoicism", sit: "A reaction about to fire",
-    tool: function () { return steps({ steps: [{ label: "Freeze. Jaw loose. Weight to heels.", say: "Freeze. Loosen your jaw.", s: 3 }], doneLabel: "Name the visitor", doneBig: "?",
+    tool: function () { return steps({ steps: [{ label: "Freeze. Jaw loose. Weight to heels.", s: 3 }], doneLabel: "Name the visitor", doneBig: "?",
       then: function () { return chips([{ name: "Feeling", items: ["Anger", "Fear", "Hurry", "Hurt"] }, { name: "Body", items: ["Hot", "Tight", "Buzzing", "Heavy"] }, { name: "Number", items: ["1", "2", "3", "4", "5"] }],
         "", function (it, g) { return (g === "Number" ? "Level " + it : it) + ". Named. Now decide whether it gets in."; }); } }); } },
   11: { name: "The Law of Neutralization", trad: "Hermeticism · Rhythm", sit: "Frustration climbing",
     tool: function () { return breath({ shape: "square", rounds: 4, variants: [{ name: "4-4-4-4", phases: P.box4 }, { name: "Short holds", phases: P.box2 }], idle: "Four rounds" }); } },
   12: { name: "Gevurah's Restraint", trad: "Kabbalah", sit: "About to send something final",
-    tool: function () { var w = h("div", { class: "chips" }); w.appendChild(steps({ steps: [{ label: "Tongue up. Palms together.", say: "Tongue to the roof of your mouth. Palms together.", s: 10, count: true }], doneText: "The peak has passed. Reread before you act." })); w.appendChild(note("e12", [{ label: "Don't send before", type: "time" }])); return w; } },
+    tool: function () { var w = h("div", { class: "chips" }); w.appendChild(steps({ steps: [{ label: "Tongue up. Palms together.", s: 10 }], doneText: "The peak has passed. Reread before you act." })); w.appendChild(note("e12", [{ label: "Don't send before", type: "time" }])); return w; } },
   13: { name: "The Inner Statue", trad: "Neoplatonism", sit: "Frustration turning into “I always…”",
     tool: function () { return breath({ phases: P.sigh, rounds: 3, idle: "Double inhale, long exhale" }); } },
   14: { name: "The Apophatic Cut", trad: "Mysticism · Via negativa", sit: "The same thoughts circling",
     tool: parking },
   15: { name: "Mental Transmutation", trad: "Hermeticism · Polarity", sit: "Stuck in one charged state",
-    tool: function () { return steps({ steps: [{ label: "Clench your fist", say: "Clench your fist hard.", s: 5 }, { label: "Open wide. Look up.", say: "Open wide. Look up.", s: 3 }], doneLabel: "Pick the opposite", doneBig: "⇅",
+    tool: function () { return steps({ steps: [{ label: "Clench your fist", s: 5 }, { label: "Open wide. Look up.", s: 3 }], doneLabel: "Pick the opposite", doneBig: "⇅",
       then: function () { return chips([{ name: "Right now my body is", items: ["Still", "Hunched", "Fast", "Loud"] }], "", function (it) {
         var o = { Still: "Walk, even ten steps.", Hunched: "Open your chest. Arms wide.", Fast: "Slow everything down by half.", Loud: "Go quiet. Lower your voice or step away." }; return o[it]; }); } }); } },
   16: { name: "Distillation", trad: "Alchemy", sit: "Too many options",
@@ -1519,10 +1327,13 @@ var START_HERE = { "starting": 2, "foggy": 4, "too-much": 7, "heated": 10, "loop
 /* ---------- views ---------- */
 var app = document.getElementById("app");
 var sheet = null;
-function soundOn() { return guide !== "off" || mixSounding(); }
+function soundOn() { return tonesOn || mixSounding(); }
 function soundLabel() {
-  var g = { off: "Off", tones: "Tones", voice: "Voice" }[guide];
-  return "Sound: " + g + (mixSounding() ? (W.running ? " + the Watch" : " + background") : "");
+  var parts = [];
+  if (tonesOn) parts.push("Practice tones");
+  if (mixSounding()) parts.push(W.running ? "the Watch" : "background");
+  var t = parts.join(" + ") || "Off";
+  return "Sound: " + t.charAt(0).toUpperCase() + t.slice(1);
 }
 function soundPanel(onChange) {
   var panel = h("section", { class: "panel", "aria-label": "Sound settings" });
@@ -1540,21 +1351,16 @@ function soundPanel(onChange) {
   }
   function head(icon, title) { return h("h3", { class: "psec-h" }, [emblem(icon, "sm"), title]); }
 
-  // guidance: silent, tones, or a voice
-  var HELP = { off: "No sound. Watch the screen.", tones: "A higher note means breathe in. A lower note means breathe out or let go.", voice: "Each step is read aloud, so you can keep your eyes closed." };
-  var help = h("p", { class: "phelp" }, [HELP[guide]]);
-  var vbox = h("div", { class: "vbox" });
-  var g = h("div", { class: "psec" }, [head("speaker", "Guidance"),
-    choice([["off", "Off"], ["tones", "Tones"], ["voice", "Voice"]], function () { return guide; }, function (v) {
-      guide = v; store.set("guide", v); help.textContent = HELP[v]; vbox.hidden = v !== "voice";
-      if (v === "voice") say("Voice guidance is on.", true);
-      if (v === "tones") chime(528, 0.4, true);
-    }), help, vbox,
-    slider("Volume", "gvol-r", guideVol, function (v) { guideVol = v; store.set("gvol", v); }, function () { if (guide === "voice") say("This loud.", true); else chime(528, 0.4, true); })
-  ]);
-  vbox.hidden = guide !== "voice";
-  vbox.appendChild(voiceChooser());
-  panel.appendChild(g);
+  // practice tones: a note at each step of a practice's tool
+  var HELP = { off: "No tones. Watch the screen.", on: "A higher note means breathe in. A lower note means breathe out or let go." };
+  var help = h("p", { class: "phelp" }, [HELP[tonesOn ? "on" : "off"]]);
+  panel.appendChild(h("div", { class: "psec" }, [head("speaker", "Practice tones"),
+    choice([[false, "Off"], [true, "On"]], function () { return tonesOn; }, function (v) {
+      tonesOn = v; store.set("guide", v ? "tones" : "off"); help.textContent = HELP[v ? "on" : "off"];
+      if (v) chime(528, 0.4, true);
+    }), help,
+    slider("Volume", "gvol-r", guideVol, function (v) { guideVol = v; store.set("gvol", v); }, function () { chime(528, 0.4, true); })
+  ]));
 
   // background sound: the same mix the Watch plays (breath tones only while it runs)
   var onRow = h("div", { class: "row", role: "group", "aria-label": "Background sound" });
@@ -1606,92 +1412,6 @@ function slider(name, id, value, onInput, onRelease) {
   if (onRelease) r.addEventListener("change", onRelease);
   return h("label", { class: "slider", for: id }, [h("span", { class: "label" }, [name]), r, out]);
 }
-var REGION = { US: "American", GB: "British", AU: "Australian", IE: "Irish", IN: "Indian", ZA: "South African", CA: "Canadian", NZ: "New Zealand", SC: "Scottish" };
-function voiceRow(title, sub, on, onTap) {
-  var b = h("button", { class: "vbtn", type: "button", "aria-pressed": String(on) }, [
-    h("span", { class: "ck", "aria-hidden": "true" }),
-    h("span", { class: "vname" }, [title, sub ? h("small", null, [sub]) : null]),
-    h("span", { class: "hear", "aria-hidden": "true" }, ["Hear"])
-  ]);
-  b.addEventListener("click", function () { onTap(b); });
-  return b;
-}
-function pressOnly(list, b) { [].forEach.call(list.querySelectorAll(".vbtn"), function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true"); }
-function voiceChooser() {
-  var box = h("div", { class: "pgroup" });
-  var list = h("div", { class: "voices" });
-  var status = h("p", { class: "phelp vstatus", "aria-live": "polite" });
-  var dev = h("div", { class: "devbox" });
-  function getPack(kind, then) {
-    if (packs[kind]) { status.textContent = ""; then(); return; }
-    status.textContent = "Getting the " + VOICES[kind].name + " voice ready…";
-    loadPack(kind, function (f) { status.textContent = "Getting the " + VOICES[kind].name + " voice ready… " + Math.round(f * 100) + "%"; })
-      .then(function () { status.textContent = "Ready. Saved on this device, so it works offline."; then(); })
-      .catch(function () { status.textContent = "Couldn't get that voice right now. Using this device's voice until it can."; then(); });
-  }
-  Object.keys(VOICES).forEach(function (k) {
-    var v = VOICES[k];
-    list.appendChild(voiceRow(v.name, v.desc + " · built in", voiceKind === k, function (b) {
-      voiceKind = k; store.set("vkind", k); pressOnly(list, b); dev.hidden = true;
-      try { ctx(); } catch (e) {}
-      getPack(k, function () { say(SAMPLE, true); });
-    }));
-  });
-  list.appendChild(voiceRow("This device's voice", "Uses your phone or computer's own voices", voiceKind === "device", function (b) {
-    voiceKind = "device"; store.set("vkind", "device"); pressOnly(list, b); status.textContent = ""; dev.hidden = false; drawDevice(); say(SAMPLE, true);
-  }));
-  box.appendChild(h("span", { class: "label" }, ["Pick a voice"]));
-  box.appendChild(list); box.appendChild(status); box.appendChild(dev);
-
-  // the device's own voices, for anyone who prefers them
-  var devList = h("div", { class: "voices" }), showAll = false;
-  function drawDevice() {
-    var vs = englishVoices(), seen = {};
-    vs = vs.filter(function (v) { var k = v.name + "|" + v.lang; if (seen[k]) return false; seen[k] = 1; return true; });
-    devList.innerHTML = "";
-    if (!vs.length) {
-      devList.appendChild(h("p", { class: "phelp" }, ["Looking for this device's voices…"]));
-      waitForDeviceVoices(function (n) { if (n) drawDevice(); else { devList.innerHTML = ""; devList.appendChild(h("p", { class: "phelp" }, ["This device didn't share any voices. It will still use its default voice."])); } });
-      return;
-    }
-    var current = voiceName && vs.some(function (v) { return v.name === voiceName; }) ? voiceName : vs[0].name;
-    (showAll ? vs : vs.slice(0, 4)).forEach(function (v) {
-      var reg = (v.lang.split(/[-_]/)[1] || "").toUpperCase();
-      var tag = /premium/i.test(v.name) ? "Premium" : /enhanced/i.test(v.name) ? "Enhanced" : /natural|neural|online/i.test(v.name) ? "Natural" : "";
-      devList.appendChild(voiceRow(v.name.replace(/\s*\((Premium|Enhanced)\)/i, ""), [REGION[reg] || v.lang, tag].filter(Boolean).join(" · "), v.name === current, function (b) {
-        voiceName = v.name; store.set("voice", voiceName); voicePick = null; pressOnly(devList, b); say(SAMPLE, true);
-      }));
-    });
-    if (vs.length > 4) {
-      var more = h("button", { class: "opt", type: "button", style: "justify-self:start" }, [showAll ? "Show fewer" : "Show all " + vs.length + " voices"]);
-      more.addEventListener("click", function () { showAll = !showAll; drawDevice(); });
-      devList.appendChild(more);
-    }
-  }
-  voiceListeners.length = 0; voiceListeners.push(function () { if (!dev.hidden) drawDevice(); });
-  var RATES = [["Slow", 0.72], ["Calm", 0.85], ["Normal", 1]];
-  var near = RATES.reduce(function (a, r) { return Math.abs(r[1] - voiceRate) < Math.abs(a[1] - voiceRate) ? r : a; });
-  var speed = h("div", { class: "row left" });
-  RATES.forEach(function (r) {
-    var b = h("button", { class: "opt", type: "button", "aria-pressed": String(r === near) }, [r[0]]);
-    b.addEventListener("click", function () { voiceRate = r[1]; store.set("rate", r[1]); [].forEach.call(speed.children, function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true"); say("Breathe in, slowly.", true); });
-    speed.appendChild(b);
-  });
-  dev.appendChild(devList);
-  dev.appendChild(h("div", { class: "pgroup" }, [h("span", { class: "label" }, ["Speed"]), speed]));
-  dev.appendChild(h("details", { class: "more howto" }, [h("summary", null, ["Want a more natural device voice?"]),
-    h("ol", null, [
-      h("li", null, ["iPhone: open Settings → Accessibility → Spoken Content → Voices → English."]),
-      h("li", null, ["Download a voice marked Premium or Enhanced, such as Ava, Zoe, Evan, or Nathan."]),
-      h("li", null, ["On a Windows computer, Microsoft Edge has natural voices built in."]),
-      h("li", null, ["Close and reopen this app, then pick the voice here."])
-    ])]));
-  dev.hidden = voiceKind !== "device";
-  if (!dev.hidden) drawDevice();
-  else if (guide === "voice" && !packs[voiceKind]) getPack(voiceKind, function () {});
-  return box;
-}
-
 /* ---------- favorites, daily line, routines, plan ---------- */
 function favs() { return store.get("favs", []); }
 function isFav(id) { return favs().indexOf(id) >= 0; }
@@ -1757,148 +1477,14 @@ var HOURS = [
 ];
 
 var ROUTINES = {
-  morning: { name: "Start the day", ids: [1, 3, 2], min: 5, about: "About 5 minutes. Settle, breathe, then take the first step." },
-  reset: { name: "Midday reset", ids: [13, 7, 9], min: 4, about: "About 4 minutes. Clear the charge, cut the input, box the tasks." },
-  evening: { name: "Close the day", ids: [23, 24], min: 5, about: "About 5 minutes. Set the work down, then let the body go." }
+  morning: { name: "Settle in", ids: [1, 3, 2], min: 5, about: "About 5 minutes. Settle, breathe, then take the first step." },
+  reset: { name: "Reset", ids: [13, 7, 9], min: 4, about: "About 4 minutes. Clear the charge, cut the input, box the tasks." },
+  evening: { name: "Close out", ids: [23, 24], min: 5, about: "About 5 minutes. Set the work down, then let the body go." }
 };
-
-/* ---------- small practices for steady moments ---------- */
-// tier: s = seconds, m = about a minute, l = a few minutes. tool: an optional extra control.
-var TIERS = { s: "Seconds", m: "About a minute", l: "A few minutes" };
-var EVERY = [
-  { id: "attention", name: "Prosoche", plain: "Attention check", trad: "Stoicism", tier: "s", cue: "Any time, especially when nothing is wrong",
-    short: "Three questions: Where is my attention? What am I actually doing? Is this up to me?",
-    how: "Answer each in a word or two, then carry on. You don’t have to change anything. The point is that you looked.",
-    why: "Most practices in this app wait for a bad moment. This one runs when nothing is wrong, so the habit of noticing is already in use when something is. The third question is Epictetus’s split between what is up to you and what isn’t (see The Principle of Cause). There’s no research on this exact exercise; it leans on the general finding that habits form through many repetitions in the same setting (one well-known study, Lally and colleagues, 2010, found a median of 66 days).",
-    from: "<em>Prosochē</em> is Greek for attention. Epictetus gives it a whole chapter (Discourses 4.12, “On Attention”): attention you let slip can’t simply be picked back up whenever you like. The historian Pierre Hadot treated this steady watchfulness as the basic Stoic spiritual attitude." },
-  { id: "threshold", name: "The Threshold", plain: "Doorway breath", trad: "Freemasonry · Jewish custom", tier: "s", cue: "Walking through a doorway",
-    short: "At the next doorway, take one slow breath out before you step through.",
-    how: "Pick the doors you pass most often. Each time, slow down for one long exhale, then step through. If you forget, the next door is another chance.",
-    why: "This is an if-then plan: “when I reach a door, I breathe out.” Tying a habit to a cue you can’t miss is one of the better-supported tricks in behavior research; a 2006 review of 94 studies (Gollwitzer and Sheeran) found a medium-to-large effect on following through, strongest for starting a behavior. Doorways also act as natural mental boundaries: in lab studies (Radvansky and colleagues, 2011), walking through one made people slightly more likely to forget what they had just been doing.",
-    from: "Thresholds are guarded places in old practice. In a Masonic lodge the candidate is stopped at the door and admitted only after a challenge. In many Jewish homes a mezuzah, a small case holding verses from Deuteronomy, is fixed to the doorpost and touched on the way in and out." },
-  { id: "onething", name: "Age Quod Agis", plain: "One thing", trad: "Jesuit tradition", tier: "s", cue: "Several things open at once",
-    short: "Name what you’re doing in three words. Close or hide one thing that isn’t that.",
-    how: "Say it under your breath: “Writing the summary.” Then close one tab, turn the phone face down, or shut one window that belongs to something else. One is enough.",
-    why: "Switching between tasks costs time and accuracy; that much is well established in lab research on task switching. Naming the task draws a clear line, so drifting over it is easier to notice.",
-    from: "Latin for “do what you are doing.” It is the motto of many Jesuit schools, and Pope John XXIII used it to mean giving your whole attention to the task in front of you, not doing everything perfectly." },
-  { id: "kavanah", name: "Kavanah", plain: "Purpose first", trad: "Jewish mysticism", tier: "s", cue: "About to start something",
-    short: "Before you start, say in one sentence what this is for.",
-    how: "For example: “This message is so they can decide by Friday.” Then begin. When you drift, come back to the sentence.",
-    why: "A stated purpose gives you something to come back to, and makes it easier to see when a task has grown past what it’s for. This is an old idea with little direct research behind it; treat it as a habit to try, not a proven fix.",
-    from: "<em>Kavanah</em> is Hebrew for intention: the direction of the heart. The Mishnah (Berakhot 5:1) describes early pious men who waited an hour before praying so they could first direct their hearts. Kabbalists later attached detailed meditations, also called <em>kavanot</em>, to ordinary prayers and acts." },
-  { id: "drill", name: "The Tyler’s Drill", plain: "Practice the pause", trad: "Freemasonry · Stress inoculation", tier: "s", cue: "Before small, routine actions", link: 10,
-    short: "Before something trivial, like opening a message or picking up your phone, wait three seconds. Then go.",
-    how: "Choose one small, frequent action for today. Each time, stop for three seconds and loosen your jaw, then carry on. You’re rehearsing the pause from The Tyler’s Sword on moments that don’t matter.",
-    why: "A skill rehearsed under low pressure is easier to reach under high pressure. Clinicians call the method stress inoculation training (Donald Meichenbaum, from the 1970s on); a 1996 review of 37 studies found it lowered anxiety and helped performance under stress. Those studies tested the full program, not this one piece.",
-    from: "The Tyler guards the lodge door with a drawn sword (see The Tyler’s Sword). A guard is trained before the night of the attack, not during it." },
-  { id: "watchtower", name: "The Watchtower", plain: "Look far away", trad: "The Golden Dawn", tier: "s", cue: "Eyes tired from the screen",
-    short: "Look at the farthest thing you can see for 20 seconds. If you can, look out in all four directions.",
-    how: "A window is best; otherwise the far end of a hallway. Let your eyes go soft at that distance, and blink a few times before you come back to the screen.",
-    why: "Eye-care groups (the American Academy of Ophthalmology and the American Optometric Association) suggest looking about 20 feet away for 20 seconds every 20 minutes at a screen. The rule itself has barely been tested, but a short break from close focus is harmless, and it doubles as a reset for attention.",
-    from: "Golden Dawn rituals open by calling on the four Watchtowers, guardians stationed at the four quarters of the world. Here the watchtower is you, looking out." },
-  { id: "above", name: "The View from Above", plain: "Zoom out", trad: "Stoicism", tier: "m", cue: "Something feels bigger than it is",
-    short: "Picture this room from the ceiling, then the building, the city, the whole planet. Then come back and look at what you’re doing.",
-    how: "Take about a minute. Rise in steps and pause at each one. On the way back down, notice whether the thing in front of you looks a different size.",
-    why: "Psychologists call this self-distancing. In experiments by Ethan Kross and colleagues, people who looked at a problem from a distance, or talked about themselves in the third person, reported less distress and reasoned about it more calmly. The effects are moderate and mostly short-term.",
-    from: "Marcus Aurelius returns to the image often: <blockquote>“Look down from above on the countless herds of men and their countless solemnities.”</blockquote> (Meditations IX.30, Long). Pierre Hadot named it “the view from above.”" },
-  { id: "kitchen", name: "The Kitchen Practice", plain: "Come back", trad: "Christian mysticism", tier: "s", cue: "Plain, repetitive work",
-    short: "When you notice your mind has wandered, come back to the task in front of you. No scolding. Just return.",
-    how: "Use it during plain work: typing, washing up, walking down a hall. Each time you catch yourself drifting, the catch is the practice. Count it as a rep, not a failure.",
-    why: "Wandering is the mind’s normal state: in a large study that sampled people by phone through the day (Killingsworth and Gilbert, 2010), minds were off the task at hand almost half the time. Meditation research treats the moment of noticing and returning as the skill being trained. Scolding yourself for drifting mostly adds a second distraction.",
-    from: "Brother Lawrence (about 1614–1691) was a lay brother who worked in a Paris monastery kitchen. He kept his mind on God, <blockquote>“recalling it as often as I found it wandered from Him,”</blockquote> and said that in “the noise and clatter of my kitchen” he kept the same calm as at prayer. He also advised against fretting over wandering, since <blockquote>“trouble and disquiet serve rather to distract the mind than to recollect it.”</blockquote> (<em>The Practice of the Presence of God</em>, 1895 translation)" },
-  { id: "lens", name: "Today’s Lens", plain: "Today’s question", trad: "Hermeticism · The Kybalion", tier: "m", cue: "Carried through the day", tool: "lens",
-    short: "", how: "Each day of the week takes one of The Kybalion’s seven principles as a lens. You don’t have to believe it; use it as a question for noticing things.",
-    why: "One question carried through the day gives scattered attention a direction. Treat it as a reflective game: The Kybalion’s claims about the universe aren’t evidence of anything.",
-    from: "<em>The Kybalion</em> (1908) sets out seven principles, from “The All is Mind” to “Gender is in everything.” It presents them as ancient Hermetic teaching; it is American New Thought, most likely written by William Walker Atkinson (see the Field Guide chapter). The seven-day planetary week is ancient and the metals come from alchemy, but pairing each day with a principle is this app’s own arrangement." },
-  { id: "stage", name: "The Four Stages", plain: "Name the stage", trad: "Alchemy", tier: "s", cue: "Partway through a task",
-    short: "Name the stage of the task in front of you: blackening (a mess), whitening (clearing), yellowing (taking shape), or reddening (finishing).",
-    how: "Say it plainly: “This is still in the blackening.” A task can slip back a stage; that’s normal. When something is stuck in the black, the next move is usually to sort or separate something.",
-    why: "Putting a state into words, even odd words, seems to take a little of its sting: in a brain-imaging study (Lieberman and colleagues, 2007), naming feelings lowered activity in the amygdala, a region involved in alarm. Calling a mess a stage also frames it as part of the process instead of proof that something is wrong.",
-    from: "Alchemists described the Work in color stages: <em>nigredo</em> (blackening), <em>albedo</em> (whitening), <em>citrinitas</em> (yellowing), and <em>rubedo</em> (reddening). Jung read them as stages of inner change in <em>Psychology and Alchemy</em> (1944). See the Field Guide chapter on alchemy." },
-  { id: "shadow", name: "The Shadow Note", plain: "Irritation note", trad: "Jungian psychology", tier: "m", cue: "Someone irritates you more than the moment deserves", tool: "shadow",
-    short: "Write one line: what did they do that I don’t let myself do?",
-    how: "Write it down and leave it. Some answers will be useless; that’s fine. Look over the list now and then for repeats.",
-    why: "Treat this as a prompt for reflection, not a diagnosis. Jung’s idea of the shadow wasn’t built on experiments, and the related idea of projection has only weak support in modern research. The useful part is pausing on a strong reaction long enough to ask a question about it.",
-    from: "In Jung’s psychology the shadow holds the parts of yourself you don’t recognize or accept. Jung held that they often show up first as outsized reactions to other people." },
-  { id: "hardship", name: "The Small Hardship", plain: "Small discomfort", trad: "Stoicism", tier: "l", cue: "Once a day, on purpose",
-    short: "Choose one small discomfort on purpose: take the stairs, stand for a call, or leave your phone in another room for half an hour.",
-    how: "Pick something mild that costs nothing and harms nothing. Do it once today, on purpose, and notice whether it’s as bad as you expected. Skip anything painful, or anything your senses strongly object to; there are other options on the list.",
-    why: "Doing a mildly unpleasant thing by choice is a small dose of exposure, the principle behind well-supported anxiety treatments that build tolerance through gradual practice. Research on this everyday version is thin, so judge it by whether ordinary friction starts to feel smaller.",
-    from: "Seneca told Lucilius to practice poverty on purpose: <blockquote>“Set aside a certain number of days, during which you shall be content with the scantiest and cheapest fare, with coarse and rough dress, saying to yourself the while: ‘Is this the condition that I feared?’”</blockquote> (Letter 18, Gummere)" },
-  { id: "weather", name: "The Weather Report", plain: "Quick check-in", trad: "Ignatian discernment", tier: "s", cue: "A few times a day", tool: "weather",
-    short: "One tap: how are you right now? Clear, foggy, stirred up, or low.",
-    how: "Pick the closest word. No explanation needed. The evening review (Raising the Sparks) shows the day's check-ins.",
-    why: "Brief check-ins through the day give a truer picture than remembering at night. Memory of a day leans heavily on its most intense moment and its ending (Daniel Kahneman’s peak-end rule), so in-the-moment reports, which researchers call experience sampling, catch what recall smooths over.",
-    from: "Ignatius of Loyola taught people to notice two movements in themselves, consolation and desolation, and to name them before acting on them (<em>Spiritual Exercises</em>, rules for discernment)." },
-  { id: "examen", name: "The Particular Examen", plain: "One habit, counted", trad: "Ignatian spirituality", tier: "m", cue: "Morning, midday, and evening", tool: "aim",
-    short: "Pick one habit to watch today. Each time you catch it, tap once. No grading.",
-    how: "In the morning, write the habit as a short phrase, something to do less (checking the phone) or more (drinking water). Tap “Caught it” each time you notice it. Tonight, Raising the Sparks shows the count. It starts fresh each day.",
-    why: "Self-monitoring, simply counting a behavior, is one of the more dependable techniques in behavior-change research; noticing tends to shift the behavior on its own. It works best on one specific habit at a time.",
-    from: "In the <em>Spiritual Exercises</em> (written 1522–1524), Ignatius sets out a “particular examen” three times a day: on rising, resolve to watch one fault; after the midday meal, go back over the morning hour by hour and mark a dot for each slip; after supper, do it again. Here the dots are taps." },
-  { id: "spark", name: "Gathering a Spark", plain: "One good thing", trad: "Lurianic Kabbalah", tier: "s", cue: "An hour that felt long",
-    short: "Name one thing from the last hour that went right, or was good to see.",
-    how: "It can be small: a clean sentence, a decent coffee, a door someone held. Say it, or write it in a word. That’s all.",
-    why: "In research reviews, gratitude-style exercises have small effects on mood that vary a lot between people. Their use here is as a counterweight: attention drifts toward problems on its own, and this tips it back for a moment.",
-    from: "In Lurianic Kabbalah, sparks of light lie scattered through ordinary things, waiting to be lifted (see Raising the Sparks). This is the daytime version: one spark at a time." },
-  { id: "silence", name: "Pythagorean Silence", plain: "Say less", trad: "Pythagoreanism", tier: "l", cue: "A meeting or a meal",
-    short: "For one stretch (a meeting, a meal, twenty minutes), say only what’s needed. Notice what you wanted to say and didn’t.",
-    how: "You don’t have to be silent, just sparing. Keep a rough count of the urges, and afterward ask which ones you’re glad you held back.",
-    why: "There’s no research on this as such. The value is in the noticing: once you’ve agreed not to follow every urge to speak, the urges become easy to watch.",
-    from: "Later biographers of Pythagoras, such as Iamblichus (around AD 300), report that newcomers to his school kept a long silence, <em>echemythia</em>, before they could join the discussions. The story may be legend, but it puts restraint of speech first among the disciplines." },
-  { id: "walk", name: "Solvitur Ambulando", plain: "Walk it out", trad: "Latin saying", tier: "l", cue: "Stuck on something that can wait five minutes",
-    short: "Walk for five minutes with no phone. When you sit back down, write the first thing you think.",
-    how: "Walk anywhere; a loop of the hallway counts. Don’t try to solve the problem. Let it sit at the edge of your mind, and write down the first thought when you’re back, even if it seems unrelated.",
-    why: "In Stanford experiments (Oppezzo and Schwartz, 2014), people came up with more ideas on a creativity test while walking and shortly afterward, indoors or out. The effect was on producing ideas, not on finding a single right answer.",
-    from: "“It is solved by walking.” The Latin saying is often credited to Diogenes or to Augustine; its real origin is uncertain." },
-  { id: "breath", name: "The Watchful Breath", plain: "Breath phrase", trad: "Hesychasm", tier: "m", cue: "Walking or waiting", link: 3,
-    short: "While walking or waiting, pair a short phrase with your breath: the first half on the in-breath, the second on the out-breath.",
-    how: "Pick two words, such as “here / now” or “steady / on.” Let the out-breath run a little longer than the in-breath. Keep it up for a minute, or for the length of a walk.",
-    why: "Slow breathing, around six breaths a minute, reliably calms the body in the short term, and the phrase gives the mind something to hold onto meanwhile. Vessel Expansion is the longer, sitting version.",
-    from: "The Hesychasts (from Greek <em>hēsychia</em>, stillness) of Eastern Orthodox monasticism joined a short prayer to the breath and repeated it through the day. Their writings, gathered in the <em>Philokalia</em>, call the alertness this builds <em>nepsis</em>: watchfulness, a guard kept at the entrance of the heart." }
-];
-var EVERY_BY = {}; EVERY.forEach(function (p) { EVERY_BY[p.id] = p; });
-// how each small practice was put when the Watch brought it up on its own, with no situation around it.
-// count: seconds to show a countdown for. The Watch no longer shows small practices (it became a breathing
-// companion in Oct 2026); this wording is left in place until the owner decides whether to remove it.
-var WATCH_SAYS = {
-  attention: { t: "Where is your attention right now? What are you actually doing? Is it up to you? A word for each is enough." },
-  threshold: { t: "Next time you walk through a doorway, let one slow breath out before you step through." },
-  onething: { t: "Name what you’re doing in three words. Then close or hide one thing that isn’t that." },
-  kavanah: { t: "Look at what you’re working on and finish this sentence: “This is so that…” For example: “This message is so they can decide by Friday.” If nothing comes, that’s worth a minute." },
-  drill: { t: "Next time you reach for your phone or open a message, wait three seconds first, jaw loose. Then go." },
-  watchtower: { t: "Look up from the screen. Find the farthest thing you can see and rest your eyes on it until the count runs out.", count: 20 },
-  above: { t: "Picture this room from the ceiling. Then the building, the city, the whole planet. Then come back to what you’re doing. Does it look a different size?", count: 60 },
-  kitchen: { t: "If your mind has wandered off what you’re doing, come back to it now. No scolding. Coming back is the practice." },
-  stage: { t: "Whatever is in front of you, which stage is it in? Blackening: a mess. Whitening: clearing. Yellowing: taking shape. Reddening: finishing." },
-  shadow: { t: "Has anyone irritated you today more than the moment deserved? If so, ask: what did they do that I don’t let myself do?" },
-  hardship: { t: "Choose one small discomfort to do on purpose today: take the stairs, stand for your next call, or put your phone in another room for half an hour." },
-  spark: { t: "Think back over the last hour. Name one thing that went right, or was good to see." },
-  silence: { t: "At your next meeting or meal, say only what’s needed. Notice what you wanted to say and didn’t." },
-  walk: { t: "If you’re stuck on something that can wait, walk for five minutes with no phone. When you sit back down, write the first thing you think." },
-  breath: { t: "For the next minute, pair two words with your breath: “here” as you breathe in, “now” as you breathe out. Let the out-breath run a little longer.", count: 60 }
-};
-var WEATHER = ["Clear", "Foggy", "Stormy", "Overcast"];
-// the saved check-in values stay the same; these are the words shown for them
-var WEATHER_SAYS = { Clear: "Clear", Foggy: "Foggy", Stormy: "Stirred up", Overcast: "Low" };
-function wxName(v) { return WEATHER_SAYS[v] || v; }
 
 /* ---------- small building blocks ---------- */
 
 function card(kids, cls) { return h("section", { class: "card" + (cls ? " " + cls : "") }, kids); }
-
-function readButton(e) {
-  var reading = false;
-  var read = h("button", { class: "icobtn", type: "button" });
-  function draw() { read.innerHTML = ""; read.appendChild(icon(reading ? "stop" : "speaker")); read.setAttribute("aria-label", reading ? "Stop reading" : "Read it aloud"); read.setAttribute("aria-pressed", String(reading)); }
-  read.addEventListener("click", function () {
-    if (reading) { hush(); reading = false; draw(); return; }
-    stopActive(); reading = true; draw();
-    say(e.name + ". " + e.method, true);
-    var poll = setInterval(function () { if (!speaking()) { clearInterval(poll); reading = false; draw(); } }, 700);
-  });
-  draw();
-  return read;
-}
 
 
 /* ---------- routines: practices back to back ---------- */
@@ -1917,7 +1503,7 @@ function routineView(key) {
     stopActive(); closeDim(); onDone = null;
     drawSteps(); body.innerHTML = "";
     if (idx >= r.ids.length) {
-      markDay(); cue(r.name + " is done.", 396, 1.2);
+      markDay(); chime(396, 1.2);
       body.appendChild(card([h("h2", null, ["Done"]), h("p", null, ["That's the whole routine."]),
         h("div", { class: "row left" }, [h("button", { class: "go", type: "button", onclick: function () { location.hash = "#/practices"; } }, ["Back to Practices"]), h("button", { class: "opt", type: "button", onclick: function () { idx = 0; show(); } }, ["Run it again"])])]));
       return;
@@ -1928,11 +1514,10 @@ function routineView(key) {
     body.appendChild(h("div", { class: "p-head" }, [h("span", { class: "num" }, [(idx + 1) + " of " + r.ids.length]), h("h2", { class: "rname" }, [BOOK.entries[id].name]), h("p", { class: "rmethod" }, [methodText(id)])]));
     body.appendChild(h("section", { class: "tool" }, [e.tool()]));
     body.appendChild(h("div", { class: "row between" }, [h("button", { class: "opt", type: "button", onclick: function () { idx++; show(); } }, ["Skip"]), next]));
-    if (idx === 0) say(r.name + ". First: " + e.name + ". Tap start when you're ready.");
     // when this step's tool finishes, point at the next one
     onDone = function () {
       next.classList.remove("ghost");
-      if (!last) cue("Next: " + E[r.ids[idx + 1]].name + ". Tap next when you're ready.", 528, 0.5);
+      if (!last) chime(528, 0.5);
     };
   }
   show();
@@ -1940,7 +1525,7 @@ function routineView(key) {
 
 /* ---------- quiet timer with bells ---------- */
 function bell(times) {
-  if (guide === "off" && !timerBells) return;
+  if (!tonesOn && !timerBells) return;
   for (var i = 0; i < (times || 1); i++) (function (k) {
     setTimeout(function () {
       try {
@@ -1981,7 +1566,7 @@ function timerView() {
   function tick() {
     var now = Date.now();
     if (now < warmEnd) { var w = Math.ceil((warmEnd - now) / 1000); big.textContent = String(w); label.textContent = "Settle in"; mirror("Settle in", String(w)); return; }
-    if (!started) { started = now; end = now + cfg.min * 60000; lastBell = now; bell(1); say("Begin."); label.textContent = "Sitting"; }
+    if (!started) { started = now; end = now + cfg.min * 60000; lastBell = now; bell(1); label.textContent = "Sitting"; }
     var left = Math.max(0, Math.round((end - now) / 1000));
     big.textContent = fmt(left); mirror("", fmt(left));
     if (cfg.every && now - lastBell >= cfg.every * 60000 && left > 5) { lastBell += cfg.every * 60000; bell(1); }
@@ -2036,11 +1621,11 @@ Object.keys(CH_PRACTICES).forEach(function (cid) { CH_PRACTICES[cid].forEach(fun
 /* a few lines that point at the app's own controls */
 var APP_TIP = {
   3: "The pacer is the circle under these steps. Pick 2, 3, or 5 minutes, then tap Start.",
-  7: "With your eyes closed, tap the speaker at the top and pick Voice. It will talk you through.",
+  7: "Before you close your eyes, tap the speaker at the top and turn Practice tones on. A higher note means breathe in, a lower one breathe out.",
   8: "Tap Start with dim screen to darken the phone while your eyes are covered.",
   11: "Follow the dot around the square below, or trace your own with a finger.",
   14: "Park the thought below. It stays on this device until you clear it.",
-  24: "Tap the speaker at the top and pick Voice, add Brown noise or Ocean if you like, then tap Start with dim screen. The voice says each step."
+  24: "Tap the speaker at the top and turn Practice tones on, add Brown noise or Ocean if you like, then tap Start with dim screen. A higher note means tense, a lower one release, from the feet up to the face."
 };
 
 /* ---------- the reading list: Trestleboard pages, Field Guide, back matter ---------- */
@@ -2164,9 +1749,7 @@ function topbar(opts) {
   opts = opts || { sound: true };
   topEl.innerHTML = "";
   var row = h("div", { class: "top-in" });
-  if (opts.title) {
-    row.appendChild(h("span", { class: "ttl" }, [opts.title]));
-  } else if (opts.back) {
+  if (opts.back) {
     row.appendChild(h("button", { class: "tb backlink", type: "button", onclick: function () { location.hash = opts.back[1]; } }, [icon("back"), opts.back[0]]));
     row.appendChild(h("div", { class: "spacer" }));
   } else {
@@ -2261,7 +1844,8 @@ function homeView() {
 
   // 1. a quiet hello
   var today = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
-  app.appendChild(h("header", { class: "hello" }, [h("h1", null, [greeting()]), h("p", null, [today])]));
+  app.appendChild(h("header", { class: "hello" }, [h("h1", null, [greeting()]), h("p", null, [today]),
+    h("p", null, ["Something steady to leave running, and old tools for when the day snags."])]));
 
   // 2. for ordinary hours: the Watch
   app.appendChild(h("section", { class: "card wpromo", "aria-labelledby": "wpromo-h" }, [
@@ -2273,28 +1857,30 @@ function homeView() {
     h("div", { class: "btnrow" }, [h("a", { class: "go", href: "#/watch" }, ["Open the Watch"])])
   ]));
 
-  // 3. for a hard moment: what's in the way? eight tiles
+  // 3. the day's question
+  app.appendChild(h("section", { class: "group" }, [h("h2", null, ["Today's question"]), h("div", { class: "card" }, [lensBox()])]));
+
+  // 4. a line for today, and the practice it points at
+  var ln = lineOfDay();
+  app.appendChild(h("section", { class: "group" }, [
+    h("h2", null, ["A line for today"]),
+    h("div", { class: "card linecard" }, [
+      h("blockquote", { class: "quote" }, [ln.t]),
+      h("cite", null, [ln.by]),
+      h("a", { class: "linkrow", href: "#/p/" + ln.n }, [h("span", null, [h("small", null, ["The practice that goes with it"]), h("span", { class: "t1" }, [BOOK.entries[ln.n].name])]), icon("chev", "chev")])
+    ])
+  ]));
+
+  // 5. for a hard moment: eight common snags
   var tiles = h("div", { class: "tiles" });
   BOOK.sections.forEach(function (g) {
     tiles.appendChild(h("a", { class: "gtile", href: "#/g/" + g.key }, [groupIcon(g), h("span", { class: "tname" }, [g.name]), h("span", { class: "thint" }, [g.hint])]));
   });
   app.appendChild(h("section", { class: "group checkin-wrap" }, [
-    h("h2", null, ["What's in the way?"]),
-    h("p", { class: "gdesc" }, ["Pick the closest one. Each has three practices."]),
+    h("h2", null, ["When something snags"]),
+    h("p", { class: "gdesc" }, ["Eight common snags, three practices each. Tap the one that sounds closest to now."]),
     tiles,
     tippingNote(false)
-  ]));
-
-  // 4. a line for today, and the practice it points at
-  var ln = lineOfDay();
-  var speak = h("button", { class: "icobtn", type: "button", "aria-label": "Read the line aloud", onclick: function () { say(ln.t + " " + ln.by.replace(/\s*\(.*\)/, ""), true); } }, [icon("speaker")]);
-  app.appendChild(h("section", { class: "group" }, [
-    h("h2", null, ["A line for today"]),
-    h("div", { class: "card linecard" }, [
-      h("blockquote", { class: "quote" }, [ln.t]),
-      h("div", { class: "qrow" }, [h("cite", null, [ln.by]), speak]),
-      h("a", { class: "linkrow", href: "#/p/" + ln.n }, [h("span", null, [h("small", null, ["The practice that goes with it"]), h("span", { class: "t1" }, [BOOK.entries[ln.n].name])]), icon("chev", "chev")])
-    ])
   ]));
 
   app.appendChild(h("footer", { class: "ending" }, [
@@ -2317,10 +1903,10 @@ function groupView(key) {
   app.appendChild(h("section", { class: "group" }, [h("span", { class: "label" }, ["Not quite it?"]), others]));
 }
 
-/* ---------- Practices tab: where to start, all 24, the small practices, routines ---------- */
+/* ---------- Practices tab: where to start, all 24, routines ---------- */
 function practicesView() {
   topbar({ sound: true }); tabs("practices");
-  app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["Practices"]), h("p", null, ["Eight groups of three, in the order of a day."])]));
+  app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["Practices"]), h("p", null, ["Twenty-four practices from old traditions in eight groups, plus routines and a quiet timer."])]));
 
   // where to start
   app.appendChild(h("section", { class: "group" }, [
@@ -2337,10 +1923,7 @@ function practicesView() {
     app.appendChild(sec);
   });
 
-  app.appendChild(h("section", { class: "group" }, [
-    h("h2", null, ["For steady moments"]),
-    h("a", { class: "linkrow", href: "#/steady" }, [h("span", null, [h("small", null, ["For ordinary hours, sorted by length"]), h("span", { class: "t1" }, ["The " + EVERY.length + " small practices"])]), icon("chev", "chev")])
-  ]));
+
 
   // routines + quiet timer, as four small tiles
   var RICON = { morning: "sun", reset: "noon", evening: "moon" };
@@ -2353,76 +1936,8 @@ function practicesView() {
   app.appendChild(h("section", { class: "group" }, [h("h2", null, ["Routines and timer"]), h("p", { class: "gdesc" }, ["A few practices back to back, or a quiet timer with bells."]), rs]));
 }
 
-/* ---------- steady moments: today's saved bits (aim, count, check-ins) ---------- */
+/* ---------- the day's question, and what the evening review shows ---------- */
 function nowClock() { var d = new Date(); return two(d.getHours()) + ":" + two(d.getMinutes()); }
-function wday() { var d = store.get("wday", null); if (!d || d.k !== dayKey()) d = { k: dayKey(), done: 0, aim: "", caught: 0 }; return d; }
-function weatherToday() { var k = dayKey(); return store.get("weather", []).filter(function (r) { return r.k === k; }); }
-function logWeather(v) {
-  var list = store.get("weather", []);
-  list.push({ k: dayKey(), t: nowClock(), v: v });
-  if (list.length > 1000) list = list.slice(-1000);
-  store.set("weather", list);
-}
-// one tap: how are you right now?
-function weatherChips() {
-  var wrap = h("div", { class: "grp" });
-  var row = h("div", { class: "row left", role: "group", "aria-label": "Quick check-in" });
-  var msg = h("span", { class: "saved", "aria-live": "polite" });
-  WEATHER.forEach(function (v) {
-    var b = h("button", { class: "opt", type: "button" }, [wxName(v)]);
-    b.addEventListener("click", function () {
-      logWeather(v);
-      [].forEach.call(row.children, function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true");
-      msg.textContent = "Logged at " + clock12(nowClock()) + ": " + wxName(v).toLowerCase() + ".";
-    });
-    row.appendChild(b);
-  });
-  wrap.appendChild(h("span", { class: "label" }, ["Quick check-in: how are you right now?"]));
-  wrap.appendChild(row); wrap.appendChild(msg);
-  return wrap;
-}
-// the particular examen: one habit, counted with taps
-function aimBox() {
-  var d = wday();
-  var wrap = h("div", { class: "note" });
-  var inp = h("input", { id: "w-aim", type: "text", placeholder: "One habit to watch today", autocomplete: "off" });
-  inp.value = d.aim;
-  inp.addEventListener("input", function () { var x = wday(); x.aim = inp.value; store.set("wday", x); });
-  var count = h("span", { class: "saved", "aria-live": "polite" });
-  function draw() { var x = wday(); count.textContent = x.caught ? "Caught " + x.caught + (x.caught === 1 ? " time" : " times") + " today" : "Nothing counted yet today"; }
-  var tap = h("button", { class: "opt", type: "button" }, ["Caught it"]);
-  tap.addEventListener("click", function () { var x = wday(); x.caught++; store.set("wday", x); draw(); });
-  wrap.appendChild(h("label", { for: "w-aim" }, [h("span", { class: "label" }, ["Today’s habit to watch"]), inp]));
-  wrap.appendChild(h("div", { class: "row between" }, [tap, count]));
-  draw();
-  return wrap;
-}
-// the shadow note: a running list of one-liners
-function shadowNotes() {
-  var items = store.get("shadow", []);
-  var wrap = h("div", { class: "note" });
-  var inp = h("input", { id: "w-shadow", type: "text", placeholder: "They… and I don’t let myself…", autocomplete: "off" });
-  var add = h("button", { class: "opt", type: "button" }, ["Add"]);
-  var list = h("ul", { class: "list" });
-  function draw() {
-    list.innerHTML = "";
-    items.slice().reverse().slice(0, 5).forEach(function (it) {
-      var x = h("button", { class: "x", type: "button", "aria-label": "Remove" }, [icon("x")]);
-      x.addEventListener("click", function () { items.splice(items.indexOf(it), 1); store.set("shadow", items); draw(); });
-      list.appendChild(h("li", null, [h("span", null, [h("small", null, [it.d]), it.t]), x]));
-    });
-  }
-  function submit() {
-    if (!inp.value.trim()) { inp.focus(); return; }
-    var d = new Date(); items.push({ t: inp.value.trim(), d: (d.getMonth() + 1) + "/" + d.getDate() }); store.set("shadow", items); inp.value = ""; draw();
-  }
-  add.addEventListener("click", submit);
-  inp.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
-  wrap.appendChild(h("label", { for: "w-shadow" }, [h("span", { class: "label" }, ["What did they do that I don’t let myself do?"]), inp]));
-  wrap.appendChild(h("div", { class: "row left" }, [add]));
-  wrap.appendChild(list); draw();
-  return wrap;
-}
 function lensBox() {
   var dd = dayInfo();
   return h("div", { class: "lensbox" }, [
@@ -2434,15 +1949,9 @@ function lensBox() {
   ]);
 }
 
-function everyTool(p) {
-  return p.tool === "weather" ? weatherChips() : p.tool === "aim" ? aimBox() : p.tool === "shadow" ? shadowNotes() : p.tool === "lens" ? lensBox() : null;
-}
 // what the evening review (Raising the Sparks) shows from the day
 function dayReview() {
-  var d = wday(), k = dayKey(), lines = [];
-  if (d.aim) lines.push(["Habit watched", d.aim + (d.caught ? ", caught " + d.caught + (d.caught === 1 ? " time" : " times") : ", none counted")]);
-  var w = weatherToday();
-  if (w.length) lines.push(["Check-ins", w.map(function (r) { return clock12(r.t) + " " + wxName(r.v).toLowerCase(); }).join(" · ")]);
+  var k = dayKey(), lines = [];
   var rated = store.get("log", []).filter(function (r) { return r.k === k; });
   if (rated.length) lines.push(["Rated", rated.map(function (r) { return BOOK.entries[r.n].name + " " + r.b + " → " + r.a; }).join(" · ")]);
   var parked = store.get("park", []).length;
@@ -2451,32 +1960,6 @@ function dayReview() {
   if (!lines.length) box.appendChild(h("p", { class: "empty" }, ["Nothing saved today. Review from memory."]));
   else box.appendChild(h("ul", { class: "list" }, lines.map(function (l) { return h("li", null, [h("span", null, [h("small", null, [l[0]]), l[1]])]); })));
   return box;
-}
-
-/* ---------- Practices: the small practices, by length ---------- */
-function everyFold(p) {
-  var body = h("div", { class: "foldbody" }, [
-    p.tool === "lens" ? null : h("p", { class: "wshort" }, [p.short]),
-    h("p", null, [p.how]),
-    everyTool(p),
-    p.link ? h("a", { class: "linkrow", href: "#/p/" + p.link }, [h("span", null, [h("small", null, ["The full practice"]), h("span", { class: "t1" }, [BOOK.entries[p.link].name])]), icon("chev", "chev")]) : null,
-    h("h3", { class: "subhead" }, ["Why it might help"]), h("p", null, [p.why]),
-    h("h3", { class: "subhead" }, ["Where it comes from"]), h("div", { class: "wfrom", html: p.from })
-  ]);
-  return h("details", { class: "more wp", id: "wp-" + p.id }, [
-    h("summary", null, [h("span", null, [h("span", { class: "sit" }, [p.name]), h("span", { class: "nm" }, [p.cue + " · " + p.trad])]), icon("chev", "chev")]),
-    body
-  ]);
-}
-function steadyView() {
-  topbar({ back: ["Practices", "#/practices"], sound: true }); tabs("practices");
-  app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["For steady moments"]), h("p", null, ["Small practices for ordinary hours, so the skills are already in use when a hard moment comes."])]));
-  Object.keys(TIERS).forEach(function (t) {
-    var sec = h("section", { class: "group" }, [h("h2", null, [TIERS[t]])]);
-    EVERY.forEach(function (p) { if (p.tier === t) sec.appendChild(everyFold(p)); });
-    app.appendChild(sec);
-  });
-  glossify([app], "the small practices");
 }
 
 /* ---------- the Watch: a breathing companion to leave running in the background ---------- */
@@ -2523,8 +2006,8 @@ function wUses(set) { return set.mix ? WB_ORDER.filter(function (k) { return W_M
 var W = { running: false, set: null, segs: [], iv: null, raf: null, paused: false, held: false, frozenAt: 0, off: 0, last: null, bag: [], pi: 0,
   master: null, gains: {}, layers: {}, chord: null, toneTo: 0, tones: [], view: null };
 function wNow() { return (W.frozenAt || Date.now()) - W.off; }
-// breathing waits while a practice's tool is running (apart from a quiet one, such as the switch countdown), or while a routine or the timer is on screen, so two
-// guides don't talk at once; a practice page that is only being read leaves it breathing
+// breathing (and its breath tones) waits while a practice's tool is running (apart from a quiet one, such as the switch countdown), or while a routine or the timer
+// is on screen, so two breath cues never sound at once; a practice page that is only being read leaves it breathing
 function wHeld() { return !!(active && !active.quiet) || /^#\/(r\/|timer)/.test(location.hash); }
 function wCycle(k) { var c = 0; WB[k].phases.forEach(function (p) { c += p.s * 1000; }); return c; }
 function wPick() {
@@ -2573,7 +2056,7 @@ function wWhere(sg, now) {
 /* sound: every layer has its own volume and runs through one master volume, which the Watch's Pause fades */
 function wGlide(sec) {
   if (!W.master) return;
-  var lvl = W.running && W.paused ? 0.0001 : (W.running && W.held ? 0.5 : 1) * bgSpeech;
+  var lvl = W.running && W.paused ? 0.0001 : W.running && W.held ? 0.5 : 1;
   try { var g = W.master.gain, t = actx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(lvl, t, sec / 3); } catch (e) {}
 }
 function wVol(kind, v) {
@@ -2638,10 +2121,20 @@ function mixSync() {
 // a soft tone at each change of breath, picked from the soft music's chord of the moment so it sounds like part of it
 // (or the music's home chord when it isn't playing): the top note to breathe in, the bottom one to breathe out,
 // one between for a hold, and the bottom note an octave up to top off a breath
-function wToneNote(hz) {
+function chordNotes() {
   var notes = (W.chord ? W.chord() : [48, 55, 64, 71]).map(function (m) { while (m < 65) m += 12; while (m > 77) m -= 12; return m; });
-  notes.sort(function (a, b) { return a - b; });
+  return notes.sort(function (a, b) { return a - b; });
+}
+function wToneNote(hz) {
+  var notes = chordNotes();
   return hz === IN ? notes[notes.length - 1] : hz === OUT ? notes[0] : hz === HOLD ? notes[1] : notes[0] + 12;
+}
+// a practice step's note (as a MIDI number) in the music's chord: the same as the Watch's for in, out, hold,
+// and topping off; anything below a breath out (finishing, letting go) drops an octave under the chord
+function chordTone(hz) {
+  if (hz === IN || hz === OUT || hz === HOLD || hz > IN) return wToneNote(hz);
+  var notes = chordNotes();
+  return hz < OUT ? notes[0] - 12 : notes[1];
 }
 function wTone(m, at, len) {
   var c = actx, f = 440 * Math.pow(2, (m - 69) / 12);
@@ -2852,7 +2345,7 @@ function watchView() {
   if (!W.set) W.set = wFresh();
   var set = W.set;
   topbar({ sound: true }); tabs("watch");
-  app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["The Watch"])]));
+  app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["The Watch"]), h("p", null, ["Breathing to leave running while you work or read. Pick a pattern, press Start, and let it go."])]));
 
   // the label at the top is the one thing a screen reader announces as it changes: the pattern, Rest, Paused
   var stLabel = h("span", { class: "label", "aria-live": "polite" }), stClock = h("span", { class: "label wclock" });
@@ -3038,13 +2531,13 @@ function watchView() {
   if (W.running) draw(false); else drawReady();
 }
 
-/* ---------- welcome: shown once, on the first open ---------- */
-function showWelcome() {
+/* ---------- welcome: shown each time the app opens. full: with the tour of the tabs (the first open, or from Your data) ---------- */
+function showWelcome(full) {
   if (document.getElementById("welcome")) return;
   var rows = [
-    [TAB_ICONS.home, "Home", "Pick what's in the way right now and get a short practice that fits."],
+    [TAB_ICONS.home, "Home", "The Watch, today's question and a line to go with it, and eight common snags with practices for each."],
     ['<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + EMB.watch + "</svg>", "The Watch", "For ordinary hours. Leave it running in the background: slow breathing with soft sound, and a little about where each pattern comes from."],
-    [TAB_ICONS.practices, "Practices", "All 24, with a place to start in each group, plus routines and the small practices."],
+    [TAB_ICONS.practices, "Practices", "All 24, with a place to start in each group, plus routines and a quiet timer."],
     [TAB_ICONS.read, "Read", "A field guide to the old traditions each practice comes from."]
   ];
   var begin = h("button", { class: "go", type: "button" }, ["Begin"]);
@@ -3052,11 +2545,11 @@ function showWelcome() {
     h("div", { class: "w-in" }, [
       h("div", { class: "w-mark" }, [stoneMark()]),
       h("h1", null, ["Trestleboard"]),
-      h("p", { class: "w-lede" }, ["Twenty-four small practices from old traditions, each one built for a moment in your day."]),
-      h("ul", { class: "w-list" }, rows.map(function (r) {
+      h("p", { class: "w-lede" }, ["Small practices from old traditions, for keeping a steady baseline and finding it again."]),
+      full ? h("ul", { class: "w-list" }, rows.map(function (r) {
         return h("li", null, [h("span", { class: "w-ic", html: r[0] }), h("span", null, [h("b", null, [r[1]]), h("span", null, [r[2]])])]);
-      })),
-      h("p", { class: "w-note" }, ["Everything you save stays on this device. No account, nothing to sign up for."]),
+      })) : null,
+      full ? h("p", { class: "w-note" }, ["Everything you save stays on this device. No account, nothing to sign up for."]) : null,
       begin
     ])
   ]);
@@ -3086,7 +2579,7 @@ function practiceView(id) {
   var mtext = h("div", { class: "mtext", html: b.method });
   if (!/<p>/.test(b.method)) mtext.innerHTML = "<p>" + b.method + "</p>";
   app.appendChild(h("section", { class: "methodbox", "aria-label": "How to do it" }, [
-    h("div", { class: "mhead" }, [h("h2", null, ["How to do it"]), readButton({ name: b.name, method: spokenMethod(id) })]),
+    h("div", { class: "mhead" }, [h("h2", null, ["How to do it"])]),
     mtext,
     APP_TIP[id] ? h("p", { class: "apptip" }, [APP_TIP[id]]) : null
   ]));
@@ -3121,16 +2614,9 @@ function practiceView(id) {
 
 /* ---------- Read: contents ---------- */
 function readHome() {
-  topbar({ sound: false, title: "Read" }); tabs("read");
+  topbar({ sound: true }); tabs("read");
+  app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["Read"]), h("p", null, ["Where the practices come from: how this app is built, and a short field guide to fourteen old traditions."])]));
   var seen = store.get("seen", {}), last = store.get("last", null);
-  if (last && READ_BY[last]) {
-    var lr = READ_BY[last];
-    app.appendChild(h("div", { class: "cover" }, [
-      h("span", { class: "label", style: "color:var(--slate-mark)" }, ["Pick up where you left off"]),
-      h("h1", { html: (lr.num ? "Chapter " + lr.num + ": " : "") + niceTitle(lr.title) }),
-      h("div", { class: "row" }, [h("a", { class: "go", href: "#/read/" + last, style: "text-decoration:none" }, ["Continue reading"])])
-    ]));
-  }
   function row(r) {
     var t = h("span", { class: "t" }, [h("span", { html: niceTitle(r.title) })]);
     if (seen[r.id]) t.appendChild(h("span", { class: "ico rd", role: "img", "aria-label": "read", html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + ICONS.check + "</svg>" }));
@@ -3158,6 +2644,12 @@ function readHome() {
     })(),
     h("ol", null, READ.filter(function (r) { return r.group === "fg"; }).map(row))
   ]));
+  // where you left off, as one row between the Field Guide and Extras
+  if (last && READ_BY[last]) {
+    var lr = READ_BY[last];
+    toc.appendChild(h("a", { class: "linkrow", href: "#/read/" + last }, [h("span", null, [h("small", null, ["Pick up where you left off"]),
+      h("span", { class: "t1", html: (lr.num ? "Chapter " + lr.num + ": " : "") + niceTitle(lr.title) })]), icon("chev", "chev")]));
+  }
   toc.appendChild(h("div", { class: "toc-group" }, [
     h("h2", null, ["Extras"]),
     h("ol", null, READ.filter(function (r) { return r.group === "back"; }).map(row))
@@ -3212,7 +2704,7 @@ function glossFind(text, used) {
   return best;
 }
 function glossDef(g) { return g.def.replace(/\s*\(Ch\. [\d, ]+\)/g, ""); }
-// every page a word appears on: practices first, then the small practices, then the reading
+// every page a word appears on: practices first, then the reading
 var GLOSS_PAGES = null;
 function glossPages() {
   if (GLOSS_PAGES) return GLOSS_PAGES;
@@ -3223,7 +2715,6 @@ function glossPages() {
     var b = BOOK.entries[n];
     GLOSS_PAGES.push({ href: "#/p/" + n, label: b.name, text: b.name + " " + text([b.method, b.image, b.why, b.hole, b.source].join(" ")) });
   });
-  GLOSS_PAGES.push({ href: "#/steady", label: "The small practices", text: EVERY.map(function (p) { return [p.name, p.short, p.how, p.why, text(p.from)].join(" "); }).join(" ") });
   READ.forEach(function (r) { if (!r.special) GLOSS_PAGES.push({ href: "#/read/" + r.id, label: r.num ? r.title + " (Ch. " + r.num + ")" : r.title, text: text(r.html), num: r.num }); });
   return GLOSS_PAGES;
 }
@@ -3326,7 +2817,7 @@ function shelfBody() {
 }
 function readerView(id) {
   var r = READ_BY[id];
-  topbar({ back: ["Read", "#/read"], sound: false, progress: true }); tabs("read");
+  topbar({ back: ["Read", "#/read"], progress: true }); tabs("read");
   store.set("last", id);
   if (!r.special) curRead = id;
   var seen = store.get("seen", {}); seen[id] = true; store.set("seen", seen);
@@ -3456,37 +2947,14 @@ function dataView() {
       ]),
       input, msg
     ]),
-    h("div", { class: "btnrow" }, [h("button", { class: "opt", type: "button", onclick: function () { showWelcome(); } }, ["Show the welcome again"])])
+    h("div", { class: "btnrow" }, [h("button", { class: "opt", type: "button", onclick: function () { showWelcome(true); } }, ["Show the welcome again"])])
   ]));
 }
 
 /* ---------- routines and timer keep their own views; give them the right bars ---------- */
 
-/* ---------- every line the app can speak (used to make the built-in voice recordings) ---------- */
-var SAMPLE = "Breathe in, slowly. And let it go.";
+/* a practice's method as plain text */
 function methodText(id) { var d = document.createElement("div"); d.innerHTML = BOOK.entries[id].method; return d.textContent; }
-// what "Read it aloud" says; "spoken" keeps the wording the built-in voices were recorded with
-function spokenMethod(id) { var d = document.createElement("div"); d.innerHTML = BOOK.entries[id].spoken || BOOK.entries[id].method; return d.textContent; }
-function allPhrases() {
-  COLLECT = [];
-  Object.keys(E).forEach(function (n) { try { E[n].tool(); } catch (e) {} });
-  var out = COLLECT; COLLECT = null;
-  out.push("Parked. Not now.", "Set done. Start the next task now.", "Begin.", "Voice guidance is on.", "This loud.", SAMPLE, "Breathe in, slowly.",
-    "Two minutes. Finish your sentence, write the note.", "Time to switch. Palms on the doorframe, breathe out, step through.");
-  for (var i = 1; i <= 60; i++) out.push(String(i));
-  Object.keys(ROUTINES).forEach(function (k) {
-    var r = ROUTINES[k];
-    out.push(r.name + ". First: " + E[r.ids[0]].name + ". Tap start when you're ready.");
-    r.ids.slice(1).forEach(function (id) { out.push("Next: " + E[id].name + ". Tap next when you're ready."); });
-    out.push(r.name + " is done.");
-  });
-  Object.keys(BOOK.entries).forEach(function (n) { out.push(BOOK.entries[n].name + ". " + spokenMethod(n)); });
-  LINES.forEach(function (ln) { out.push(ln.t + " " + ln.by.replace(/\s*\(.*\)/, "")); });
-  var seen = {}, list = [];
-  out.forEach(function (t) { var k = phraseKey(t); if (k && !seen[k]) { seen[k] = 1; list.push({ id: phraseId(k), text: k }); } });
-  return list;
-}
-window.trestleboardPhrases = allPhrases;
 
 /* ---------- router ---------- */
 function render() {
@@ -3501,7 +2969,6 @@ function render() {
   else if ((m = /^g\/([\w-]+)$/.exec(hsh)) && GROUP_BY_KEY[m[1]]) groupView(m[1]);
   else if (hsh === "practices" || hsh === "all") practicesView();
   else if (hsh === "watch") watchView();
-  else if (hsh === "steady") steadyView();
   else if (hsh === "read") readHome();
   else if ((m = /^read\/([\w-]+)$/.exec(hsh)) && READ_BY[m[1]]) readerView(m[1]);
   else if (hsh === "data" || hsh === "log") dataView();
@@ -3509,13 +2976,11 @@ function render() {
   wMiniDraw(false);
   window.scrollTo(0, 0); placePage(); onScroll();
 }
-// phones only allow sound after a tap: wake the audio on the first tap when guidance is on
-document.addEventListener("click", function () { if (guide !== "off" && (!actx || actx.state === "suspended")) { try { ctx(); } catch (e) {} } }, true);
-// have the chosen built-in voice ready before it's needed
-if (guide === "voice" && voiceKind !== "device") loadPack(voiceKind).catch(function () {});
+// phones only allow sound after a tap: wake the audio on the first tap when practice tones are on
+document.addEventListener("click", function () { if (tonesOn && (!actx || actx.state === "suspended")) { try { ctx(); } catch (e) {} } }, true);
 window.addEventListener("hashchange", render);
 render();
-if (!store.get("welcomed", false)) showWelcome();
+showWelcome(!store.get("welcomed", false));
 
 /* ---------- offline: keep a copy of the app on the phone ---------- */
 if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
