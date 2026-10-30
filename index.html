@@ -20,17 +20,18 @@
    Text sizes: six steps (--t-*). Spacing: 4 / 8 / 12 / 16 / 24 / 32.
    Fonts: the device's own sans-serif by default (San Francisco on iPhone
    and Mac, Segoe UI on Windows). The Aa menu can switch to Atkinson
-   Hyperlegible Next (the whole app) or Literata (reading text only); both
+   Hyperlegible Next or Hanken Grotesk (each for the whole app); both
    are in fonts/, trimmed to the characters the app uses, so they work offline.
-   Colors: Slate is the default; Linen and Ink are below, each in light and dark.
+   Colors: Slate is the default; Linen and Moss are below, each in light and dark,
+   and each theme has a third color (--accent3) kept to a few small markers.
    Every text color is checked against its background two ways: the usual
    contrast ratio (7:1 for main text, 4.5:1 for small and accent text) and
    APCA, which judges dark backgrounds more strictly (Lc 90 and 60).
    ========================================================== */
 @font-face { font-family: "Atkinson Hyperlegible Next"; src: url("fonts/atkinson-hyperlegible-next.woff2") format("woff2"); font-weight: 300 700; font-style: normal; font-display: swap; }
 @font-face { font-family: "Atkinson Hyperlegible Next"; src: url("fonts/atkinson-hyperlegible-next-italic.woff2") format("woff2"); font-weight: 300 700; font-style: italic; font-display: swap; }
-@font-face { font-family: "Literata"; src: url("fonts/literata.woff2") format("woff2"); font-weight: 300 700; font-style: normal; font-display: swap; }
-@font-face { font-family: "Literata"; src: url("fonts/literata-italic.woff2") format("woff2"); font-weight: 300 700; font-style: italic; font-display: swap; }
+@font-face { font-family: "Hanken Grotesk"; src: url("fonts/hanken-grotesk.woff2") format("woff2"); font-weight: 300 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Hanken Grotesk"; src: url("fonts/hanken-grotesk-italic.woff2") format("woff2"); font-weight: 300 700; font-style: italic; font-display: swap; }
 :root {
   --paper: #e7ebef;
   --surface: #f4f6f8;
@@ -44,6 +45,8 @@
   --on-slate: #eef2f6;
   --on-slate-muted: #b6c1cc;
   --slate-mark: #a3c0db;
+  --accent3: #7d5e12;      /* the third color: small markers only (practice number, Start here, pin, the Watch's label, current tab) */
+  --accent3-slate: #e3c27a; /* the same, on slate backgrounds */
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
   --display: var(--sans);
   --body: var(--sans);
@@ -72,27 +75,28 @@
   :root:not([data-theme="light"]) {
     --paper: #12171d; --surface: #19212a; --ink: #e2e8ee; --muted: #adb9c5; --rule: #2a3542;
     --steel: #9dbddb; --steel-soft: #1d2a37; --on-steel: #12171d; --slate: #1f2832;
+    --accent3: #dcb768; --accent3-slate: #dcb768;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --paper: #12171d; --surface: #19212a; --ink: #e2e8ee; --muted: #adb9c5; --rule: #2a3542;
   --steel: #9dbddb; --steel-soft: #1d2a37; --on-steel: #12171d; --slate: #1f2832;
+  --accent3: #dcb768; --accent3-slate: #dcb768;
   color-scheme: dark;
 }
 /* the other color themes from the Aa menu (saved as palette). Each sets every color, light and dark;
    dark follows the device unless Light or Dark is picked, the same as Slate */
-:root[data-palette="linen"] { --paper: #f2ebe0; --surface: #faf6ef; --ink: #2a221b; --muted: #5e5246; --rule: #dacfbf; --steel: #8a4724; --steel-soft: #efdccb; --on-steel: #ffffff; --slate: #3a2f27; --on-slate: #f3ebe1; --on-slate-muted: #cdbfae; --slate-mark: #e3b384; }
-@media (prefers-color-scheme: dark) { :root[data-palette="linen"]:not([data-theme="light"]) { --paper: #1a1511; --surface: #231d18; --ink: #efe7dc; --muted: #c2b6a8; --rule: #3b3229; --steel: #e8b183; --steel-soft: #35281e; --on-steel: #1a1511; --slate: #2b231d; --on-slate: #f3ebe1; --on-slate-muted: #cdbfae; --slate-mark: #e3b384; } }
-:root[data-palette="linen"][data-theme="dark"] { --paper: #1a1511; --surface: #231d18; --ink: #efe7dc; --muted: #c2b6a8; --rule: #3b3229; --steel: #e8b183; --steel-soft: #35281e; --on-steel: #1a1511; --slate: #2b231d; --on-slate: #f3ebe1; --on-slate-muted: #cdbfae; --slate-mark: #e3b384; }
-:root[data-palette="ink"] { --paper: #fafafa; --surface: #ffffff; --ink: #121212; --muted: #4f4f4f; --rule: #d9d9d9; --steel: #22507a; --steel-soft: #e1e9f1; --on-steel: #ffffff; --slate: #16181b; --on-slate: #efefef; --on-slate-muted: #b4b4b4; --slate-mark: #a7c0d8; }
-@media (prefers-color-scheme: dark) { :root[data-palette="ink"]:not([data-theme="light"]) { --paper: #000000; --surface: #121212; --ink: #e8e8e8; --muted: #b3b3b3; --rule: #2b2b2b; --steel: #a0c2e2; --steel-soft: #15212d; --on-steel: #000000; --slate: #121212; --on-slate: #ececec; --on-slate-muted: #b3b3b3; --slate-mark: #a7c0d8; } }
-:root[data-palette="ink"][data-theme="dark"] { --paper: #000000; --surface: #121212; --ink: #e8e8e8; --muted: #b3b3b3; --rule: #2b2b2b; --steel: #a0c2e2; --steel-soft: #15212d; --on-steel: #000000; --slate: #121212; --on-slate: #ececec; --on-slate-muted: #b3b3b3; --slate-mark: #a7c0d8; }
-/* fonts from the Aa menu (saved as font): Atkinson for everything, or Literata for long reading text */
+:root[data-palette="linen"] { --paper: #f2ebe0; --surface: #faf6ef; --ink: #2a221b; --muted: #5e5246; --rule: #dacfbf; --steel: #8a4724; --steel-soft: #efdccb; --on-steel: #ffffff; --slate: #3a2f27; --on-slate: #f3ebe1; --on-slate-muted: #cdbfae; --slate-mark: #e3b384; --accent3: #2c625b; --accent3-slate: #9fd0c6; }
+@media (prefers-color-scheme: dark) { :root[data-palette="linen"]:not([data-theme="light"]) { --paper: #1a1511; --surface: #231d18; --ink: #efe7dc; --muted: #c2b6a8; --rule: #3b3229; --steel: #e8b183; --steel-soft: #35281e; --on-steel: #1a1511; --slate: #2b231d; --on-slate: #f3ebe1; --on-slate-muted: #cdbfae; --slate-mark: #e3b384; --accent3: #8fc6bd; --accent3-slate: #8fc6bd; } }
+:root[data-palette="linen"][data-theme="dark"] { --paper: #1a1511; --surface: #231d18; --ink: #efe7dc; --muted: #c2b6a8; --rule: #3b3229; --steel: #e8b183; --steel-soft: #35281e; --on-steel: #1a1511; --slate: #2b231d; --on-slate: #f3ebe1; --on-slate-muted: #cdbfae; --slate-mark: #e3b384; --accent3: #8fc6bd; --accent3-slate: #8fc6bd; }
+:root[data-palette="moss"] { --paper: #e8ebe4; --surface: #f4f6f1; --ink: #1c231c; --muted: #525d4d; --rule: #c6cebf; --steel: #3c6646; --steel-soft: #d8e4d6; --on-steel: #ffffff; --slate: #2c382f; --on-slate: #eef3ec; --on-slate-muted: #b9c4b4; --slate-mark: #a8cca3; --accent3: #94472c; --accent3-slate: #ecb096; }
+@media (prefers-color-scheme: dark) { :root[data-palette="moss"]:not([data-theme="light"]) { --paper: #121712; --surface: #192019; --ink: #e3eae0; --muted: #afbbab; --rule: #2a352a; --steel: #9cc79e; --steel-soft: #1c2b1e; --on-steel: #121712; --slate: #1e2a20; --on-slate: #e9efe7; --on-slate-muted: #b9c4b4; --slate-mark: #a8cca3; --accent3: #edad90; --accent3-slate: #edad90; } }
+:root[data-palette="moss"][data-theme="dark"] { --paper: #121712; --surface: #192019; --ink: #e3eae0; --muted: #afbbab; --rule: #2a352a; --steel: #9cc79e; --steel-soft: #1c2b1e; --on-steel: #121712; --slate: #1e2a20; --on-slate: #e9efe7; --on-slate-muted: #b9c4b4; --slate-mark: #a8cca3; --accent3: #edad90; --accent3-slate: #edad90; }
+/* fonts from the Aa menu (saved as font): Atkinson or Hanken Grotesk, each for the whole app */
 html[data-font="atkinson"] { --sans: "Atkinson Hyperlegible Next", -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, Arial, sans-serif; }
-html[data-font="literata"] { --read: "Literata", Georgia, "Times New Roman", serif; }
+html[data-font="hanken"] { --sans: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, Arial, sans-serif; }
 .prose, .mtext, .fields dd, .glossdef { font-family: var(--read); }
-html[data-font="literata"] :is(.prose, .mtext, .fields dd, .glossdef) { font-size-adjust: from-font; }
 /* the device's Increase Contrast setting: firmer grey text, borders and small Watch text, in every theme */
 @media (prefers-contrast: more) {
   body { --muted: color-mix(in srgb, var(--ink) 78%, var(--paper)); --rule: color-mix(in srgb, var(--ink) 50%, var(--paper)); --on-slate-muted: color-mix(in srgb, var(--on-slate) 88%, var(--slate)); }
@@ -143,7 +147,8 @@ p { margin: 0; }
   font-size: var(--t-small); white-space: nowrap;
 }
 .tb .ico { width: 1.4rem; height: 1.4rem; }
-.tb[aria-pressed="true"], .tb[aria-expanded="true"] { color: var(--slate-mark); }
+.tb[aria-expanded="true"] { color: var(--slate-mark); }
+.tb[aria-pressed="true"] { color: var(--accent3-slate); }
 .tb.backlink { color: var(--slate-mark); font-size: var(--t-body); padding-left: 0; min-width: 0; }
 .tb.backlink .ico { width: 1.1rem; height: 1.1rem; }
 .tb.aa { font-family: var(--display); font-size: var(--t-card); font-weight: 600; }
@@ -174,8 +179,10 @@ p { margin: 0; }
 }
 .tabs a { position: relative; isolation: isolate; display: grid; justify-items: center; align-content: center; gap: 2px; height: var(--tabs-h); color: var(--muted); text-decoration: none; font-size: var(--t-tiny); font-weight: 600; transition: color 0.2s; }
 .tabs a svg { width: 1.45rem; height: 1.45rem; transition: transform 0.25s; }
-.tabs a[aria-current="page"] { color: var(--steel); }
-.tabs a[aria-current="page"]::before { content: ""; position: absolute; z-index: -1; top: 0.35rem; left: 50%; width: 3.6rem; height: 1.85rem; margin-left: -1.8rem; border-radius: 1rem; background: var(--steel-soft); }
+.tabs a[aria-current="page"] { color: var(--accent3); }
+.tabs a[aria-current="page"]::before { content: ""; position: absolute; z-index: -1; top: 0.35rem; left: 50%; width: 3.6rem; height: 1.85rem; margin-left: -1.8rem; border-radius: 1rem; background: color-mix(in srgb, var(--accent3) 14%, transparent); }
+/* Windows High Contrast removes the pill's background, so the current tab keeps an outline there */
+@media (forced-colors: active) { .tabs a[aria-current="page"]::before { border: 2px solid CanvasText; } }
 .tabs a.fresh::before { animation: pill 0.3s ease-out; }
 
 /* ---------- headings and groups ---------- */
@@ -197,6 +204,7 @@ p { margin: 0; }
 .go.ghost { background: transparent; color: var(--steel); }
 .opt { background: var(--surface); color: var(--ink); border: 1px solid var(--rule); padding: 0 var(--s4); font-size: var(--t-small); }
 .opt[aria-pressed="true"] { border-color: var(--steel); background: var(--steel-soft); color: var(--ink); }
+.opt > .ico { width: 1.1rem; height: 1.1rem; }
 .go:active, .opt:active, .pick:active, .linkrow:active, .gtile:active, .pager a:active { transform: scale(0.985); }
 .row { display: flex; flex-wrap: wrap; gap: var(--s2); justify-content: center; }
 .row.left { justify-content: flex-start; }
@@ -218,8 +226,8 @@ p { margin: 0; }
 .pick .sit, .linkrow .t1 { display: block; }
 .pick .nm, .linkrow small { display: block; font-size: var(--t-small); color: var(--muted); }
 .pick .end { display: inline-flex; align-items: center; gap: var(--s2); }
-.pick .pin { width: 0.95rem; height: 0.95rem; color: var(--steel); }
-.pick .tag { display: block; margin-bottom: 2px; font-size: var(--t-tiny); font-weight: 600; color: var(--steel); }
+.pick .pin { width: 0.95rem; height: 0.95rem; color: var(--accent3); }
+.pick .tag { display: block; margin-bottom: 2px; font-size: var(--t-tiny); font-weight: 600; color: var(--accent3); }
 .links, .rows { display: grid; gap: var(--s2); }
 
 /* fold-outs styled as rows */
@@ -244,7 +252,7 @@ p { margin: 0; }
 .wpromo-top { display: flex; align-items: center; gap: var(--s3); }
 .wpromo .emb.tile { width: 2.8rem; height: 2.8rem; background: transparent; color: var(--slate-mark); border-color: color-mix(in srgb, var(--on-slate-muted) 45%, transparent); }
 .wpromo .emb.tile svg { width: 1.5rem; height: 1.5rem; }
-.wpromo .label { color: var(--slate-mark); }
+.wpromo .label { color: var(--accent3-slate); }
 .wpromo h2 { font-size: var(--t-head); }
 .wpromo p { color: color-mix(in srgb, var(--on-slate) 82%, var(--slate)); }
 .wpromo .go { background: var(--slate-mark); color: var(--slate); border-color: var(--slate-mark); }
@@ -287,7 +295,7 @@ p { margin: 0; }
 
 /* ---------- practice page ---------- */
 .p-head { display: grid; gap: var(--s2); }
-.p-head .num { font-family: var(--display); color: var(--steel); font-size: var(--t-small); font-weight: 600; }
+.p-head .num { font-family: var(--display); color: var(--accent3); font-size: var(--t-small); font-weight: 600; }
 .p-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); font-size: var(--t-small); color: var(--muted); }
 .p-meta .dotsep { opacity: 0.6; }
 .when { font-size: var(--t-body); }
@@ -543,6 +551,8 @@ html.locked, html.locked body { overflow: hidden; }
 .w-list li > span:last-child > span { color: var(--on-slate-muted); font-size: var(--t-small); line-height: 1.4; }
 .w-note { color: var(--on-slate-muted); font-size: var(--t-small); font-style: italic; }
 .welcome .go { background: var(--slate-mark); color: var(--slate); border-color: var(--slate-mark); min-width: 12rem; }
+/* Begin stays in view at the bottom on short screens, with the tour scrolling under it */
+.w-go { position: sticky; bottom: 0; width: 100%; display: grid; justify-items: center; padding: var(--s5) 0 calc(env(safe-area-inset-bottom, 0px) + var(--s3)); background: linear-gradient(to top, var(--slate) 65%, transparent); }
 
 /* ---------- the day's question and the Watch ---------- */
 .foldbody .subhead { margin-top: var(--s2); }
@@ -551,6 +561,8 @@ html.locked, html.locked body { overflow: hidden; }
 .lenstag { display: flex; align-items: center; gap: var(--s2); }
 .wwhy > summary { cursor: pointer; color: var(--steel); font-size: var(--t-small); min-height: var(--tap); display: flex; align-items: center; }
 .wwhy .foldbody { display: grid; gap: var(--s2); font-size: var(--t-small); color: var(--muted); }
+.wwhy > summary .chev { margin-left: var(--s1); transform: rotate(90deg); }
+.wwhy[open] > summary .chev { transform: rotate(-90deg); }
 .dayrev { margin-top: var(--s2); }
 
 /* the Watch's screen: slate, like a player, with what's on now in the middle */
@@ -577,6 +589,7 @@ html.locked, html.locked body { overflow: hidden; }
 .wstage .opt { background: transparent; color: var(--on-slate); border-color: color-mix(in srgb, var(--on-slate-muted) 45%, transparent); }
 .wstage .opt[aria-pressed="true"] { background: color-mix(in srgb, var(--slate-mark) 25%, transparent); border-color: var(--slate-mark); color: var(--on-slate); }
 .wstage .wwhy > summary { color: var(--slate-mark); }
+.wstage .wwhy > summary .chev { color: var(--slate-mark); opacity: 0.8; }
 .wstage blockquote { border-left-color: var(--slate-mark); }
 .wstage .wwhy .foldbody { color: var(--on-slate-muted); }
 .wfoot { display: grid; gap: var(--s2); }
@@ -608,6 +621,11 @@ html.locked, html.locked body { overflow: hidden; }
 .wsb { width: var(--tap); padding: 0; font-size: 1.2rem; }
 .wsb[aria-disabled="true"] { opacity: 0.35; cursor: default; }
 .wsv { min-width: 5.2rem; text-align: center; font-size: var(--t-small); font-weight: 600; font-variant-numeric: tabular-nums; }
+/* the Watch and its Sound and screen: a button opens it as a sheet on narrower windows; beside the Watch on wide ones */
+.wgrid { display: grid; gap: var(--s6); }
+.wgrid > * { min-width: 0; }
+.wside { display: none; }
+.wside-h { font-size: var(--t-card); }
 /* the Dim slider's dark layer over the Watch page; taps go through it */
 /* read by a screen reader, not shown */
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -666,10 +684,13 @@ body.wmini-on .app { padding-bottom: calc(var(--tabs-h) + env(safe-area-inset-bo
     right: max(0px, calc((100% - 40rem - var(--rail) - var(--pane)) / 2));
     padding: calc(52px + env(safe-area-inset-top, 0px) + var(--s5)) max(var(--s4), env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + var(--s5)) 0;
   }
-  /* the Watch page is the Watch itself, so it keeps the room the pane would take */
+  /* the Watch page is the Watch itself: no side pane; its own Sound and screen sits in that room instead */
   body.on-watch .side { display: none; }
-  body.on-watch .top-in { max-width: calc(40rem + var(--rail)); padding-right: 0; }
-  body.on-watch .app { max-width: calc(40rem + var(--rail)); padding-right: max(var(--s4), env(safe-area-inset-right, 0px)); }
+  body.on-watch .top-in { padding-right: 0; }
+  body.on-watch .app { padding-right: max(var(--s4), env(safe-area-inset-right, 0px)); }
+  .wgrid { grid-template-columns: minmax(0, 1fr) var(--pane); gap: var(--s5); align-items: start; }
+  .wside { display: grid; gap: var(--s3); position: sticky; top: calc(52px + env(safe-area-inset-top, 0px) + var(--s4)); max-height: calc(100vh - 52px - env(safe-area-inset-top, 0px) - 2 * var(--s4)); overflow-y: auto; overscroll-behavior: contain; }
+  .wsound-b { display: none; }
 }
 /* the pane's cards: the Watch (to start it, or running), and the page's own card below */
 .side-slot { display: grid; gap: var(--s4); align-content: start; }
@@ -705,6 +726,7 @@ body.wmini-on .app { padding-bottom: calc(var(--tabs-h) + env(safe-area-inset-bo
 .icobtn.pop { animation: pop 0.35s ease-out; }
 .group.flash > h2 { animation: flash 1.6s ease-out; }
 @media (prefers-reduced-motion: no-preference) {
+  .wwhy > summary .chev { transition: transform 0.2s; }
   .sheet { animation: sheetup 0.28s ease-out; }
   .sheet-back { animation: wfade 0.2s ease-out; }
   .sheet.settle { transition: transform 0.24s ease-out; }
@@ -844,21 +866,29 @@ function rainBuffer(c, secs, heavy) {
   return loopable(c, [L, R], len, xf);
 }
 // crickets: each sings a high note in short pulses, grouped into chirps, at its own pitch, pace, and place.
-// far: more of them, quieter (the chorus behind the near ones). Each chirp pattern fits the loop exactly.
+// Near (far false): three crickets, each in its own part of the pitch range and starting at its own point in the
+// cycle, so two rarely chirp at once (overlapping near-twins sounded like one cricket doubled). Every chirp has at
+// least three pulses. Far: a softer chorus, lower and duller, with longer, blurrier pulses and loose timing, so it
+// sounds like distance rather than an echo of the near ones. Each chirp pattern fits the loop exactly.
 function cricketBuffer(c, secs, far) {
   var sr = c.sampleRate, len = Math.floor(sr * secs), buf = c.createBuffer(2, len, sr);
-  var L = buf.getChannelData(0), R = buf.getChannelData(1), count = far ? 9 : 4;
+  var L = buf.getChannelData(0), R = buf.getChannelData(1), count = far ? 10 : 3;
+  var lanes = [4050, 4650, 5250].sort(function () { return Math.random() - 0.5; });
   for (var k = 0; k < count; k++) {
-    var f = 3900 + Math.random() * 1300, pulses = 2 + Math.floor(Math.random() * 3), reps = Math.max(1, Math.round(secs / (0.55 + Math.random() * 0.5)));
-    var period = secs / reps, on = 0.014 + Math.random() * 0.008, gap = 0.012 + Math.random() * 0.008, pan = Math.random();
-    var amp = far ? 0.015 + Math.random() * 0.02 : 0.05 + Math.random() * 0.05, start = Math.random() * period;
+    var f = far ? 3700 + Math.random() * 1000 : lanes[k] + (Math.random() - 0.5) * 200;
+    var pulses = 3 + Math.floor(Math.random() * 3), reps = Math.max(1, Math.round(secs / (0.6 + Math.random() * 0.6)));
+    var period = secs / reps, on = far ? 0.022 + Math.random() * 0.01 : 0.016 + Math.random() * 0.006;
+    var gap = far ? 0.01 + Math.random() * 0.008 : 0.016 + Math.random() * 0.006, pan = far ? Math.random() : 0.15 + 0.35 * k + Math.random() * 0.1;
+    var amp = far ? 0.008 + Math.random() * 0.008 : 0.05 + Math.random() * 0.04;
+    var start = far ? Math.random() * period : (k + Math.random() * 0.3) * period / count;
     for (var r = 0; r < reps; r++) {
-      if (Math.random() > (far ? 0.85 : 0.92)) continue;
+      if (Math.random() > (far ? 0.7 : 0.92)) continue;
+      var drift = far ? (Math.random() - 0.5) * 0.08 : 0;
       for (var p = 0; p < pulses; p++) {
-        var t0 = Math.floor(((start + r * period + p * (on + gap)) % secs) * sr), n = Math.floor(on * sr);
+        var t0 = Math.floor((((start + r * period + drift + p * (on + gap)) % secs + secs) % secs) * sr), n = Math.floor(on * sr);
         for (var i = 0; i < n; i++) {
           var j = (t0 + i) % len, e = Math.sin(Math.PI * i / n), tt = (t0 + i) / sr;
-          var s = (Math.sin(2 * Math.PI * f * tt) + 0.15 * Math.sin(4 * Math.PI * f * tt)) * amp * e * e;
+          var s = (Math.sin(2 * Math.PI * f * tt) + (far ? 0 : 0.15 * Math.sin(4 * Math.PI * f * tt))) * amp * e * e;
           L[j] += s * (1 - pan); R[j] += s * pan;
         }
       }
@@ -1030,7 +1060,7 @@ var W_LAYERS = [["music", "Soft music", "music"], ["tones", "Breath tones", "mus
   ["crickets", "Crickets", "nature"], ["brown", "Brown noise", "nature"], ["pink", "Pink noise", "nature"]];
 // each layer's level, measured as loudness (LUFS, the broadcast standard) so that every layer sounds about as
 // loud as the fire at the same slider position. Re-measure if a layer's recipe changes.
-var W_CAL = { music: 0.989, drone: 1.059, rain: 0.86, ocean: 1.084, wind: 1.084, fire: 1, storm: 0.813, crickets: 2.2, brown: 0.543, pink: 0.49 };
+var W_CAL = { music: 0.989, drone: 1.059, rain: 0.86, ocean: 1.084, wind: 1.084, fire: 1, storm: 0.813, crickets: 2.39, brown: 0.543, pink: 0.49 };
 // the volumes start from the Watch's defaults each time the app opens; nothing plays until the sound is
 // turned on in the top bar or the Watch starts. Breath tones only sound while the Watch runs.
 var mixVol = {}, mixOn = false;
@@ -1169,7 +1199,7 @@ function wLayer(kind, c, dest) {
   if (kind === "crickets") {
     // near crickets and a far chorus, on loops of unrelated lengths, over a faint night air
     chain([loop(cricketBuffer(c, 13.7, false)), filt("lowpass", 9000)]);
-    chain([loop(cricketBuffer(c, 17.3, true)), filt("lowpass", 6000)]);
+    chain([loop(cricketBuffer(c, 17.3, true)), filt("lowpass", 4000)]);
     chain([loop(noiseBuffer("brown")), filt("lowpass", 300), amp(0.06)]);
   }
   // waves and thunder are set a few seconds ahead; after the page's timers were stopped, skip what was missed
@@ -1261,6 +1291,18 @@ function toolDone() { markDay(); var f = onDone;
 function stopActive() { if (active && active.stop) active.stop(); active = null; letSleep(); }
 // starts the tool if needed, then turns the lights out; that screen has its own Stop.
 // shape (optional): makes the copy of the breathing shape to show there
+// practice tones on or off, right in the tool that plays them (saved as guide, as before); every copy on the page
+// moves together, and the top bar's speaker follows
+function tonesButton() {
+  var b = h("button", { class: "opt", type: "button", "data-tones": "", "aria-pressed": String(tonesOn) }, [icon("speaker"), "Tones"]);
+  b.addEventListener("click", function () {
+    tonesOn = !tonesOn; store.set("guide", tonesOn ? "tones" : "off");
+    [].forEach.call(document.querySelectorAll("[data-tones]"), function (x) { x.setAttribute("aria-pressed", String(tonesOn)); });
+    if (tonesOn) chime(528, 0.4, true);
+    if (redrawSound) redrawSound();
+  });
+  return b;
+}
 function lightsButton(start, stop, shape) {
   var b = h("button", { class: "opt", type: "button" }, ["Start with lights out"]);
   b.addEventListener("click", function () { start(); openLights(stop, { shape: shape ? shape() : null }); });
@@ -1363,7 +1405,7 @@ function breath(cfg) {
     btn.textContent = "Stop"; btn.classList.add("ghost"); holdAwake(); stage.classList.remove("idle");
     t0 = performance.now(); raf = requestAnimationFrame(frame);
   });
-  [phase, sub, opts, h("div", { class: "row" }, [btn]), stage, h("div", { class: "row" }, [lightsButton(function () { if (!raf) btn.click(); }, stop, twin)])].forEach(function (x) { if (x) wrap.appendChild(x); });
+  [phase, sub, opts, h("div", { class: "row" }, [btn]), stage, h("div", { class: "row" }, [lightsButton(function () { if (!raf) btn.click(); }, stop, twin), tonesButton()])].forEach(function (x) { if (x) wrap.appendChild(x); });
   return wrap;
 }
 
@@ -1418,7 +1460,7 @@ function steps(cfg) {
     btn.textContent = "Stop"; btn.classList.add("ghost"); holdAwake();
     timer = setInterval(tick, 100);
   });
-  [label, sub, btn, big, bar, cfg.lights ? lightsButton(function () { if (!timer) btn.click(); }, stop) : null, after].forEach(function (x) { if (x) wrap.appendChild(x); });
+  [label, sub, btn, big, bar, h("div", { class: "row" }, [cfg.lights ? lightsButton(function () { if (!timer) btn.click(); }, stop) : null, tonesButton()]), after].forEach(function (x) { if (x) wrap.appendChild(x); });
   return wrap;
 }
 
@@ -1525,7 +1567,7 @@ function reps() {
   minus.addEventListener("click", function () { target = Math.max(1, target - 5); store.set("reps", target); draw(); });
   plus.addEventListener("click", function () { target += 5; store.set("reps", target); draw(); });
   reset.addEventListener("click", function () { n = 0; draw(); });
-  [tap, sub, h("div", { class: "row" }, [minus, plus, reset])].forEach(function (x) { wrap.appendChild(x); });
+  [tap, sub, h("div", { class: "row" }, [minus, plus, reset]), h("div", { class: "row" }, [tonesButton()])].forEach(function (x) { wrap.appendChild(x); });
   return wrap;
 }
 
@@ -1551,7 +1593,7 @@ function coin() {
     h("span", { class: "label" }, ["2. If two are still tied"]),
     h("label", { for: "coin-a" }, [a]), h("label", { for: "coin-b" }, [b])
   ]));
-  [face, btn, res].forEach(function (x) { wrap.appendChild(x); });
+  [face, btn, res, h("div", { class: "row" }, [tonesButton()])].forEach(function (x) { wrap.appendChild(x); });
   return wrap;
 }
 
@@ -1578,7 +1620,7 @@ function switcher() {
   var b2 = h("button", { class: "go ghost", type: "button" }, ["2 min"]);
   b10.addEventListener("click", function () { start(10); });
   b2.addEventListener("click", function () { start(2); });
-  [big, sub, h("div", { class: "row" }, [b10, b2])].forEach(function (x) { wrap.appendChild(x); });
+  [big, sub, h("div", { class: "row" }, [b10, b2]), h("div", { class: "row" }, [tonesButton()])].forEach(function (x) { wrap.appendChild(x); });
   wrap.appendChild(note("e22", [{ label: "Parking note: where I stopped, what's next", ph: "Stopped at… next is…" }]));
   return wrap;
 }
@@ -1675,40 +1717,15 @@ var START_HERE = { "starting": 2, "foggy": 4, "too-much": 7, "heated": 10, "loop
 /* ---------- views ---------- */
 var app = document.getElementById("app");
 var sheet = null;
-function soundOn() { return tonesOn || mixSounding(); }
+// the speaker shows the Watch or background sound; practice tones show on each tool's own Tones button
+function soundOn() { return mixSounding(); }
 function soundLabel() {
-  var parts = [];
-  if (tonesOn) parts.push("Practice tones");
-  if (mixSounding()) parts.push(W.running ? "the Watch" : "background");
-  var t = parts.join(" + ") || "Off";
-  return "Sound: " + t.charAt(0).toUpperCase() + t.slice(1);
+  if (!mixSounding()) return "Sound: Off";
+  return "Sound: " + (W.running ? "The Watch" : "Background");
 }
 function soundPanel(onChange) {
   var panel = h("section", { class: "panel", "aria-label": "Sound settings" });
-  function choice(opts, current, onPick, cls) {
-    var row = h("div", { class: "row" + (cls ? " " + cls : "") });
-    opts.forEach(function (o) {
-      var b = h("button", { class: "opt", type: "button", "aria-pressed": String(o[0] === current()) }, [o[1]]);
-      b.addEventListener("click", function () {
-        [].forEach.call(row.children, function (x) { x.setAttribute("aria-pressed", "false"); });
-        b.setAttribute("aria-pressed", "true"); onPick(o[0]); if (onChange) onChange();
-      });
-      row.appendChild(b);
-    });
-    return row;
-  }
   function head(icon, title) { return h("h3", { class: "psec-h" }, [emblem(icon, "sm"), title]); }
-
-  // practice tones: a note at each step of a practice's tool
-  var HELP = { off: "No tones. Watch the screen.", on: "A higher note means breathe in. A lower note means breathe out or let go." };
-  var help = h("p", { class: "phelp" }, [HELP[tonesOn ? "on" : "off"]]);
-  panel.appendChild(h("div", { class: "psec" }, [head("speaker", "Practice tones"),
-    choice([[false, "Off"], [true, "On"]], function () { return tonesOn; }, function (v) {
-      tonesOn = v; store.set("guide", v ? "tones" : "off"); help.textContent = HELP[v ? "on" : "off"];
-      if (v) chime(528, 0.4, true);
-    }), help,
-    slider("Volume", "gvol-r", guideVol, function (v) { guideVol = v; store.set("gvol", v); }, function () { chime(528, 0.4, true); })
-  ]));
 
   // background sound: the same mix the Watch plays (breath tones only while it runs)
   var onRow = h("div", { class: "row", role: "group", "aria-label": "Background sound" });
@@ -1721,6 +1738,11 @@ function soundPanel(onChange) {
     mixControls("mx-", function () { return true; }, W.running),
     [h("p", { class: "phelp" }, ["Plays quietly under everything until you turn it off. Made by the app itself, so it works offline."])]
   )));
+  // practice tones: a note at each step of a practice's tool, turned on or off by the Tones button in each tool
+  panel.appendChild(h("div", { class: "psec" }, [head("speaker", "Practice tones"),
+    h("p", { class: "phelp" }, ["A higher note means breathe in. A lower note means breathe out or let go."]),
+    slider("Volume", "gvol-r", guideVol, function (v) { guideVol = v; store.set("gvol", v); }, function () { chime(528, 0.4, true); })
+  ]));
   panel.appendChild(h("p", { class: "phelp" }, ["Hearing nothing? Turn the device volume up. On an iPhone, also check the silent switch."]));
   return panel;
 }
@@ -1777,24 +1799,30 @@ function sheetSwipe(el, back) {
   });
   el.addEventListener("touchcancel", function () { if (mode === "drag") settle(false); mode = "no"; });
 }
-function openSheet(onChange) {
+// opts (optional): title, label (what a screen reader calls the sheet), and body (its content), for the Watch's
+// own Sound and screen; without them, it's the top bar's sound settings
+function openSheet(onChange, opts) {
   closeSheet();
+  opts = opts || {};
   var done = h("button", { class: "go", type: "button" }, ["Done"]);
   var back = h("div", { class: "sheet-back" });
-  var el = h("div", { class: "sheet", role: "dialog", "aria-modal": "true", "aria-label": "Sound settings" }, [
-    h("div", { class: "sheet-in" }, [h("div", { class: "sheet-head" }, [h("h2", null, ["Sound"]), done]), soundPanel(onChange)])
+  var el = h("div", { class: "sheet", role: "dialog", "aria-modal": "true", "aria-label": opts.label || "Sound settings" }, [
+    h("div", { class: "sheet-in" }, [h("div", { class: "sheet-head" }, [h("h2", null, [opts.title || "Sound"]), done]), opts.body ? opts.body() : soundPanel(onChange)])
   ]);
   done.addEventListener("click", closeSheet);
   back.addEventListener("click", closeSheet);
   sheetSwipe(el, back);
   document.body.appendChild(back); document.body.appendChild(el);
   document.documentElement.classList.add("locked");
-  sheet = { el: el, back: back };
+  sheet = { el: el, back: back, from: document.activeElement };
   done.focus();
 }
+// on close, the keyboard goes back to the button that opened the sheet, if it's still on the page
 function closeSheet() {
   if (!sheet) return;
+  var from = sheet.from;
   sheet.el.remove(); sheet.back.remove(); sheet = null;
+  if (from && from.focus && document.body.contains(from)) from.focus();
   if (!document.getElementById("welcome")) document.documentElement.classList.remove("locked");
 }
 function slider(name, id, value, onInput, onRelease) {
@@ -2019,11 +2047,11 @@ Object.keys(CH_PRACTICES).forEach(function (cid) { CH_PRACTICES[cid].forEach(fun
 /* a few lines that point at the app's own controls */
 var APP_TIP = {
   3: "The pacer is the circle under these steps. Pick 2, 3, or 5 minutes, then tap Start.",
-  7: "Before you close your eyes, tap the speaker at the top and turn Practice tones on. A higher note means breathe in, a lower one breathe out.",
+  7: "Before you close your eyes, tap Tones under the circle to turn them on. A higher note means breathe in, a lower one breathe out.",
   8: "Tap Start with lights out to darken the phone while your eyes are covered.",
   11: "Follow the dot around the square below, or trace your own with a finger.",
   14: "Park the thought below. It stays on this device until you clear it.",
-  24: "Tap the speaker at the top and turn Practice tones on, add Brown noise or Ocean if you like, then tap Start with lights out. A higher note means tense, a lower one release, from the feet up to the face."
+  24: "Tap Tones below to turn them on, add Brown noise or Ocean from the speaker at the top if you like, then tap Start with lights out. A higher note means tense, a lower one release, from the feet up to the face."
 };
 
 /* ---------- the reading list: Trestleboard pages, Field Guide, back matter ---------- */
@@ -2176,7 +2204,7 @@ function closeSizePop(back) {
 }
 document.addEventListener("keydown", function (e) { if (e.key !== "Escape") return; if (sizePop) closeSizePop(true); else if (lights && !document.getElementById("welcome")) closeLights(); });
 // light or dark: "auto" follows the device; the phone's status bar takes the top bar's color in each color theme
-var THEME_BAR = { slate: { light: "#2b3541", dark: "#1f2832" }, linen: { light: "#3a2f27", dark: "#2b231d" }, ink: { light: "#16181b", dark: "#121212" } };
+var THEME_BAR = { slate: { light: "#2b3541", dark: "#1f2832" }, linen: { light: "#3a2f27", dark: "#2b231d" }, moss: { light: "#2c382f", dark: "#1e2a20" } };
 function applyTheme(v) {
   var root = document.documentElement, bar = THEME_BAR[store.get("palette", "slate")] || THEME_BAR.slate;
   if (v === "light" || v === "dark") root.setAttribute("data-theme", v); else root.removeAttribute("data-theme");
@@ -2187,14 +2215,14 @@ function applyTheme(v) {
 }
 // the color theme (Slate, the default, has no attribute) and the font (Device, the default, has none)
 function applyPalette(v) {
-  if (v === "linen" || v === "ink") document.documentElement.setAttribute("data-palette", v); else document.documentElement.removeAttribute("data-palette");
+  if (v === "linen" || v === "moss") document.documentElement.setAttribute("data-palette", v); else document.documentElement.removeAttribute("data-palette");
   applyTheme(store.get("theme", "auto"));
 }
 function applyFont(v) {
-  if (v === "atkinson" || v === "literata") document.documentElement.setAttribute("data-font", v); else document.documentElement.removeAttribute("data-font");
+  if (v === "atkinson" || v === "hanken") document.documentElement.setAttribute("data-font", v); else document.documentElement.removeAttribute("data-font");
 }
 // each theme's own look on its button: top bar color over page color, both from the light version
-var SWATCH = { slate: ["#2b3541", "#e7ebef"], linen: ["#3a2f27", "#f2ebe0"], ink: ["#16181b", "#fafafa"] };
+var SWATCH = { slate: ["#2b3541", "#e7ebef"], linen: ["#3a2f27", "#f2ebe0"], moss: ["#2c382f", "#e8ebe4"] };
 function swatch(k) { return h("span", { class: "sw", "aria-hidden": "true", style: "background: linear-gradient(135deg, " + SWATCH[k][0] + " 50%, " + SWATCH[k][1] + " 50%)" }); }
 // one menu for how pages look: text size, light or dark, color theme, and font
 function displayControl() {
@@ -2205,7 +2233,9 @@ function displayControl() {
     sizeBtn = aa;
     var pop = h("div", { class: "sizepop", role: "group", "aria-label": "Display" });
     function choices(label, cls, key, opts, def, apply) {
+      // a choice that was retired (the Ink colors, the Literata font) shows as the default, which is what applies
       var cur = store.get(key, def);
+      if (!opts.some(function (z) { return z[0] === cur; })) cur = def;
       var row = h("div", { class: "prow" + (cls ? " " + cls : ""), role: "group", "aria-label": label }, [h("span", { class: "plabel", "aria-hidden": "true" }, [label])]);
       opts.forEach(function (z) {
         var b = h("button", { type: "button", "aria-label": z[1], "aria-pressed": String(cur === z[0]), style: (z[3] ? "font-size:" + z[3] + ";" : "") + (z[4] || "") }, [z[2]]);
@@ -2223,10 +2253,10 @@ function displayControl() {
       function (v) { document.documentElement.setAttribute("data-size", v); }));
     pop.appendChild(choices("Look", "look", "theme", [["auto", "Match the device", "Device"], ["light", "Light", "Light"], ["dark", "Dark", "Dark"]], "auto", applyTheme));
     pop.appendChild(choices("Color", "look", "palette", [["slate", "Slate colors", h("span", null, [swatch("slate"), "Slate"])],
-      ["linen", "Linen colors, warm", h("span", null, [swatch("linen"), "Linen"])], ["ink", "Ink colors, high contrast, true black in dark mode", h("span", null, [swatch("ink"), "Ink"])]], "slate", applyPalette));
+      ["linen", "Linen colors, warm", h("span", null, [swatch("linen"), "Linen"])], ["moss", "Moss colors, green", h("span", null, [swatch("moss"), "Moss"])]], "slate", applyPalette));
     pop.appendChild(choices("Font", "look", "font", [["device", "The device's own font", "Device"],
       ["atkinson", "Atkinson Hyperlegible Next, for the whole app", "Atkinson", null, "font-family:'Atkinson Hyperlegible Next',sans-serif"],
-      ["literata", "Literata, for reading text", "Literata", null, "font-family:Literata,Georgia,serif"]], "device", applyFont));
+      ["hanken", "Hanken Grotesk, for the whole app", "Hanken", null, "font-family:'Hanken Grotesk',sans-serif"]], "device", applyFont));
     topEl.appendChild(pop); sizePop = pop; aa.setAttribute("aria-expanded", "true");
     // opened from the keyboard: start on the text size picked now
     if (ev.detail === 0) { var on = pop.querySelector('[aria-pressed="true"]'); if (on) on.focus(); }
@@ -2948,10 +2978,13 @@ function watchView() {
   var mainB = h("button", { class: "go wbig", type: "button" }, ["Start"]);
   var stopB = h("button", { class: "opt", type: "button" }, ["Stop"]);
   var lightsB = h("button", { class: "opt", type: "button" }, ["Lights out"]);
+  // Sound and screen: on narrower windows this button opens it as a sheet; on wide ones it sits beside the Watch instead
+  var soundB = h("button", { class: "opt wsound-b", type: "button", "aria-haspopup": "dialog" }, ["Sound and screen"]);
   var stage = h("section", { class: "wstage", "aria-label": "The Watch" }, [
-    h("div", { class: "wtop" }, [stLabel, stClock]), mid, h("div", { class: "btnrow wbtns" }, [mainB, stopB, lightsB]), readBox, h("div", { class: "wfoot" }, [bar, foot])
+    h("div", { class: "wtop" }, [stLabel, stClock]), mid, h("div", { class: "btnrow wbtns" }, [mainB, stopB, lightsB, soundB]), readBox, h("div", { class: "wfoot" }, [bar, foot])
   ]);
-  app.appendChild(stage);
+  var wgrid = h("div", { class: "wgrid" }, [stage]);
+  app.appendChild(wgrid);
   function turn() { if (!reduce) { stage.classList.remove("turn"); void stage.offsetWidth; stage.classList.add("turn"); } }
   function buttons() {
     mainB.textContent = !W.running ? "Start" : W.paused ? "Resume" : "Pause";
@@ -3003,7 +3036,7 @@ function watchView() {
       mid.appendChild(h("div", { class: "wsetup" }, [h("span", { class: "label" }, ["Order"]), row]));
     }
     var uses = wUses(set);
-    if (uses.length) mid.appendChild(h("details", { class: "wwhy wsetup" }, [h("summary", null, ["Length of each set"]),
+    if (uses.length) mid.appendChild(h("details", { class: "wwhy wsetup" }, [h("summary", null, ["Length of each set", icon("chev", "chev")]),
       h("div", { class: "foldbody" }, uses.map(function (k) {
         return wStepper(wName(k), 1, WB[k].max, function () { return set.rounds[k]; }, function (v) { set.rounds[k] = v; },
           function (v) { return WB[k].unit === "min" ? v + " min" : v + (v === 1 ? " round" : " rounds"); });
@@ -3098,28 +3131,39 @@ function watchView() {
   stopB.addEventListener("click", function () { watchStop(); mainB.focus(); });
   lightsB.addEventListener("click", wLightsOut);
 
-  // sound and screen: live while it runs, too
+  // sound and screen: live while it runs, too. The side panel and the sheet each have a copy, kept in step
   function chooser(title, opts, key, after) {
     var row = h("div", { class: "row left" });
-    opts.forEach(function (o) {
-      var b = h("button", { class: "opt", type: "button", "aria-pressed": String(set[key] === o[0]) }, [o[1]]);
+    opts.forEach(function (o, i) {
+      var b = h("button", { class: "opt", type: "button", "data-wkey": key, "data-wi": String(i), "aria-pressed": String(set[key] === o[0]) }, [o[1]]);
       b.addEventListener("click", function () {
         set[key] = o[0];
-        [].forEach.call(row.children, function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true");
+        [].forEach.call(document.querySelectorAll('[data-wkey="' + key + '"]'), function (x) { x.setAttribute("aria-pressed", String(x.getAttribute("data-wi") === String(i))); });
         if (after) after();
       });
       row.appendChild(b);
     });
     return h("div", { class: "pgroup", role: "group", "aria-label": title }, [h("span", { class: "label" }, [title]), row]);
   }
-  app.appendChild(h("details", { class: "more" }, [h("summary", null, [h("span", null, ["Sound and screen"]), icon("chev", "chev")]),
-    h("div", { class: "foldbody" }, [
-      h("div", { class: "psec" }, mixControls("wv-", function () { return W.running; }, true)),
+  // id: the sliders' id prefix, so the side panel and the sheet never share ids
+  function soundScreen(id) {
+    var p = h("div", { class: "panel" }, [
+      h("div", { class: "psec" }, mixControls(id, function () { return W.running; }, true)),
       h("div", { class: "psec" }, [
         chooser("Screen while running", [[true, "Stays on"], [false, "Sleeps as usual"]], "awake", function () { if (W.running && set.awake) holdAwake(); else if (!set.awake) letSleep(); }),
-        slider("Dim", "wv-dim", set.dim, function (v) { set.dim = v; wDim(); })
+        slider("Dim", id + "dim", set.dim, function (v) {
+          set.dim = v; wDim();
+          [].forEach.call(document.querySelectorAll("input[data-wdim]"), function (r) { if (+r.value !== v) { r.value = v; r.nextSibling.textContent = Math.round(v * 100) + "%"; } });
+        })
       ])
-    ])]));
+    ]);
+    p.querySelector("#" + id + "dim").setAttribute("data-wdim", "");
+    return p;
+  }
+  wgrid.appendChild(h("section", { class: "wside", "aria-labelledby": "wside-h" }, [h("h2", { id: "wside-h", class: "wside-h" }, ["Sound and screen"]), soundScreen("wv-")]));
+  soundB.addEventListener("click", function () {
+    openSheet(null, { title: "Sound and screen", label: "Sound and screen", body: function () { return soundScreen("ws-"); } });
+  });
 
   var view = { draw: draw, foot: function () { drawFoot(); if (!W.raf) step(); }, ready: function () { phaseEl = null; shownK = null; drawReady(); } };
   W.view = view;
@@ -3146,7 +3190,7 @@ function showWelcome(full) {
         return h("li", null, [h("span", { class: "w-ic", html: r[0] }), h("span", null, [h("b", null, [r[1]]), h("span", null, [r[2]])])]);
       })) : null,
       full ? h("p", { class: "w-note" }, ["Everything you save stays on this device. No account, nothing to sign up for."]) : null,
-      begin
+      h("div", { class: "w-go" }, [begin])
     ])
   ]);
   begin.addEventListener("click", function () {

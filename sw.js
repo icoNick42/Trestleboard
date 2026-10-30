@@ -1,9 +1,9 @@
 /* Keeps a copy of the Trestleboard on the phone so it opens with no internet.
    With signal, it checks for a newer version first (giving up after 3 seconds);
    without signal, it uses the saved copy. */
-var CACHE = "trestleboard-v27-2026-10-30";
+var CACHE = "trestleboard-v28-2026-10-30";
 var FILES = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png",
-  "fonts/atkinson-hyperlegible-next.woff2", "fonts/atkinson-hyperlegible-next-italic.woff2", "fonts/literata.woff2", "fonts/literata-italic.woff2"];
+  "fonts/atkinson-hyperlegible-next.woff2", "fonts/atkinson-hyperlegible-next-italic.woff2", "fonts/hanken-grotesk.woff2", "fonts/hanken-grotesk-italic.woff2"];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); }));
