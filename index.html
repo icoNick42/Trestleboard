@@ -681,20 +681,135 @@ function chime(freq, len, force) {
 }
 
 /* background sound, generated here (no files) */
-function noiseBuffer(kind) {
-  var c = ctx(), len = c.sampleRate * 6, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0), last = 0;
-  for (var i = 0; i < len; i++) {
-    var w = Math.random() * 2 - 1;
-    if (kind === "rain") d[i] = w;
-    else { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; }
-  }
-  // fade the loop seam
-  for (var k = 0; k < 2000; k++) { var f = k / 2000; d[k] *= f; d[len - 1 - k] *= f; }
+// a loop with no seam: the data runs xf samples past the loop's length, and that extra tail is blended into the
+// start (equal-power, so the loudness doesn't dip where the loop comes round). chans: arrays of len + xf samples
+function loopable(c, chans, len, xf) {
+  var buf = c.createBuffer(chans.length, len, c.sampleRate);
+  chans.forEach(function (src, ch) {
+    var d = buf.getChannelData(ch);
+    for (var i = 0; i < len; i++) d[i] = src[i];
+    for (var k = 0; k < xf; k++) { var f = k / xf; d[k] = src[k] * Math.sqrt(f) + src[len + k] * Math.sqrt(1 - f); }
+  });
   return buf;
 }
-/* soft music, made here: slow chords with a few bell notes over them, never quite the same twice.
-   dest and level: where it plays (its layer's volume) and how loud */
-function startMusic(c, dest, level) {
+// noise made once and looped: white (flat hiss), pink (a softer hiss, equal energy in each octave), brown (deep rumble)
+var noiseMade = {};
+function noiseBuffer(kind) {
+  if (noiseMade[kind]) return noiseMade[kind];
+  var c = ctx(), len = c.sampleRate * 6, xf = 4000, d = new Float32Array(len + xf), last = 0;
+  var b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+  for (var i = 0; i < len + xf; i++) {
+    var w = Math.random() * 2 - 1;
+    if (kind === "white") d[i] = w;
+    else if (kind === "pink") {
+      // Paul Kellet's pink-noise filter
+      b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759; b2 = 0.969 * b2 + w * 0.153852;
+      b3 = 0.8665 * b3 + w * 0.3104856; b4 = 0.55 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.016898;
+      d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11; b6 = w * 0.115926;
+    } else { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; }
+  }
+  return (noiseMade[kind] = loopable(c, [d], len, xf));
+}
+// a smooth random wander from 0 to 1 across len samples: n random points joined by gentle curves
+function wander(len, n) {
+  var pts = [], out = new Float32Array(len);
+  for (var i = 0; i <= n; i++) pts.push(Math.random());
+  pts[n] = pts[0];
+  for (var j = 0; j < len; j++) {
+    var x = j / len * n, a = Math.floor(x), f = (1 - Math.cos((x - a) * Math.PI)) / 2;
+    out[j] = pts[a] * (1 - f) + pts[Math.min(n, a + 1)] * f;
+  }
+  return out;
+}
+/* rain, heard from indoors: thousands of small drops, softened the way a window or wall softens them, made once
+   and looped, spread left and right, their density drifting a little. heavy: denser still, for the storm */
+function rainBuffer(c, secs, heavy) {
+  var sr = c.sampleRate, len = Math.floor(sr * secs), xf = 4000, full = len + xf;
+  var L = new Float32Array(full), R = new Float32Array(full), dens = wander(full, Math.round(secs / 2.5));
+  var rate = heavy ? 3200 : 2600, t = 0, i;
+  while (t < full) {
+    var size = Math.pow(Math.random(), 3), n = Math.floor(sr * (0.0004 + size * 0.003));
+    var a = 0.03 + size * 0.15, pan = Math.random(), lp = 0.08 + Math.random() * 0.17, y = 0, y2 = 0;
+    for (i = 0; i < n && t + i < full; i++) {
+      // a drop: a short burst of noise through two gentle filters, so it's a soft tick, not a click or a ping
+      y += lp * ((Math.random() * 2 - 1) - y); y2 += lp * (y - y2);
+      var s = (y - y2 * 0.5) * a * Math.pow(1 - i / n, 2);
+      L[t + i] += s * (1 - pan); R[t + i] += s * pan;
+    }
+    t += Math.max(1, Math.floor(-Math.log(Math.random() + 1e-9) * sr / (rate * (0.6 + 0.8 * dens[Math.min(t, full - 1)]))));
+  }
+  return loopable(c, [L, R], len, xf);
+}
+// crickets: each sings a high note in short pulses, grouped into chirps, at its own pitch, pace, and place.
+// far: more of them, quieter (the chorus behind the near ones). Each chirp pattern fits the loop exactly.
+function cricketBuffer(c, secs, far) {
+  var sr = c.sampleRate, len = Math.floor(sr * secs), buf = c.createBuffer(2, len, sr);
+  var L = buf.getChannelData(0), R = buf.getChannelData(1), count = far ? 9 : 4;
+  for (var k = 0; k < count; k++) {
+    var f = 3900 + Math.random() * 1300, pulses = 2 + Math.floor(Math.random() * 3), reps = Math.max(1, Math.round(secs / (0.55 + Math.random() * 0.5)));
+    var period = secs / reps, on = 0.014 + Math.random() * 0.008, gap = 0.012 + Math.random() * 0.008, pan = Math.random();
+    var amp = far ? 0.015 + Math.random() * 0.02 : 0.05 + Math.random() * 0.05, start = Math.random() * period;
+    for (var r = 0; r < reps; r++) {
+      if (Math.random() > (far ? 0.85 : 0.92)) continue;
+      for (var p = 0; p < pulses; p++) {
+        var t0 = Math.floor(((start + r * period + p * (on + gap)) % secs) * sr), n = Math.floor(on * sr);
+        for (var i = 0; i < n; i++) {
+          var j = (t0 + i) % len, e = Math.sin(Math.PI * i / n), tt = (t0 + i) / sr;
+          var s = (Math.sin(2 * Math.PI * f * tt) + 0.15 * Math.sin(4 * Math.PI * f * tt)) * amp * e * e;
+          L[j] += s * (1 - pan); R[j] += s * pan;
+        }
+      }
+    }
+  }
+  return buf;
+}
+/* the soft music's moods: chords (as MIDI note numbers), the bells' notes, and the drone's two home notes.
+   Warm is the original music. Dusk: the same feel in a minor key. Open: chords stacked in fourths and fifths
+   that never settle. Piano: a soft piano in slow broken chords over a quiet held chord. The bells keep to one five-note scale, so they fit every chord. The mood isn't saved;
+   it starts as Warm each time the app opens, like the volumes */
+var MOODS = {
+  warm: { name: "Warm", chords: [[48, 55, 64, 71], [45, 52, 60, 67], [41, 48, 57, 64], [43, 50, 59, 62], [40, 47, 55, 62], [41, 53, 57, 60]],
+    bells: [72, 74, 76, 79, 81, 84, 86, 88], home: [36, 43] },
+  dusk: { name: "Dusk", chords: [[45, 52, 60, 64, 71], [41, 48, 57, 64], [38, 45, 53, 60, 64], [43, 50, 59, 62], [40, 47, 55, 62], [45, 52, 59, 60]],
+    bells: [69, 72, 74, 76, 79, 81, 84, 86], home: [33, 40] },
+  open: { name: "Open", chords: [[38, 45, 50, 55, 62], [36, 43, 50, 57, 64], [43, 50, 57, 62], [41, 48, 55, 62, 67], [45, 50, 57, 64], [40, 45, 52, 57, 62]],
+    bells: [74, 76, 79, 81, 83, 86, 88, 91], home: [38, 45] },
+  piano: { name: "Piano", piano: true, chords: [[36, 48, 55, 64, 67], [43, 50, 55, 59, 62], [45, 52, 57, 60, 64], [41, 48, 53, 57, 60], [40, 47, 55, 59, 64], [38, 50, 57, 60, 65]],
+    bells: [72, 74, 76, 79, 81, 84, 86, 88], home: [36, 43] }
+};
+var musicMood = "warm";
+/* a soft felt piano note, made the first time it's needed and kept: a few overtones that run slightly sharp (piano
+   strings are a little stiff), each fading at its own pace in two stages (the quick drop, then the long ring), two
+   strings a hair apart for a real piano's slow shimmer, and a soft hammer thump. Made at a lower sample rate, since
+   felt muffles the highs; about 20 notes in all, a few megabytes */
+var pianoNotes = {};
+function pianoNote(c, m) {
+  if (pianoNotes[m]) return pianoNotes[m];
+  var sr = 22050, len = Math.floor(sr * (m < 50 ? 7 : m < 70 ? 5 : 3.5)), buf = c.createBuffer(1, len, sr), d = buf.getChannelData(0);
+  var f0 = 440 * Math.pow(2, (m - 69) / 12), B = 0.00035, T = 2.8 * Math.pow(2, -(m - 48) / 24), i;
+  for (var n = 1; n <= 9; n++) {
+    var fn = n * f0 * Math.sqrt(1 + B * n * n);
+    if (fn > 9000) break;
+    var an = Math.pow(n, -1.7) * (n === 1 ? 1 : 0.7), tf = T * 0.25 / n, ts = T * 1.6 / (1 + 0.5 * (n - 1)), ph = Math.random() * 6.28, beat = (Math.random() - 0.5) * 0.0012;
+    for (i = 0; i < len; i++) {
+      var t = i / sr;
+      d[i] += an * (0.55 * Math.exp(-t / tf) + 0.45 * Math.exp(-t / ts)) * 0.5 * (Math.sin(ph + 2 * Math.PI * fn * t) + Math.sin(ph + 2 * Math.PI * fn * (1 + beat) * t));
+    }
+  }
+  var y = 0;
+  for (i = 0; i < len; i++) {
+    d[i] *= Math.min(1, i / (sr * 0.004));
+    if (i < sr * 0.03) { y += 0.08 * ((Math.random() * 2 - 1) - y); d[i] += y * 0.5 * Math.exp(-i / (sr * 0.008)); }
+  }
+  for (var e = 0; e < 600; e++) d[len - 1 - e] *= e / 600;
+  pianoNotes[m] = buf;
+  return buf;
+}
+/* soft music, made here: slow chords, with bell notes on loops of unrelated lengths (Brian Eno's idea in
+   Music for Airports), so the pattern drifts and never quite repeats. dest and level: where it plays and how
+   loud; mood: a key of MOODS. bright(): the Watch opens and closes the music's tone with the breath */
+function startMusic(c, dest, level, mood) {
+  var M = MOODS[mood] || MOODS.warm, CH = M.chords;
   var out = c.createGain(), t0 = c.currentTime;
   out.gain.setValueAtTime(0.0001, t0);
   out.gain.exponentialRampToValueAtTime(level, t0 + 4);
@@ -708,49 +823,74 @@ function startMusic(c, dest, level) {
   var tone = c.createBiquadFilter(); tone.type = "lowpass"; tone.frequency.value = 2400;
   tone.connect(dry); tone.connect(room); room.connect(wet); dry.connect(out); wet.connect(out);
   function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
-  // chords in C major (as MIDI note numbers), and bell notes from the five-note scale above them
-  var CHORDS = [[48, 55, 64, 71], [45, 52, 60, 67], [41, 48, 57, 64], [43, 50, 59, 62], [40, 47, 55, 62], [41, 53, 57, 60]];
-  var BELLS = [72, 74, 76, 79, 81, 84, 86, 88];
-  var ci = 0, nextChord = t0 + 0.2, nextBell = t0 + 5, played = [];
+  var ci = 0, nextChord = t0 + 0.2, played = [];
   function pad(notes, t, dur) {
     notes.forEach(function (m, k) {
-      var o = c.createOscillator(), g = c.createGain(), lvl = k === 0 ? 0.05 : 0.022;
+      // the low note carries; the rest share the same total level however many notes the chord has
+      var o = c.createOscillator(), g = c.createGain(), lvl = k === 0 ? 0.05 : 0.088 / notes.length;
       o.type = k === 0 ? "sine" : "triangle"; o.frequency.value = hz(m); o.detune.value = (Math.random() - 0.5) * 8;
       g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(lvl, t + 5);
       g.gain.setValueAtTime(lvl, t + dur - 6); g.gain.linearRampToValueAtTime(0.0001, t + dur);
       o.connect(g); g.connect(tone); o.start(t); o.stop(t + dur + 0.1);
     });
   }
-  function ding(m, t) {
+  // the Piano mood: each note placed a little left or right by pitch, like sitting at the keys
+  function key(m, t, lvl) {
+    var src = c.createBufferSource(), g = c.createGain(), pn = c.createStereoPanner();
+    src.buffer = pianoNote(c, m); g.gain.value = lvl * 0.26; pn.pan.value = Math.max(-0.5, Math.min(0.5, (m - 60) / 40));
+    src.connect(g); g.connect(pn); pn.connect(tone); src.start(t);
+  }
+  // slow broken chords, low note first, twice per chord, the second time a little softer and looser
+  function arp(notes, t) {
+    [0, 6].forEach(function (off, pass) {
+      notes.forEach(function (m, k) {
+        key(m, t + off + k * (0.62 + Math.random() * 0.1) + (pass ? Math.random() * 0.15 : 0), (k === 0 ? 0.32 : 0.22) * (pass ? 0.8 : 1) * (0.85 + Math.random() * 0.3));
+      });
+    });
+  }
+  function ding(m, t, lvl) {
+    if (M.piano) { key(m, t, 0.2 * lvl); return; }
     [[1, 0.045], [2, 0.012]].forEach(function (p) {
       var o = c.createOscillator(), g = c.createGain();
       o.type = "sine"; o.frequency.value = hz(m) * p[0];
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(p[1], t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 4.5 / p[0]);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(p[1] * lvl, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 4.5 / p[0]);
       o.connect(g); g.connect(tone); o.start(t); o.stop(t + 5);
     });
   }
-  function bellNote() { return BELLS[Math.floor(Math.random() * BELLS.length)]; }
+  // six bell loops, each ringing one note of the scale every so many seconds; the lengths share no pattern
+  var bells = [17.3, 21.1, 23.9, 27.7, 31.3, 37.9].map(function (s, k) {
+    return { every: s, note: M.bells[(k * 3 + 1) % M.bells.length], next: t0 + 3 + Math.random() * s };
+  });
   // schedule 20 seconds ahead, so a slowed background tab doesn't leave gaps
   function ahead() {
     var until = c.currentTime + 20;
+    // after the page's timers were stopped, carry on from now rather than playing everything missed at once
+    nextChord = Math.max(nextChord, c.currentTime + 0.2);
     while (nextChord < until) {
-      var r = Math.random(); ci = r < 0.7 ? (ci + 1) % CHORDS.length : r < 0.85 ? (ci + 2) % CHORDS.length : ci;
-      pad(CHORDS[ci], nextChord, 17); played.push([nextChord, ci]); if (played.length > 8) played.shift(); nextChord += 12;
+      var r = Math.random(); ci = r < 0.7 ? (ci + 1) % CH.length : r < 0.85 ? (ci + 2) % CH.length : ci;
+      if (M.piano) { arp(CH[ci], nextChord); pad(CH[ci].slice(0, 3), nextChord, 17); } else pad(CH[ci], nextChord, 17);
+      played.push([nextChord, ci]); if (played.length > 8) played.shift(); nextChord += 12;
     }
-    while (nextBell < until) {
-      ding(bellNote(), nextBell);
-      if (Math.random() < 0.3) ding(bellNote(), nextBell + 0.6 + Math.random());
-      nextBell += 3 + Math.random() * 6;
-    }
+    bells.forEach(function (b) {
+      if (b.next < c.currentTime) b.next = c.currentTime + Math.random() * 3;
+      while (b.next < until) { ding(b.note, b.next + (Math.random() - 0.5) * 0.3, 0.7 + Math.random() * 0.4); b.next += b.every; }
+    });
   }
   ahead();
   // the chord sounding now, so the Watch's bell and tones can ring in it
   function chord() {
     var t = c.currentTime;
     while (played.length > 1 && played[1][0] <= t) played.shift();
-    return played.length && played[0][0] <= t ? CHORDS[played[0][1]] : CHORDS[0];
+    return played.length && played[0][0] <= t ? CH[played[0][1]] : CH[0];
   }
-  return { nodes: [tone, room, wet, dry, out], timer: setInterval(ahead, 2000), chord: chord };
+  // the breath: "in" opens the tone a little, "out" closes it, anything else settles it; at: audio clock time
+  function bright(how, at, sec) {
+    try { tone.frequency.setTargetAtTime(how === "in" ? 3400 : how === "out" ? 1700 : 2400, at, Math.max(0.3, sec / 3)); } catch (e) {}
+  }
+  function calm() {
+    try { var t = c.currentTime; tone.frequency.cancelScheduledValues(t); tone.frequency.setTargetAtTime(2400, t, 0.4); } catch (e) {}
+  }
+  return { nodes: [tone, room, wet, dry, out], timer: setInterval(ahead, 2000), chord: chord, bright: bright, calm: calm };
 }
 /* the Watch's bell, at the start of each set: its notes come from the soft music's chord of the moment (or the
    music's home chord when it isn't playing), so it sounds like part of the music. Which notes, and whether
@@ -779,78 +919,159 @@ function watchBell(dest, at) {
 }
 
 /* the sound layers, made here (no files). The top bar's sound settings and the Watch's "Sound and screen" are
-   two views of one mix: the same layers at the same volumes. Each layer plays into dest at full level, and
-   its volume is set on its own gain. Returns { stop }, plus chord() for the music. */
-var W_LAYERS = [["music", "Soft music"], ["tones", "Breath tones"], ["rain", "Rain"], ["ocean", "Ocean"], ["wind", "Wind"], ["fire", "Fire"], ["storm", "Thunderstorm"], ["brown", "Brown noise"]];
+   two views of one mix: the same layers at the same volumes. Each background layer plays into dest at a level
+   matched to the others (W_CAL; breath tones are a cue and keep their own level), and its volume is set on its own gain. Returns { stop, fade }, plus the music's own controls.
+   The third field sorts the sliders into two groups. */
+var W_LAYERS = [["music", "Soft music", "music"], ["tones", "Breath tones", "music"], ["drone", "Drone", "music"],
+  ["rain", "Rain", "nature"], ["ocean", "Ocean", "nature"], ["wind", "Wind", "nature"], ["fire", "Fire", "nature"], ["storm", "Thunderstorm", "nature"],
+  ["crickets", "Crickets", "nature"], ["brown", "Brown noise", "nature"], ["pink", "Pink noise", "nature"]];
+// each layer's level, measured as loudness (LUFS, the broadcast standard) so that every layer sounds about as
+// loud as the fire at the same slider position. Re-measure if a layer's recipe changes.
+var W_CAL = { music: 0.989, drone: 1.059, rain: 0.86, ocean: 1.084, wind: 1.084, fire: 1, storm: 0.813, crickets: 2.2, brown: 0.543, pink: 0.49 };
 // the volumes start from the Watch's defaults each time the app opens; nothing plays until the sound is
 // turned on in the top bar or the Watch starts. Breath tones only sound while the Watch runs.
 var mixVol = {}, mixOn = false;
-W_LAYERS.forEach(function (l) { mixVol[l[0]] = l[0] === "music" || l[0] === "tones" ? 0.5 : 0; });
-// a fire's crackle: short clicks and the odd pop over a quiet hiss, made once and looped
+W_LAYERS.forEach(function (l) { mixVol[l[0]] = l[0] === "music" || l[0] === "tones" ? 0.7 : 0; });
+// a fire's crackle: short clicks and the odd pop over a quiet hiss, made once and looped without a seam
 function crackleBuffer(c) {
-  var len = Math.floor(c.sampleRate * 9.7), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0), i;
-  for (i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * 0.015;
+  var len = Math.floor(c.sampleRate * 9.7), xf = 4000, full = len + xf, d = new Float32Array(full), i;
+  for (i = 0; i < full; i++) d[i] = (Math.random() * 2 - 1) * 0.015;
   var t = 0;
-  while (t < len) {
+  while (t < full) {
     var big = Math.random() < 0.06, n = Math.floor(c.sampleRate * (big ? 0.012 : 0.002 + Math.random() * 0.005)), a = big ? 0.9 : 0.15 + Math.random() * 0.45;
-    for (i = 0; i < n && t + i < len; i++) d[t + i] += (Math.random() * 2 - 1) * a * Math.pow(1 - i / n, 3);
+    for (i = 0; i < n && t + i < full; i++) d[t + i] += (Math.random() * 2 - 1) * a * Math.pow(1 - i / n, 3);
     // crackles come in little clusters
     t += Math.floor(c.sampleRate * (Math.random() < 0.3 ? 0.01 + Math.random() * 0.04 : 0.05 + Math.random() * 0.35));
   }
-  for (var k = 0; k < 2000; k++) { var f = k / 2000; d[k] *= f; d[len - 1 - k] *= f; }
-  return buf;
+  return loopable(c, [d], len, xf);
 }
 function wLayer(kind, c, dest) {
-  if (kind === "music") { var m = startMusic(c, dest, 2.2); return { chord: m.chord, stop: function () { clearInterval(m.timer); m.nodes.forEach(function (n) { try { n.disconnect(); } catch (e) {} }); } }; }
-  var nodes = [], timer = null, claps = [];
+  var top = c.createGain(); top.gain.value = W_CAL[kind] || 1; top.connect(dest);
+  var nodes = [top], live = [], timer = null, tick = null;
+  function stop() {
+    clearInterval(timer);
+    live.concat(nodes).forEach(function (n) { try { if (n.stop) n.stop(); } catch (e) {} try { n.disconnect(); } catch (e) {} });
+  }
+  // a slow fade, then stop: for swapping the music's mood while it plays
+  function fade() { try { top.gain.setTargetAtTime(0.0001, c.currentTime, 1); } catch (e) {} setTimeout(stop, 5000); }
+  if (kind === "music") {
+    var m = startMusic(c, top, 2.2, musicMood);
+    nodes = nodes.concat(m.nodes); timer = m.timer;
+    return { chord: m.chord, bright: m.bright, calm: m.calm, stop: stop, fade: fade };
+  }
   function node(n) { nodes.push(n); return n; }
-  function loop(buf) { var s = node(c.createBufferSource()); s.buffer = buf; s.loop = true; s.start(); return s; }
+  function loop(buf, off) { var s = node(c.createBufferSource()); s.buffer = buf; s.loop = true; s.start(c.currentTime, off || 0); return s; }
   function filt(type, f, q) { var x = node(c.createBiquadFilter()); x.type = type; x.frequency.value = f; if (q) x.Q.value = q; return x; }
   function amp(v) { var g = node(c.createGain()); g.gain.value = v; return g; }
-  // a slow wobble on a setting, for gusts and swells
-  function sway(param, rate, depth) { var o = node(c.createOscillator()), g = amp(depth); o.frequency.value = rate; o.connect(g); g.connect(param); o.start(); }
-  function chain(list) { for (var i = 0; i < list.length - 1; i++) list[i].connect(list[i + 1]); list[list.length - 1].connect(dest); }
-  if (kind === "brown") chain([loop(noiseBuffer("brown")), amp(0.5)]);
-  if (kind === "rain") chain([loop(noiseBuffer("rain")), filt("highpass", 900), filt("lowpass", 5500), amp(0.09)]);
-  // slow swells of filtered noise
-  if (kind === "ocean") { var swell = amp(0.55); sway(swell.gain, 0.09, 0.45); chain([loop(noiseBuffer("brown")), filt("lowpass", 700), swell, amp(0.55)]); }
-  if (kind === "wind") {
-    var air = loop(noiseBuffer("rain"));
-    [[480, 0.9, 0.061, 0.083], [950, 1.6, 0.107, 0.047]].forEach(function (p) {
-      var bp = filt("bandpass", p[0], p[1]), g = amp(0.5);
-      sway(bp.frequency, p[2], p[0] * 0.45); sway(g.gain, p[3], 0.38);
-      air.connect(bp); chain([bp, g, filt("lowpass", 2400), amp(0.33)]);
+  function pan(v) { var p = node(c.createStereoPanner()); p.pan.value = v; return p; }
+  function chain(list) { for (var i = 0; i < list.length - 1; i++) list[i].connect(list[i + 1]); list[list.length - 1].connect(top); }
+  // a setting that wanders between lo and hi (gusts, swells): three slow wobbles at unrelated speeds, added up, so
+  // it never quite repeats. It runs inside the audio engine, so it keeps moving when the page's timers are slowed
+  // or stopped, and nothing piles up over a long session. every: roughly how many seconds between changes
+  function drift(param, lo, hi, every) {
+    param.value = (lo + hi) / 2;
+    [1, 1.618, 2.414].forEach(function (k) {
+      var o = node(c.createOscillator()), g = amp((hi - lo) / 6);
+      o.frequency.value = 1 / (every * 2 * k * (0.8 + Math.random() * 0.4)); o.connect(g); g.connect(param); o.start(c.currentTime + Math.random() * every);
     });
+  }
+  // a sound that plays once at time t (a wave, a roll of thunder): source → filter → gain → pan, all freed after
+  function once(buf, t, end) { var s = c.createBufferSource(); s.buffer = buf; s.loop = true; s.start(t, Math.random() * 5); s.stop(end); live.push(s); if (live.length > 40) live.shift(); return s; }
+  if (kind === "brown") chain([loop(noiseBuffer("brown")), amp(0.5)]);
+  if (kind === "pink") chain([loop(noiseBuffer("pink")), amp(0.5)]);
+  if (kind === "drone") {
+    // a held low note and its fifth (like a tanpura, or the Byzantine ison), on the mood's home note
+    var M = MOODS[musicMood] || MOODS.warm, dlp = filt("lowpass", 700), dg = amp(1);
+    M.home.forEach(function (n, k) {
+      [[1, 0.07], [2, 0.03], [3, 0.012]].forEach(function (p) {
+        var o = node(c.createOscillator()), g = amp(p[1] * (k ? 0.6 : 1));
+        o.type = "sine"; o.frequency.value = 440 * Math.pow(2, (n - 69) / 12) * p[0]; o.detune.value = (Math.random() - 0.5) * 6;
+        o.connect(g); g.connect(dlp); o.start();
+      });
+    });
+    chain([dlp, dg]);
+    drift(dg.gain, 0.75, 1, 6); drift(dlp.frequency, 450, 900, 7);
+  }
+  if (kind === "rain" || kind === "storm") {
+    // the patter, two copies of unrelated lengths so the loop doesn't show, under the low roar of heavy rain
+    var heavy = kind === "storm", swell = amp(1), roar = amp(1);
+    chain([loop(rainBuffer(c, 11.3, heavy)), filt("highpass", 200), filt("lowpass", heavy ? 3400 : 3000), swell]);
+    chain([loop(rainBuffer(c, 13.9, heavy), 3), filt("highpass", 300), filt("lowpass", 2500), amp(0.6)]);
+    chain([loop(noiseBuffer("pink")), filt("lowpass", 700), filt("highpass", 100), roar, amp(0.5)]);
+    drift(swell.gain, 0.8, 1.1, 5); drift(roar.gain, 0.6, 1.2, 6);
+  }
+  if (kind === "storm") {
+    // thunder: a few overlapping low rolls now and then; a near strike starts with a sharp crack
+    var low = noiseBuffer("brown"), hiss = noiseBuffer("white"), nextT = c.currentTime + 5 + Math.random() * 8;
+    var roll = function (t, lvl, p) {
+      var rise = 0.2 + Math.random() * 0.8, fall = 2 + Math.random() * 4, s = once(low, t, t + rise + fall + 0.1);
+      var lp = c.createBiquadFilter(), g = c.createGain(), pn = c.createStereoPanner();
+      lp.type = "lowpass"; lp.frequency.setValueAtTime(260 + Math.random() * 200, t); lp.frequency.exponentialRampToValueAtTime(90, t + rise + fall);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(lvl, t + rise); g.gain.exponentialRampToValueAtTime(0.0001, t + rise + fall);
+      pn.pan.value = Math.max(-1, Math.min(1, p)); s.connect(lp); lp.connect(g); g.connect(pn); pn.connect(top);
+    };
+    var crack = function (t, p) {
+      var s = once(hiss, t, t + 1), bp = c.createBiquadFilter(), g = c.createGain(), pn = c.createStereoPanner();
+      bp.type = "bandpass"; bp.frequency.value = 1800; bp.Q.value = 0.4;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+      pn.pan.value = p; s.connect(bp); bp.connect(g); g.connect(pn); pn.connect(top);
+    };
+    tick = function () {
+      nextT = Math.max(nextT, c.currentTime + 1);
+      while (nextT < c.currentTime + 30) {
+        var near = Math.random() < 0.25, lvl = near ? 0.9 : 0.35 + Math.random() * 0.4, p = (Math.random() - 0.5) * 1.2, rolls = 2 + Math.floor(Math.random() * 3);
+        if (near) crack(nextT, p);
+        for (var k = 0; k < rolls; k++) roll(nextT + (near ? 0.3 : 0) + k * (0.6 + Math.random() * 1.4), lvl * Math.pow(0.7, k), p + (Math.random() - 0.5) * 0.3);
+        nextT += 16 + Math.random() * 28;
+      }
+    };
+  }
+  if (kind === "ocean") {
+    // waves: each builds for a few seconds, breaks (brightest there), then washes back as a long fizz; a new one
+    // every 6 to 11 seconds, from a slightly different place. Under them, a steady wash and a low rumble.
+    var lowB = noiseBuffer("brown"), whB = noiseBuffer("white"), wash = amp(1), nextW = c.currentTime + 0.5;
+    chain([loop(lowB), filt("lowpass", 220), amp(0.25)]);
+    chain([loop(noiseBuffer("pink")), filt("lowpass", 700), filt("highpass", 90), wash, amp(0.22)]);
+    drift(wash.gain, 0.5, 1.1, 5);
+    var wave = function (t) {
+      var build = 2 + Math.random() * 2, fall = 5 + Math.random() * 3, big = 0.6 + Math.random() * 0.5, p = (Math.random() - 0.5) * 0.8;
+      var s = once(lowB, t, t + build + fall + 0.1), lp = c.createBiquadFilter(), g = c.createGain(), pn = c.createStereoPanner();
+      lp.type = "lowpass"; lp.frequency.setValueAtTime(250, t); lp.frequency.exponentialRampToValueAtTime(1400 + big * 800, t + build); lp.frequency.exponentialRampToValueAtTime(300, t + build + fall);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5 * big, t + build); g.gain.exponentialRampToValueAtTime(0.0001, t + build + fall);
+      pn.pan.value = p; s.connect(lp); lp.connect(g); g.connect(pn); pn.connect(top);
+      // the foam: a bright hiss from the break, draining away
+      var tb = t + build - 0.3, f = once(whB, tb, tb + fall + 1.6), hp = c.createBiquadFilter(), fl = c.createBiquadFilter(), fg = c.createGain(), fp = c.createStereoPanner();
+      hp.type = "highpass"; hp.frequency.value = 1500; fl.type = "lowpass"; fl.frequency.setValueAtTime(9000, tb); fl.frequency.exponentialRampToValueAtTime(3000, tb + fall + 1);
+      fg.gain.setValueAtTime(0.0001, tb); fg.gain.exponentialRampToValueAtTime(0.07 * big, tb + 0.8); fg.gain.exponentialRampToValueAtTime(0.0001, tb + fall + 1.5);
+      fp.pan.value = p * 1.3; f.connect(hp); hp.connect(fl); fl.connect(fg); fg.connect(fp); fp.connect(top);
+    };
+    tick = function () { nextW = Math.max(nextW, c.currentTime + 0.5); while (nextW < c.currentTime + 25) { wave(nextW); nextW += 6 + Math.random() * 5; } };
+  }
+  if (kind === "wind") {
+    // air through two bands that wander in pitch and strength, left and right; now and then a gust lifts both
+    var air = loop(noiseBuffer("white")), gust = amp(0.6), rum = amp(0.5);
+    [[420, 1.1, -0.5], [900, 2.2, 0.45]].forEach(function (b) {
+      var bp = filt("bandpass", b[0], b[1]), g = amp(0.5), pn = pan(b[2]);
+      air.connect(bp); bp.connect(g); g.connect(pn); pn.connect(gust);
+      drift(bp.frequency, b[0] * 0.6, b[0] * 1.5, 2.5); drift(g.gain, 0.2, 0.8, 2);
+    });
+    chain([gust, filt("lowpass", 2600), amp(0.45)]);
+    chain([loop(noiseBuffer("brown")), filt("lowpass", 180), rum, amp(0.35)]);
+    drift(gust.gain, 0.35, 1, 4); drift(rum.gain, 0.3, 1, 4);
   }
   if (kind === "fire") {
     chain([loop(crackleBuffer(c)), filt("highpass", 1400), amp(0.22)]);
     chain([loop(noiseBuffer("brown")), filt("lowpass", 320), amp(0.3)]);
   }
-  if (kind === "storm") {
-    chain([loop(noiseBuffer("rain")), filt("highpass", 500), filt("lowpass", 7000), amp(0.1)]);
-    var low = noiseBuffer("brown"), next = c.currentTime + 6 + Math.random() * 10;
-    // thunder: a slow, low rumble now and then, some with a second roll after it
-    var thunder = function (t, lvl) {
-      var s = c.createBufferSource(), lp = c.createBiquadFilter(), g = c.createGain(), rise = 0.3 + Math.random() * 1.2, fall = 3 + Math.random() * 4;
-      s.buffer = low; lp.type = "lowpass"; lp.frequency.value = 140 + Math.random() * 200;
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(lvl, t + rise); g.gain.exponentialRampToValueAtTime(0.0001, t + rise + fall);
-      s.connect(lp); lp.connect(g); g.connect(dest); s.start(t, Math.random() * 3); s.stop(t + rise + fall + 0.1);
-      claps.push(s); if (claps.length > 12) claps.shift();
-    };
-    var ahead = function () {
-      while (next < c.currentTime + 30) {
-        var lvl = 0.6 + Math.random() * 0.9;
-        thunder(next, lvl);
-        if (Math.random() < 0.4) thunder(next + 1 + Math.random() * 1.5, lvl * 0.6);
-        next += 14 + Math.random() * 30;
-      }
-    };
-    ahead(); timer = setInterval(ahead, 5000);
+  if (kind === "crickets") {
+    // near crickets and a far chorus, on loops of unrelated lengths, over a faint night air
+    chain([loop(cricketBuffer(c, 13.7, false)), filt("lowpass", 9000)]);
+    chain([loop(cricketBuffer(c, 17.3, true)), filt("lowpass", 6000)]);
+    chain([loop(noiseBuffer("brown")), filt("lowpass", 300), amp(0.06)]);
   }
-  return { stop: function () {
-    clearInterval(timer);
-    claps.concat(nodes).forEach(function (n) { try { if (n.stop) n.stop(); } catch (e) {} try { n.disconnect(); } catch (e) {} });
-  } };
+  // waves and thunder are set a few seconds ahead; after the page's timers were stopped, skip what was missed
+  if (tick) { tick(); timer = setInterval(tick, 2000); }
+  return { stop: stop, fade: fade };
 }
 
 /* dim screen: a dark full-screen view of the current step, for eyes-closed or bedtime use */
@@ -1368,7 +1589,7 @@ function soundPanel(onChange) {
     onRow.appendChild(b);
   });
   panel.appendChild(h("div", { class: "psec" }, [head("waves", "Background"), onRow].concat(
-    W_LAYERS.filter(function (l) { return l[0] !== "tones" || W.running; }).map(function (l) { return mixSlider(l[0], l[1], "mx-" + l[0], function () { return true; }); }),
+    mixControls("mx-", function () { return true; }, W.running),
     [h("p", { class: "phelp" }, ["Plays quietly under everything until you turn it off. Made by the app itself, so it works offline."])]
   )));
   panel.appendChild(h("p", { class: "phelp" }, ["Hearing nothing? Turn the device volume up. On an iPhone, also check the silent switch."]));
@@ -2106,7 +2327,8 @@ function wVol(kind, v) {
   if (!mixOn || !W.master) { if (redrawSound) redrawSound(); return; }
   var c = actx, g = W.gains[kind];
   if (!g) { g = W.gains[kind] = c.createGain(); g.gain.value = 0.0001; g.connect(W.master); }
-  try { g.gain.cancelScheduledValues(c.currentTime); g.gain.setTargetAtTime(Math.max(0.0001, v), c.currentTime, 0.15); } catch (e) {}
+  // the slider's position squared, so each step of the slider sounds like an even step in loudness
+  try { g.gain.cancelScheduledValues(c.currentTime); g.gain.setTargetAtTime(Math.max(0.0001, v * v), c.currentTime, 0.15); } catch (e) {}
   if (kind === "tones") return;
   if (v > 0 && !W.layers[kind]) {
     try { W.layers[kind] = wLayer(kind, c, g); if (kind === "music") W.chord = W.layers[kind].chord; } catch (e) {}
@@ -2145,13 +2367,23 @@ if ("mediaSession" in navigator) try {
     lockPaused = false; try { ctx(); } catch (e) {} audioMode(mixOn);
   });
 } catch (e) {}
+// a safety limit on everything the mix plays, so stacked layers never jump out loud
+var mixLimit = null;
+function mixLimiter() {
+  if (!mixLimit) {
+    mixLimit = actx.createDynamicsCompressor();
+    mixLimit.threshold.value = -2; mixLimit.knee.value = 2; mixLimit.ratio.value = 20; mixLimit.attack.value = 0.006; mixLimit.release.value = 0.3;
+    mixLimit.connect(actx.destination);
+  }
+  return mixLimit;
+}
 // turning the mix on and off (a tap has to start it on a phone)
 function mixStart() {
   if (mixOn && W.master) { if (lockPaused) { lockPaused = false; try { ctx(); } catch (e) {} audioMode(true); } return; }
   audioMode(true);
   try {
     ctx();
-    W.master = actx.createGain(); W.master.gain.value = 0.0001; W.master.connect(actx.destination);
+    W.master = actx.createGain(); W.master.gain.value = 0.0001; W.master.connect(mixLimiter());
     mixOn = true;
     W_LAYERS.forEach(function (l) { wVol(l[0], mixVol[l[0]]); });
     wGlide(3);
@@ -2189,13 +2421,77 @@ function mixSync() {
     if (+r.value !== v) { r.value = v; r.nextSibling.textContent = Math.round(v * 100) + "%"; }
   });
   [].forEach.call(document.querySelectorAll("[data-mixon]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-mixon") === String(mixOn))); });
+  [].forEach.call(document.querySelectorAll("[data-mood]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-mood") === musicMood)); });
+}
+/* the music's mood: changing it while the music or drone plays fades the old one out under the new one */
+function mixMood(m) {
+  if (m === musicMood || !MOODS.hasOwnProperty(m)) return;
+  musicMood = m;
+  if (mixOn && W.master) ["music", "drone"].forEach(function (k) {
+    var old = W.layers[k];
+    if (!old) return;
+    try { W.layers[k] = wLayer(k, actx, W.gains[k]); } catch (e) { W.layers[k] = null; }
+    if (k === "music") W.chord = W.layers[k] ? W.layers[k].chord : null;
+    old.fade();
+  });
+  mixSync();
+}
+/* ready-made scenes: one main layer and at most two or three quieter ones, sounds that could happen together, and
+   nothing sudden in the focus scene. Volumes are slider positions; breath tones stay as they are */
+var SCENES = [
+  { name: "Rain study", mood: "warm", v: { rain: 0.75, music: 0.65, pink: 0.4 } },
+  { name: "Hearth", mood: "dusk", v: { fire: 0.75, rain: 0.55, music: 0.6 } },
+  { name: "Night porch", mood: "open", v: { crickets: 0.7, wind: 0.5, drone: 0.55, music: 0.55 } },
+  { name: "Shoreline", mood: "open", v: { ocean: 0.75, wind: 0.55, music: 0.55 } }
+];
+// my own scene, saved as scene ({ mood, v }); it loads only when picked, so the app still opens with the defaults
+function myScene() { var s = store.get("scene", null); return s && s.v && MOODS.hasOwnProperty(s.mood) ? s : null; }
+// wake: whether picking it turns the sound on (the top bar's always; the Watch's only once it runs)
+function mixScene(s, wake) {
+  mixMood(s.mood);
+  W_LAYERS.forEach(function (l) { if (l[0] !== "tones") wVol(l[0], Math.max(0, Math.min(1, +s.v[l[0]] || 0))); });
+  if (wake && !mixOn) mixStart();
+}
+function mixSaveScene() {
+  var v = {};
+  W_LAYERS.forEach(function (l) { if (l[0] !== "tones" && mixVol[l[0]] > 0) v[l[0]] = mixVol[l[0]]; });
+  store.set("scene", { mood: musicMood, v: v });
+}
+// the scenes, the music's mood, and every layer's slider in two groups, built the same for the top bar's sound
+// settings and the Watch's "Sound and screen". id: the sliders' id prefix; wake: as for mixSlider
+function mixControls(id, wake, showTones) {
+  function group(title, kids) { return h("div", { class: "pgroup", role: "group", "aria-label": title }, [h("span", { class: "label", "aria-hidden": "true" }, [title])].concat(kids)); }
+  var scenes = h("div", { class: "row left" }), said = h("span", { class: "vh", "aria-live": "polite" });
+  function drawScenes() {
+    scenes.innerHTML = "";
+    var mine = myScene();
+    SCENES.concat(mine ? [{ name: "My scene", mood: mine.mood, v: mine.v }] : []).forEach(function (s) {
+      var b = h("button", { class: "opt", type: "button" }, [s.name]);
+      b.addEventListener("click", function () { mixScene(s, wake()); said.textContent = ""; setTimeout(function () { said.textContent = s.name + " set."; }, 50); });
+      scenes.appendChild(b);
+    });
+  }
+  drawScenes();
+  var save = h("button", { class: "linkbtn", type: "button" }, ["Save as my scene"]);
+  save.addEventListener("click", function () { mixSaveScene(); drawScenes(); said.textContent = ""; setTimeout(function () { said.textContent = "Saved as My scene."; }, 50); });
+  var moods = h("div", { class: "row left", role: "group", "aria-label": "Music mood" }, Object.keys(MOODS).map(function (k) {
+    var b = h("button", { class: "opt", type: "button", "data-mood": k, "aria-pressed": String(k === musicMood) }, [MOODS[k].name]);
+    b.addEventListener("click", function () { mixMood(k); });
+    return b;
+  }));
+  function sliders(g) { return W_LAYERS.filter(function (l) { return l[2] === g && (l[0] !== "tones" || showTones); }).map(function (l) { return mixSlider(l[0], l[1], id + l[0], wake); }); }
+  return [group("Scenes", [scenes, h("div", { class: "row left" }, [save, said])]),
+    group("Music and tones", [moods].concat(sliders("music"))),
+    group("Nature and noise", sliders("nature"))];
 }
 // a soft tone at each change of breath, picked from the soft music's chord of the moment so it sounds like part of it
 // (or the music's home chord when it isn't playing): the top note to breathe in, the bottom one to breathe out,
 // one between for a hold, and the bottom note an octave up to top off a breath
 function chordNotes() {
   var notes = (W.chord ? W.chord() : [48, 55, 64, 71]).map(function (m) { while (m < 65) m += 12; while (m > 77) m -= 12; return m; });
-  return notes.sort(function (a, b) { return a - b; });
+  // a chord with the same note in two octaves folds onto one pitch twice; keep it once, so a hold never sounds
+  // the same as a breath out (every chord in MOODS keeps at least three different notes)
+  return notes.sort(function (a, b) { return a - b; }).filter(function (m, i, a) { return !i || m !== a[i - 1]; });
 }
 function wToneNote(hz) {
   var notes = chordNotes();
@@ -2225,8 +2521,11 @@ function wSchedule() {
   if (actx.state !== "running") { wUntone(); return; }
   var now = wNow(), to = now + 3000, from = Math.max(W.toneTo, now - 400), ct = actx.currentTime;
   W.tones = W.tones.filter(function (x) { return x.at > ct - 1; });
+  var mus = W.layers.music && W.layers.music.bright ? W.layers.music : null;
   W.segs.forEach(function (sg) {
-    if (sg.kind !== "set" || sg.end <= from || sg.start >= to) return;
+    if (sg.end <= from || sg.start >= to) return;
+    // the music's tone breathes with the sets and settles in the rests
+    if (sg.kind !== "set") { if (mus && sg.start >= from) mus.bright("rest", ct + Math.max(0, sg.start - now) / 1000, 2); return; }
     if (sg.start >= from && sg.start < to) watchBell(W.gains.tones, ct + Math.max(0, sg.start - now) / 1000);
     var ph = WB[sg.k].phases;
     for (var r = Math.max(0, Math.floor((from - sg.start) / sg.C)); r < sg.n; r++) {
@@ -2235,6 +2534,7 @@ function wSchedule() {
       for (var i = 0; i < ph.length; i++) {
         // the bell marks the set's first breath, so that one gets no tone of its own
         if (t >= from && t < to && (r || i)) wTone(wToneNote(ph[i].hz), ct + Math.max(0, t - now) / 1000, Math.min(1.8, ph[i].s * 0.6 + 0.6));
+        if (mus && t >= from && t < to && (ph[i].hz === IN || ph[i].hz === OUT)) mus.bright(ph[i].hz === IN ? "in" : "out", ct + Math.max(0, t - now) / 1000, ph[i].s);
         t += ph[i].s * 1000;
       }
     }
@@ -2244,6 +2544,7 @@ function wSchedule() {
 // stopping or pausing: tones already set for later are taken back
 function wUntone() {
   var ct = actx ? actx.currentTime : 0;
+  if (W.layers.music && W.layers.music.calm) W.layers.music.calm();
   W.tones.forEach(function (x) { if (x.at > ct) try { x.o.stop(); x.o.disconnect(); } catch (e) {} });
   W.tones = []; W.toneTo = wNow();
 }
@@ -2576,7 +2877,6 @@ function watchView() {
   stopB.addEventListener("click", function () { watchStop(); mainB.focus(); });
 
   // sound and screen: live while it runs, too
-  var sliders = W_LAYERS.map(function (l) { return mixSlider(l[0], l[1], "wv-" + l[0], function () { return W.running; }); });
   function chooser(title, opts, key, after) {
     var row = h("div", { class: "row left" });
     opts.forEach(function (o) {
@@ -2592,7 +2892,7 @@ function watchView() {
   }
   app.appendChild(h("details", { class: "more" }, [h("summary", null, [h("span", null, ["Sound and screen"]), icon("chev", "chev")]),
     h("div", { class: "foldbody" }, [
-      h("div", { class: "psec" }, sliders),
+      h("div", { class: "psec" }, mixControls("wv-", function () { return W.running; }, true)),
       h("div", { class: "psec" }, [
         chooser("Screen while running", [[true, "Stays on"], [false, "Sleeps as usual"]], "awake", function () { if (W.running && set.awake) holdAwake(); else if (!set.awake) letSleep(); }),
         slider("Dim", "wv-dim", set.dim, function (v) { set.dim = v; wDim(); })
