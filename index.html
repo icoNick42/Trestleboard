@@ -92,8 +92,7 @@ h3 { font-size: var(--t-card); }
 p { margin: 0; }
 .label { font-family: var(--body); font-size: var(--t-tiny); font-weight: 600; color: var(--muted); }
 .ev { font-family: var(--body); font-size: var(--t-tiny); font-weight: 600; color: var(--steel); white-space: nowrap; }
-.empty, .gdesc, .phelp, .msg { color: var(--muted); font-size: var(--t-small); }
-.msg:empty { display: none; }
+.empty, .gdesc, .phelp { color: var(--muted); font-size: var(--t-small); }
 .ico { display: inline-grid; place-items: center; flex: none; }
 .ico svg { width: 100%; height: 100%; }
 .chev { width: 0.95rem; height: 0.95rem; color: var(--muted); opacity: 0.6; }
@@ -490,9 +489,6 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 .pager .home { grid-column: 1 / -1; justify-self: center; border: 0; background: none; color: var(--steel); padding: 0 var(--s3); min-height: var(--tap); font-size: var(--t-small); }
 @media (max-width: 30rem) { .pager { grid-template-columns: 1fr; } .pager .next { grid-column: 1; } }
 
-/* ---------- Your data ---------- */
-.filepick { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-
 /* ---------- welcome (first open) ---------- */
 html.locked, html.locked body { overflow: hidden; }
 .welcome { position: fixed; inset: 0; z-index: 20; background: var(--slate); color: var(--on-slate); overflow-y: auto; display: grid; place-items: center;
@@ -609,6 +605,8 @@ body.wmini-on .app { padding-bottom: calc(var(--tabs-h) + env(safe-area-inset-bo
 @media (prefers-reduced-motion: no-preference) {
   .sheet { animation: sheetup 0.28s ease-out; }
   .sheet-back { animation: wfade 0.2s ease-out; }
+  .sheet.settle { transition: transform 0.24s ease-out; }
+  .sheet-back.settle { transition: opacity 0.24s ease-out; }
   .welcome { animation: wfade 0.5s ease-out both; }
   .w-in > * { animation: wrise 0.6s ease-out both; }
   .w-in > *:nth-child(1) { animation-delay: 0.1s; }
@@ -1385,6 +1383,50 @@ function soundButton() {
   draw();
   return b;
 }
+// a sheet also closes with a swipe down, like a phone's own sheets: from its top bar, or from anywhere once its
+// content is scrolled to the top. Sliders keep their own drags; Done and a tap outside still close it too.
+function sheetSwipe(el, back) {
+  var x0 = 0, y0 = 0, dy = 0, mode = "no", recent = [];
+  function settle(close) {
+    if (close && reduce) { closeSheet(); return; }
+    el.classList.add("settle"); back.classList.add("settle");
+    el.style.transform = close ? "translateY(" + el.offsetHeight + "px)" : "";
+    back.style.opacity = close ? "0" : "";
+    setTimeout(function () {
+      if (close) { if (sheet && sheet.el === el) closeSheet(); return; }
+      el.classList.remove("settle"); back.classList.remove("settle");
+    }, reduce ? 0 : 240);
+  }
+  el.addEventListener("touchstart", function (e) {
+    if (mode === "drag") settle(false);
+    var t = e.touches[0];
+    mode = e.touches.length === 1 && !e.target.closest("input, textarea, select") && (e.target.closest(".sheet-head") || el.scrollTop <= 0) ? "maybe" : "no";
+    x0 = t.clientX; y0 = t.clientY; dy = 0; recent = [];
+  }, { passive: true });
+  el.addEventListener("touchmove", function (e) {
+    if (mode === "no") return;
+    var t = e.touches[0], mx = t.clientX - x0, my = t.clientY - y0;
+    if (mode === "maybe") {
+      if (Math.abs(mx) < 8 && Math.abs(my) < 8) return;
+      mode = my > Math.abs(mx) ? "drag" : "no";
+      if (mode === "no") return;
+      el.style.animation = "none"; // so the slide-up doesn't play again when the drag ends
+    }
+    e.preventDefault();
+    dy = Math.max(0, my);
+    recent.push([Date.now(), dy]); if (recent.length > 6) recent.shift();
+    el.style.transform = "translateY(" + dy + "px)";
+    back.style.opacity = String(Math.max(0, 1 - dy / el.offsetHeight));
+  }, { passive: false });
+  el.addEventListener("touchend", function () {
+    if (mode !== "drag") { mode = "no"; return; }
+    mode = "no";
+    // far enough, or a quick flick (judged on the last moments of the drag), closes it; otherwise it springs back
+    var a = recent[0], v = a ? (dy - a[1]) / Math.max(16, Date.now() - a[0]) : 0;
+    settle(dy > Math.min(140, el.offsetHeight * 0.3) || (dy > 40 && v > 0.4));
+  });
+  el.addEventListener("touchcancel", function () { if (mode === "drag") settle(false); mode = "no"; });
+}
 function openSheet(onChange) {
   closeSheet();
   var done = h("button", { class: "go", type: "button" }, ["Done"]);
@@ -1394,6 +1436,7 @@ function openSheet(onChange) {
   ]);
   done.addEventListener("click", closeSheet);
   back.addEventListener("click", closeSheet);
+  sheetSwipe(el, back);
   document.body.appendChild(back); document.body.appendChild(el);
   document.documentElement.classList.add("locked");
   sheet = { el: el, back: back };
@@ -1886,7 +1929,6 @@ function homeView() {
   app.appendChild(h("footer", { class: "ending" }, [
     h("span", { class: "ico", html: BOOK.final.svg }), h("h2", null, [BOOK.final.title]), h("p", { html: BOOK.final.text })
   ]));
-  app.appendChild(h("a", { class: "linkrow", href: "#/data" }, [h("span", null, [h("small", null, ["Backup, restore, the welcome screen"]), h("span", { class: "t1" }, ["Your data"])]), icon("chev", "chev")]));
 }
 
 /* ---------- Practices: one group ---------- */
@@ -2075,9 +2117,38 @@ function wVol(kind, v) {
   if (redrawSound) redrawSound();
 }
 function mixSounding() { return mixOn && W_LAYERS.some(function (l) { return mixVol[l[0]] > 0 && (l[0] !== "tones" || W.running); }); }
+// while the mix plays, tell the phone it's playing media ("playback"): an iPhone then keeps it going with the screen
+// locked and shows it on the lock screen, and pauses other apps' audio meanwhile. Practice tones alone stay on
+// "auto", so they mix with other audio as before. lockPaused: paused from the lock screen's controls
+var lockPaused = false;
+function audioMode(on) {
+  try { if (navigator.audioSession) navigator.audioSession.type = on ? "playback" : "auto"; } catch (e) {}
+  if (!("mediaSession" in navigator)) return;
+  try {
+    navigator.mediaSession.metadata = on ? new MediaMetadata({ title: W.running ? "The Watch" : "Background sound", artist: "Trestleboard",
+      artwork: [{ src: "icons/icon-512.png", sizes: "512x512", type: "image/png" }] }) : null;
+    navigator.mediaSession.playbackState = on ? (lockPaused || (W.running && W.paused) ? "paused" : "playing") : "none";
+  } catch (e) {}
+}
+// the lock screen's pause and play: the sound holds still (and the Watch's breathing pauses) until play, or Resume
+// in the app; back in the app, background sound paused this way counts as off
+if ("mediaSession" in navigator) try {
+  navigator.mediaSession.setActionHandler("pause", function () {
+    if (!mixOn) return;
+    // paused with the app on screen (Control Center, an AirPod taken out): background sound on its own just turns off
+    if (!W.running && document.visibilityState === "visible") { mixStop(0.3); return; }
+    if (W.running) watchPause(true);
+    lockPaused = true; try { actx.suspend(); } catch (e) {} audioMode(true);
+  });
+  navigator.mediaSession.setActionHandler("play", function () {
+    if (W.running) { watchPause(false); return; }
+    lockPaused = false; try { ctx(); } catch (e) {} audioMode(mixOn);
+  });
+} catch (e) {}
 // turning the mix on and off (a tap has to start it on a phone)
 function mixStart() {
-  if (mixOn && W.master) return;
+  if (mixOn && W.master) { if (lockPaused) { lockPaused = false; try { ctx(); } catch (e) {} audioMode(true); } return; }
+  audioMode(true);
   try {
     ctx();
     W.master = actx.createGain(); W.master.gain.value = 0.0001; W.master.connect(actx.destination);
@@ -2090,7 +2161,7 @@ function mixStart() {
 }
 // sec: how long the fade out takes (slower when the Watch stops)
 function mixStop(sec) {
-  wUntone();
+  wUntone(); lockPaused = false;
   var m = W.master, layers = W.layers, gains = W.gains;
   mixOn = false; W.master = null; W.layers = {}; W.gains = {}; W.chord = null;
   if (m) {
@@ -2099,8 +2170,9 @@ function mixStop(sec) {
       Object.keys(layers).forEach(function (k) { if (layers[k]) layers[k].stop(); });
       Object.keys(gains).forEach(function (k) { try { gains[k].disconnect(); } catch (e) {} });
       try { m.disconnect(); } catch (e) {}
+      if (!mixOn) audioMode(false);
     }, sec * 1500);
-  }
+  } else audioMode(false);
   mixSync();
   if (redrawSound) redrawSound();
 }
@@ -2185,8 +2257,9 @@ function wFreeze() {
 }
 function watchPause(on) {
   if (!W.running) return;
-  if (!on) try { ctx(); } catch (e) {} // a tap is when a phone lets suspended audio start again
+  if (!on) { lockPaused = false; try { ctx(); } catch (e) {} } // a tap is when a phone lets suspended audio start again
   W.paused = on; wFreeze();
+  if (mixOn) audioMode(true);
   wShow(false);
 }
 function wTick() {
@@ -2199,9 +2272,9 @@ function wTick() {
 function wShow(fresh) { if (W.view) W.view.draw(fresh); else wMiniDraw(); }
 function watchStart() {
   try { ctx(); } catch (e) {}
-  W.running = true; W.paused = false; W.held = false; W.frozenAt = 0; W.off = 0; W.last = null; W.bag = []; W.pi = 0; W.toneTo = 0; W.tones = [];
+  lockPaused = false; W.running = true; W.paused = false; W.held = false; W.frozenAt = 0; W.off = 0; W.last = null; W.bag = []; W.pi = 0; W.toneTo = 0; W.tones = [];
   // the Watch plays the same mix as the background sound: whatever is already on carries straight on
-  if (!mixOn) mixStart(); else { W_LAYERS.forEach(function (l) { wVol(l[0], mixVol[l[0]]); }); wGlide(2); }
+  if (!mixOn) mixStart(); else { W_LAYERS.forEach(function (l) { wVol(l[0], mixVol[l[0]]); }); wGlide(2); audioMode(true); }
   if (W.set.awake) holdAwake();
   var first = wPick(), now = wNow();
   W.segs = [{ kind: "lead", k: first, start: now, end: now + W_LEAD }];
@@ -2212,7 +2285,7 @@ function watchStart() {
 }
 function watchStop() {
   clearInterval(W.iv); W.iv = null; if (W.raf) cancelAnimationFrame(W.raf); W.raf = null;
-  W.running = false; W.paused = false; W.frozenAt = 0; W.segs = [];
+  W.running = false; W.paused = false; W.frozenAt = 0; W.segs = []; lockPaused = false;
   wUntone();
   // a practice or the timer on screen may be holding the screen on; leave those alone
   if (!wHeld()) letSleep();
@@ -2227,6 +2300,7 @@ function watchDetach() { if (W.raf) cancelAnimationFrame(W.raf); W.raf = null; W
 document.addEventListener("visibilitychange", function () {
   if (!(W.running || mixOn) || document.visibilityState !== "visible") return;
   if (W.running && W.set.awake) holdAwake();
+  if (lockPaused) { if (!W.running) mixStop(0.3); return; }
   try { if (actx && actx.state !== "running") actx.resume(); } catch (e) {}
 });
 
@@ -2531,7 +2605,7 @@ function watchView() {
   if (W.running) draw(false); else drawReady();
 }
 
-/* ---------- welcome: shown each time the app opens. full: with the tour of the tabs (the first open, or from Your data) ---------- */
+/* ---------- welcome: shown each time the app opens or is come back to. full: with the tour of the tabs (the first open only) ---------- */
 function showWelcome(full) {
   if (document.getElementById("welcome")) return;
   var rows = [
@@ -2556,7 +2630,7 @@ function showWelcome(full) {
   begin.addEventListener("click", function () {
     store.set("welcomed", true);
     el.classList.add("leaving");
-    document.documentElement.classList.remove("locked");
+    if (!sheet) document.documentElement.classList.remove("locked");
     setTimeout(function () { el.remove(); }, reduce ? 0 : 380);
   });
   document.body.appendChild(el);
@@ -2768,6 +2842,7 @@ function openGloss(i) {
     glossFrom = { hash: location.hash || "#/", y: window.scrollY, title: glossTitle };
     glossTo = i; closeSheet(); location.hash = "#/read/glossary";
   });
+  sheetSwipe(el, back);
   document.body.appendChild(back); document.body.appendChild(el);
   document.documentElement.classList.add("locked");
   sheet = { el: el, back: back };
@@ -2883,74 +2958,7 @@ function placePage() {
   }
 }
 
-/* ---------- Your data: backup, restore, the welcome ---------- */
-function backupData() {
-  var data = {};
-  try {
-    for (var i = 0; i < localStorage.length; i++) {
-      var k = localStorage.key(i);
-      if (k && k.indexOf("tb:") === 0) data[k] = localStorage.getItem(k);
-    }
-  } catch (e) {}
-  return { app: "trestleboard", version: 1, saved: new Date().toISOString(), data: data };
-}
-function saveBackup(msg) {
-  var json = JSON.stringify(backupData(), null, 1);
-  var name = "trestleboard-backup-" + dayKey() + ".json";
-  var file = null;
-  try { file = new File([json], name, { type: "application/json" }); } catch (e) {}
-  // On iPhone the share sheet has "Save to Files"; elsewhere this downloads the file
-  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-    navigator.share({ files: [file], title: "Trestleboard backup" })
-      .then(function () { msg.textContent = "Backup saved."; })
-      .catch(function (err) { if (err && err.name !== "AbortError") download(); });
-    return;
-  }
-  download();
-  function download() {
-    try {
-      var url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
-      var a = h("a", { href: url, download: name }); document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
-      msg.textContent = "Backup file saved as " + name + ".";
-    } catch (e) { msg.textContent = "Couldn't save a file here."; }
-  }
-}
-function restoreBackup(file, msg) {
-  var rd = new FileReader();
-  rd.onload = function () {
-    try {
-      var b = JSON.parse(rd.result);
-      if (!b || b.app !== "trestleboard" || !b.data) throw new Error("not ours");
-      var keys = Object.keys(b.data);
-      keys.forEach(function (k) { if (k.indexOf("tb:") === 0) localStorage.setItem(k, b.data[k]); });
-      msg.textContent = "Restored " + keys.length + " saved items from " + (b.saved || "").slice(0, 10) + ".";
-      setTimeout(render, 900);
-    } catch (e) { msg.textContent = "That file isn't a Trestleboard backup."; }
-  };
-  rd.readAsText(file);
-}
 function clock12(t) { if (!t) return ""; var p = t.split(":"), hr = +p[0]; return ((hr % 12) || 12) + ":" + p[1] + (hr < 12 ? " am" : " pm"); }
-function dataView() {
-  topbar({ back: ["Home", "#/"], sound: false }); tabs("home");
-  app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["Your data"])]));
-  var msg = h("p", { class: "msg", "aria-live": "polite" });
-  var input = h("input", { class: "filepick", type: "file", accept: "application/json,.json", id: "restore-file", tabindex: "-1", "aria-hidden": "true" });
-  input.addEventListener("change", function () { if (input.files && input.files[0]) restoreBackup(input.files[0], msg); input.value = ""; });
-  app.appendChild(h("section", { class: "group" }, [
-    h("div", { class: "card" }, [
-      h("h3", null, ["Back up"]),
-      h("p", null, ["Everything you save here (ratings, notes, pinned practices, parked thoughts, check-ins, settings) lives only on this device. A backup file keeps a copy somewhere safe, like your Files app or iCloud Drive."]),
-      h("div", { class: "btnrow" }, [
-        h("button", { class: "go", type: "button", onclick: function () { saveBackup(msg); } }, ["Save a backup"]),
-        h("button", { class: "opt", type: "button", onclick: function () { input.click(); } }, ["Restore from a backup"])
-      ]),
-      input, msg
-    ]),
-    h("div", { class: "btnrow" }, [h("button", { class: "opt", type: "button", onclick: function () { showWelcome(true); } }, ["Show the welcome again"])])
-  ]));
-}
-
 /* ---------- routines and timer keep their own views; give them the right bars ---------- */
 
 /* a practice's method as plain text */
@@ -2971,7 +2979,6 @@ function render() {
   else if (hsh === "watch") watchView();
   else if (hsh === "read") readHome();
   else if ((m = /^read\/([\w-]+)$/.exec(hsh)) && READ_BY[m[1]]) readerView(m[1]);
-  else if (hsh === "data" || hsh === "log") dataView();
   else homeView();
   wMiniDraw(false);
   window.scrollTo(0, 0); placePage(); onScroll();
@@ -2981,6 +2988,20 @@ document.addEventListener("click", function () { if (tonesOn && (!actx || actx.s
 window.addEventListener("hashchange", render);
 render();
 showWelcome(!store.get("welcomed", false));
+// coming back to the app after a minute or more away shows the welcome again; quick switches don't,
+// and neither does coming back while the Watch runs, since it's meant to be left on in the background
+var awayAt = 0;
+document.addEventListener("visibilitychange", function () {
+  if (document.hidden) { awayAt = Date.now(); return; }
+  if (awayAt && Date.now() - awayAt >= 60000 && !W.running) showWelcome(false);
+  awayAt = 0;
+});
+// opened as an installed app, ask the browser to keep this app's saved data even when the device runs low on space
+// (the browser decides, with no prompt; in a normal tab some browsers would ask, so it isn't asked there)
+try {
+  if (navigator.storage && navigator.storage.persist && (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone))
+    navigator.storage.persisted().then(function (p) { if (!p) return navigator.storage.persist(); }).catch(function () {});
+} catch (e) {}
 
 /* ---------- offline: keep a copy of the app on the phone ---------- */
 if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
