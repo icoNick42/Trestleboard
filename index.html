@@ -601,6 +601,7 @@ html.locked, html.locked body { overflow: hidden; }
 /* the setup: patterns and mixes to pick, the order, and the length of each set */
 .wsetup { display: grid; gap: var(--s2); padding-top: var(--s3); border-top: 1px solid color-mix(in srgb, var(--on-slate-muted) 25%, transparent); }
 .wsetup.first { padding-top: 0; border-top: 0; }
+.wcustom > .label:not(:first-child) { margin-top: var(--s2); }
 .wpats { display: grid; gap: var(--s2); }
 .wpats.two { grid-template-columns: 1fr 1fr; }
 .wpat { display: grid; grid-template-columns: 1.1rem minmax(0, 1fr) auto; align-items: center; gap: var(--s3); width: 100%; min-height: var(--tap); text-align: left; font: inherit; font-size: var(--t-body); line-height: 1.3;
@@ -1214,17 +1215,19 @@ function wLayer(kind, c, dest) {
     chain([loop(noiseBuffer("brown")), filt("lowpass", 300), amp(0.06)]);
   }
   if (kind === "hum") {
-    /* the hum: a soft, wordless "mmm" that fills each breath out and stops when it ends, so you can hum along. A
-       few tones a hair apart (a group hum is never quite in tune), through the soft filters of closed lips and a
-       little room. It's a wordless sound, not speech. hum(notes, at, sec, tail, change): notes, the chord sounding at
+    /* the hum: a soft, wordless "mmm" that fills each breath out, so you can hum along. From about 60% of the way
+       through the breath out it thins away on a curve (even steps in loudness, not in volume, so it never drops off
+       at the end) and darkens as it goes, and a soft room tail carries it a moment into the breath in. A few tones
+       a hair apart (a group hum is never quite in tune), through the soft filters of closed lips and a room.
+       It's a wordless sound, not speech. hum(notes, at, sec, tail, change): notes, the chord sounding at
        the start (its lowest note, brought into a low voice's range, is the hum's note); at, when, on the audio clock;
        sec, how long the breath out lasts; tail, extra seconds to let it fade (the set's last breath); change, the
        music's next chord if it changes during the hum ([time, notes]): if the hum's note isn't in it, the hum slides
        to the nearest note that is, so it never holds against the new chord */
-    var hlen = Math.floor(c.sampleRate * 2.5), hir = c.createBuffer(2, hlen, c.sampleRate);
-    for (var hc = 0; hc < 2; hc++) { var hd = hir.getChannelData(hc); for (var hi = 0; hi < hlen; hi++) hd[hi] = (Math.random() * 2 - 1) * Math.pow(1 - hi / hlen, 3); }
+    var hlen = Math.floor(c.sampleRate * 4), hir = c.createBuffer(2, hlen, c.sampleRate);
+    for (var hc = 0; hc < 2; hc++) { var hd = hir.getChannelData(hc); for (var hi = 0; hi < hlen; hi++) hd[hi] = (Math.random() * 2 - 1) * Math.pow(1 - hi / hlen, 2); }
     var hroom = node(c.createConvolver()), hbus = amp(1); hroom.buffer = hir;
-    chain([hbus, amp(0.75)]); chain([hroom, amp(0.4)]); hbus.connect(hroom);
+    chain([hbus, amp(0.68)]); chain([hroom, filt("lowpass", 1800), amp(0.55)]); hbus.connect(hroom);
     var sung = [];
     var hum = function (notes, at, sec, tail, change) {
       var m = notes[0];
@@ -1238,11 +1241,12 @@ function wLayer(kind, c, dest) {
       lp.type = "lowpass"; lp.frequency.value = 650; lp.Q.value = 0.5;
       lp2.type = "lowpass"; lp2.Q.value = 0.6;
       body.type = "peaking"; body.frequency.value = 270; body.Q.value = 1; body.gain.value = 5;
-      // it opens a little through the middle of the breath, then closes again
-      lp2.frequency.setValueAtTime(600, at); lp2.frequency.linearRampToValueAtTime(950, at + sec * 0.45); lp2.frequency.linearRampToValueAtTime(600, end);
-      var a = Math.min(0.7, sec * 0.15), r = tail || Math.min(0.6, sec * 0.15);
+      // it opens a little through the middle of the breath, then closes as it fades
+      lp2.frequency.setValueAtTime(600, at); lp2.frequency.linearRampToValueAtTime(950, at + sec * 0.45); lp2.frequency.exponentialRampToValueAtTime(380, end);
+      var a = Math.min(0.7, sec * 0.15), fa = at + sec * 0.6, curve = new Float32Array(64);
+      for (var ci = 0; ci < 64; ci++) { var x = ci / 63; curve[ci] = 0.85 * (Math.pow(10, -2.5 * x) - Math.pow(10, -2.5)) / (1 - Math.pow(10, -2.5)); }
       g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(1, at + a);
-      g.gain.linearRampToValueAtTime(0.8, end - r); g.gain.linearRampToValueAtTime(0, end);
+      g.gain.linearRampToValueAtTime(0.85, fa); g.gain.setValueCurveAtTime(curve, fa, end - fa);
       // a slow, small waver that starts a moment in, like a held voice
       var vib = c.createOscillator(), vg = c.createGain();
       vib.frequency.value = 4.3 + Math.random() * 0.8;
@@ -1275,7 +1279,8 @@ function wLayer(kind, c, dest) {
       // under a practice's own guide (hums not yet begun are taken back with the Watch's tones)
       calm: function () {
         var t = c.currentTime;
-        sung.forEach(function (x) { if (x.end > t) try { x.g.gain.cancelScheduledValues(t); x.g.gain.setValueAtTime(x.g.gain.value, t); x.g.gain.linearRampToValueAtTime(0, t + 0.3); } catch (e) {} });
+        // if a browser won't take back a fade already under way, the hum is cut instead of left to run on
+        sung.forEach(function (x) { if (x.end > t) try { x.g.gain.cancelScheduledValues(t); x.g.gain.setValueAtTime(x.g.gain.value, t); x.g.gain.linearRampToValueAtTime(0, t + 0.3); } catch (e) { try { x.g.disconnect(); } catch (e2) {} } });
         sung = [];
       } };
   }
@@ -2506,7 +2511,7 @@ function dayReview() {
 }
 
 /* ---------- the Watch: a breathing companion to leave running in the background ---------- */
-// You pick one or more breathing patterns (or a mix), press Start, and it breathes with you until you pause
+// You tap a mix (or pick one or more breathing patterns under Custom), and it breathes with you until you pause
 // or stop it: a set of one pattern, a short rest, the next set, and so on, with soft sound underneath.
 // Nothing about the setup is saved; each visit to the app starts from the defaults.
 // The four patterns come from four of the 24 practices (n: its number); cue and why are taken from that practice's text, caveats included. The stop line under them is shown once, by reading().
@@ -2527,18 +2532,25 @@ var WB = {
     why: "The second inhale is thought to reopen collapsed air sacs in the lungs, and heart rate dips a little on the long exhale. In one 2023 study of about a hundred people, it raised positive mood more than mindfulness meditation; it wasn’t tested against the other breathing methods." }
 };
 var WB_ORDER = ["vessel", "tzim", "box", "statue"];
-// mixes: which pattern comes next is picked at random, weighted toward the main ones
+// mixes, shown as the Watch's front screen in this order; a tap starts one. Which pattern comes next is picked at
+// random, weighted toward the main ones. A mix's sets run each pattern's own default length (WB def), not Custom's;
+// len: a set's length for this mix instead (minutes or rounds, by the pattern's unit); rest: the rest after each
+// set, in ms, instead of wRest's. drive: Drive's rules
+// (breath tones and the breath sound come on, no thunder, no dip in the rests, Lights out on start; see watchStart)
 var W_MIXES = {
+  slow: { name: "Slow", plain: "Slow breathing only, for long stretches", w: { vessel: 1 }, len: { vessel: 8 } },
+  settle: { name: "Settle", plain: "Mostly slow breathing, now and then a sigh or a box", w: { vessel: 8, statue: 1, box: 1 } },
   reset: { name: "Reset", plain: "Mostly the sigh and box breathing", w: { statue: 4, box: 4, tzim: 2 } },
-  settle: { name: "Settle", plain: "Mostly slow breathing, now and then a sigh or a box", w: { vessel: 8, statue: 1, box: 1 } }
+  drive: { name: "Drive", plain: "Slow breathing by ear, with quiet stretches between", w: { vessel: 1 }, len: { vessel: 2 }, rest: 240000, drive: true }
 };
-// the rest after a set: a quarter of the set's length, between 12 and 30 seconds
+function wDrive() { return !!(W.set && W.set.mix && W_MIXES[W.set.mix].drive); }
+// the rest after a set: a quarter of the set's length, between 12 and 30 seconds (a mix may set its own, as Drive does)
 var W_LEAD = 4000;
-function wRest(sg) { return Math.min(30000, Math.max(12000, (sg.end - sg.start) / 4)); }
+function wRest(sg) { var mx = W.set && W.set.mix && W_MIXES[W.set.mix]; return mx && mx.rest ? mx.rest : Math.min(30000, Math.max(12000, (sg.end - sg.start) / 4)); }
 function wFresh() {
   var rounds = {};
   WB_ORDER.forEach(function (k) { rounds[k] = WB[k].def; });
-  return { pats: ["vessel"], mix: null, order: "picked", rounds: rounds, awake: true, dim: 0 };
+  return { pats: ["vessel"], mix: "slow", order: "picked", rounds: rounds, awake: true, dim: 0 };
 }
 function wName(k) { return BOOK.entries[WB[k].n].name; }
 // the patterns this setup uses, in the order picked (a mix uses its own)
@@ -2579,7 +2591,8 @@ function wPick() {
   return k;
 }
 function wSetSeg(k, start) {
-  var C = wCycle(k), n = WB[k].unit === "min" ? Math.max(1, Math.round(W.set.rounds[k] * 60000 / C)) : W.set.rounds[k];
+  var mx = W.set.mix && W_MIXES[W.set.mix], len = mx ? mx.len && mx.len[k] || WB[k].def : W.set.rounds[k];
+  var C = wCycle(k), n = WB[k].unit === "min" ? Math.max(1, Math.round(len * 60000 / C)) : len;
   return { kind: "set", k: k, start: start, end: start + n * C, C: C, n: n };
 }
 // what follows a segment: a rest after each set, the set it announced after each rest
@@ -2605,6 +2618,7 @@ function wGlide(sec) {
   try { var g = W.master.gain, t = actx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(lvl, t, sec / 3); } catch (e) {}
 }
 function wVol(kind, v) {
+  if (kind === "storm" && W.running && wDrive()) v = 0;
   mixVol[kind] = v; mixSync();
   if (!mixOn || !W.master) { if (redrawSound) redrawSound(); return; }
   var c = actx, g = W.gains[kind];
@@ -2704,6 +2718,8 @@ function mixSync() {
   [].forEach.call(document.querySelectorAll("input[data-mix]"), function (r) {
     var v = mixVol[r.getAttribute("data-mix")];
     if (+r.value !== v) { r.value = v; r.nextSibling.textContent = Math.round(v * 100) + "%"; }
+    // no thunder while Drive runs
+    if (r.getAttribute("data-mix") === "storm") r.disabled = W.running && wDrive();
   });
   [].forEach.call(document.querySelectorAll("[data-mixon]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-mixon") === String(mixOn))); });
   [].forEach.call(document.querySelectorAll("[data-mood]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-mood") === musicMood)); });
@@ -2739,7 +2755,9 @@ function mixScene(s, wake) {
 }
 function mixSaveScene() {
   var v = {};
-  W_LAYERS.forEach(function (l) { if (!wCue(l[0]) && mixVol[l[0]] > 0) v[l[0]] = mixVol[l[0]]; });
+  // during Drive, the levels from before it (Drive's changes don't belong in a scene)
+  var was = W.running && W.driveWas || {};
+  W_LAYERS.forEach(function (l) { var x = was.hasOwnProperty(l[0]) ? was[l[0]] : mixVol[l[0]]; if (!wCue(l[0]) && x > 0) v[l[0]] = x; });
   store.set("scene", { mood: musicMood, v: v });
 }
 // the scenes, the music's mood, and every layer's slider in two groups, built the same for the top bar's sound
@@ -2824,7 +2842,7 @@ function wSchedule() {
       if (air) air.settle(rs);
       // a long voiced breath, then silence: with the hum on, the whole mix softens in the rest after a set that had
       // a hum, once the set's last hum has faded, and comes back before the next set's bell
-      if (hum && sg.kind === "rest" && sg.prev && !WB[sg.prev].noHum && W.hush) try {
+      if (hum && sg.kind === "rest" && sg.prev && !WB[sg.prev].noHum && W.hush && !wDrive()) try {
         W.hush.gain.setTargetAtTime(0.4, rs + 1.8, 1.2);
         W.hush.gain.setTargetAtTime(1, ct + Math.max(0, sg.end - now) / 1000 - 4, 1.5);
       } catch (e) {}
@@ -2891,6 +2909,16 @@ function wShow(fresh) { if (W.view) W.view.draw(fresh); else wMiniDraw(); }
 function watchStart() {
   try { ctx(); } catch (e) {}
   lockPaused = false; W.running = true; W.paused = false; W.held = false; W.frozenAt = 0; W.off = 0; W.last = null; W.bag = []; W.pi = 0; W.toneTo = 0; W.tones = [];
+  // Drive: followed by ear, so breath tones and the breath sound come on if they're off; thunder's sudden cracks
+  // don't belong on the road, so its level moves to plain rain (its slider stays off while Drive runs, see mixSync)
+  // what Drive changes is put back when the Watch stops (W.driveWas)
+  W.driveWas = null;
+  if (wDrive()) {
+    W.driveWas = { tones: mixVol.tones || 0, air: mixVol.air || 0, storm: mixVol.storm || 0, rain: mixVol.rain || 0 };
+    if (!mixVol.tones) mixVol.tones = 0.5;
+    if (!mixVol.air) mixVol.air = 0.45;
+    if (mixVol.storm) { mixVol.rain = Math.max(mixVol.rain || 0, mixVol.storm); mixVol.storm = 0; }
+  }
   // the Watch plays the same mix as the background sound: whatever is already on carries straight on
   if (!mixOn) mixStart(); else { W_LAYERS.forEach(function (l) { wVol(l[0], mixVol[l[0]]); }); wGlide(2); audioMode(true); }
   if (W.set.awake) holdAwake();
@@ -2899,6 +2927,7 @@ function watchStart() {
   W.segs.push(wSetSeg(first, W.segs[0].end));
   W.iv = setInterval(wTick, 250);
   wSchedule();
+  mixSync();
   if (redrawSound) redrawSound();
 }
 function watchStop() {
@@ -2909,6 +2938,9 @@ function watchStop() {
   if (!wHeld()) letSleep();
   // Stop ends the sound too, with a slow fade
   mixStop(3);
+  // Drive's changes go back to what they were (the sound is already fading out, so this only moves the sliders)
+  if (W.driveWas) { var was = W.driveWas; W.driveWas = null; Object.keys(was).forEach(function (k) { wVol(k, was[k]); }); }
+  mixSync();
   if (W.view) W.view.ready();
   wMiniDraw();
 }
@@ -2928,7 +2960,7 @@ function wStatus() {
   if (W.paused) return { top: "Paused", t: "Paused", s: "Resume picks up where you left off." };
   if (W.held) return { top: "Waiting", t: "Waiting while another guide runs", s: "Breathing picks up when it stops." };
   if (sg.kind === "lead") return { top: "Starting", t: "Get ready", s: wName(sg.k) };
-  if (sg.kind === "rest") { var sec = Math.max(1, Math.ceil((sg.end - now) / 1000)); return { top: "Rest", t: "Rest", s: "Breathe however you like. " + wName(sg.k) + " in " + sec + " seconds." }; }
+  if (sg.kind === "rest") { var sec = Math.max(1, Math.ceil((sg.end - now) / 1000)); return { top: "Rest", t: "Rest", s: "Breathe however you like. " + wName(sg.k) + " in " + (sec > 90 ? wLeft(sg.end - now) : sec + " seconds") + "." }; }
   var at = wWhere(sg, now), ph = WB[sg.k].phases[at.i];
   return { top: "Breathing", hid: ": " + wName(sg.k), t: ph.label, s: WB[sg.k].unit === "min" ? wLeft(at.left) + " left in this set" : "Round " + at.round + " of " + sg.n };
 }
@@ -3000,12 +3032,14 @@ function wMiniPlace() {
     var go = h("button", { class: "opt", type: "button", "aria-label": "Start the Watch" }, ["Start"]);
     go.addEventListener("click", function () {
       if (!W.set) W.set = wFresh();
+      // it replays the last mix or Custom setup, except Drive, which starts from its own button with the screen dark
+      if (wDrive()) W.set.mix = "slow";
       if (!wUses(W.set).length) { location.hash = "#/watch"; return; }
       watchStart(); wMiniDraw();
       if (wMini) wMini.pb.focus();
     });
     sideStart = h("section", { class: "side-card side-start", "aria-label": "The Watch" }, [h("span", { class: "label" }, ["The Watch"]),
-      h("div", { class: "btnrow" }, [go, h("a", { class: "wgo", href: "#/watch", "aria-label": "Set up the Watch" }, ["Set up", icon("chev", "chev")])])]);
+      h("div", { class: "btnrow" }, [go, h("a", { class: "wgo", href: "#/watch", "aria-label": "Choose a mix" }, ["Mixes", icon("chev", "chev")])])]);
     sideWatch.appendChild(sideStart);
   }
   sideStart.hidden = W.running;
@@ -3032,7 +3066,7 @@ function wMiniFoot() {
   var st = wStatus(), sg = W.segs[0], t, sub;
   if (W.paused || W.held) { t = W.paused ? "Paused" : "Waiting"; sub = st.s; }
   else if (sg.kind === "set") { t = st.t; sub = wName(sg.k) + " · " + st.s; }
-  else if (sg.kind === "rest") { t = "Rest"; sub = wName(sg.k) + " in " + Math.max(1, Math.ceil((sg.end - wNow()) / 1000)) + " seconds"; }
+  else if (sg.kind === "rest") { t = "Rest"; var rsec = Math.max(1, Math.ceil((sg.end - wNow()) / 1000)); sub = wName(sg.k) + " in " + (rsec > 90 ? wLeft(sg.end - wNow()) : rsec + " seconds"); }
   else { t = "Get ready"; sub = wName(sg.k); }
   if (wMini.title.textContent !== t) wMini.title.textContent = t;
   if (wMini.sub.textContent !== sub) wMini.sub.textContent = sub;
@@ -3097,7 +3131,7 @@ function watchView() {
   if (!W.set) W.set = wFresh();
   var set = W.set;
   topbar({ sound: true }); tabs("watch");
-  app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["The Watch"]), h("p", null, ["Breathing to leave running while you work or read. Pick a pattern, press Start, and let it go."])]));
+  app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["The Watch"]), h("p", null, ["Breathing to leave running while you work or read. Pick a mix and let it go."])]));
 
   // the label at the top is the one thing a screen reader announces as it changes: the pattern, Rest, Paused
   var stLabel = h("span", { class: "label", "aria-live": "polite" }), stClock = h("span", { class: "label wclock" });
@@ -3115,9 +3149,9 @@ function watchView() {
   app.appendChild(wgrid);
   function turn() { if (!reduce) { stage.classList.remove("turn"); void stage.offsetWidth; stage.classList.add("turn"); } }
   function buttons() {
-    mainB.textContent = !W.running ? "Start" : W.paused ? "Resume" : "Pause";
-    mainB.disabled = !W.running && !wUses(set).length;
-    stopB.hidden = !W.running; lightsB.hidden = !W.running;
+    // before it starts, the mixes and Custom's own Start begin it, so this button only pauses and resumes
+    mainB.textContent = W.paused ? "Resume" : "Pause";
+    mainB.hidden = stopB.hidden = lightsB.hidden = !W.running;
   }
 
   // the setup: patterns or a mix, the order, and how long each set runs
@@ -3137,38 +3171,62 @@ function watchView() {
     foot.textContent = "Runs until you pause or stop it, even on other pages. On a phone, the screen has to stay on.";
     barI.style.width = "0";
   }
+  // the front screen: one tap on a mix starts it. Custom, folded under the mixes, holds the patterns to pick, their
+  // order, and how long each set runs, with its own Start; opening it sets the mix aside
+  var customOpen = false;
+  // the tapped button goes away as the page redraws, so the keyboard moves to Pause
+  function begin() { watchStart(); draw(true); mainB.focus(); }
+  function mixCard(m) {
+    var b = h("button", { class: "wpat", type: "button" }, [h("span", { class: "vname" }, [W_MIXES[m].name, h("small", null, [W_MIXES[m].plain])])]);
+    b.setAttribute("aria-label", "Start " + W_MIXES[m].name + ": " + W_MIXES[m].plain);
+    b.addEventListener("click", function () {
+      set.mix = m; begin();
+      // Drive goes straight to a dark screen
+      if (W_MIXES[m].drive) wLightsOut();
+    });
+    return b;
+  }
   function setup() {
     mid.innerHTML = "";
-    var numbered = !set.mix && set.pats.length > 1 && set.order === "picked";
-    var pats = h("div", { class: "wpats", role: "group", "aria-label": "Patterns" }, WB_ORDER.map(function (k) {
-      var at = set.pats.indexOf(k), on = !set.mix && at >= 0;
+    mid.appendChild(h("div", { class: "wsetup first" }, [h("span", { class: "label" }, ["Pick a mix to start"]),
+      h("div", { class: "wpats two", role: "group", "aria-label": "Mixes" }, Object.keys(W_MIXES).map(mixCard))]));
+    var body = h("div", { class: "foldbody wcustom" });
+    var fold = h("details", { class: "wwhy wsetup" }, [h("summary", null, ["Custom", icon("chev", "chev")]), body]);
+    fold.open = customOpen;
+    fold.addEventListener("toggle", function () { customOpen = fold.open; if (fold.open) set.mix = null; });
+    mid.appendChild(fold);
+    var numbered = set.pats.length > 1 && set.order === "picked";
+    body.appendChild(h("span", { class: "label" }, ["Pick one or more"]));
+    body.appendChild(h("div", { class: "wpats", role: "group", "aria-label": "Patterns" }, WB_ORDER.map(function (k) {
+      var at = set.pats.indexOf(k), on = at >= 0;
       return toggleRow(wName(k), WB[k].plain, on, on && numbered ? String(at + 1) : null, function () {
-        if (set.mix) { set.mix = null; set.pats = []; }
+        set.mix = null;
         var i = set.pats.indexOf(k);
         if (i >= 0) set.pats.splice(i, 1); else set.pats.push(k);
         drawReady();
       });
-    }));
-    var mixes = h("div", { class: "wpats two", role: "group", "aria-label": "Mixes" }, Object.keys(W_MIXES).map(function (m) {
-      return toggleRow(W_MIXES[m].name, W_MIXES[m].plain, set.mix === m, null, function () { set.mix = set.mix === m ? null : m; if (!set.mix && !set.pats.length) set.pats = ["vessel"]; drawReady(); });
-    }));
-    mid.appendChild(h("div", { class: "wsetup first" }, [h("span", { class: "label" }, ["Pick one or more"]), pats]));
-    mid.appendChild(h("div", { class: "wsetup" }, [h("span", { class: "label" }, ["Or a mix"]), mixes]));
-    if (!set.mix && set.pats.length > 1) {
+    })));
+    if (set.pats.length > 1) {
       var row = h("div", { class: "row left", role: "group", "aria-label": "Order" });
       [["picked", "In the order picked"], ["shuffle", "Shuffle"]].forEach(function (o) {
         var b = h("button", { class: "opt", type: "button", "aria-pressed": String(set.order === o[0]) }, [o[1]]);
         b.addEventListener("click", function () { set.order = o[0]; drawReady(); });
         row.appendChild(b);
       });
-      mid.appendChild(h("div", { class: "wsetup" }, [h("span", { class: "label" }, ["Order"]), row]));
+      body.appendChild(h("span", { class: "label" }, ["Order"])); body.appendChild(row);
     }
-    var uses = wUses(set);
-    if (uses.length) mid.appendChild(h("details", { class: "wwhy wsetup" }, [h("summary", null, ["Length of each set", icon("chev", "chev")]),
-      h("div", { class: "foldbody" }, uses.map(function (k) {
-        return wStepper(wName(k), 1, WB[k].max, function () { return set.rounds[k]; }, function (v) { set.rounds[k] = v; },
-          function (v) { return WB[k].unit === "min" ? v + " min" : v + (v === 1 ? " round" : " rounds"); });
-      }))]));
+    if (set.pats.length) {
+      body.appendChild(h("span", { class: "label" }, ["Length of each set"]));
+      set.pats.forEach(function (k) {
+        body.appendChild(wStepper(wName(k), 1, WB[k].max, function () { return set.rounds[k]; }, function (v) { set.rounds[k] = v; },
+          function (v) { return WB[k].unit === "min" ? v + " min" : v + (v === 1 ? " round" : " rounds"); }));
+      });
+    }
+    var go = h("button", { class: "go", type: "button" }, ["Start"]);
+    go.disabled = !set.pats.length;
+    go.setAttribute("aria-label", "Start custom");
+    go.addEventListener("click", function () { set.mix = null; begin(); });
+    body.appendChild(h("div", { class: "btnrow" }, [go]));
   }
 
   // running: the breathing shape, what to do now, and the reading for the pattern on now
@@ -3250,14 +3308,13 @@ function watchView() {
     var st = wStatus(), top = st.top + (st.hid || "");
     if (stLabel.textContent !== top) { stLabel.innerHTML = ""; stLabel.appendChild(document.createTextNode(st.top)); if (st.hid) stLabel.appendChild(h("span", { class: "vh" }, [st.hid])); }
     barI.style.width = Math.min(100, (now - sg.start) / (sg.end - sg.start) * 100).toFixed(1) + "%";
+    if (wDrive()) { foot.textContent = "Drive: about 2 minutes of breathing, then 4 of quiet. Keep it low enough to hear the road."; return; }
     foot.textContent = sg.kind === "set" ? "Then a short rest" + (nx && nx.k !== sg.k ? ", and " + wName(nx.k) + " after it." : ".")
       : sg.kind === "rest" ? "A rest between sets." : "Starting with " + wName(sg.k) + ".";
   }
-  mainB.addEventListener("click", function () {
-    if (!W.running) { watchStart(); draw(true); }
-    else watchPause(!W.paused);
-  });
-  stopB.addEventListener("click", function () { watchStop(); mainB.focus(); });
+  mainB.addEventListener("click", function () { if (W.running) watchPause(!W.paused); });
+  // after Stop the page shows the mixes again; the keyboard goes to the first one
+  stopB.addEventListener("click", function () { watchStop(); var first = mid.querySelector("button.wpat"); if (first) first.focus(); });
   lightsB.addEventListener("click", wLightsOut);
 
   // sound and screen: live while it runs, too. The side panel and the sheet each have a copy, kept in step
