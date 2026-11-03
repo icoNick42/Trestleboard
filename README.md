@@ -29,3 +29,8 @@ Your notes, pins, and settings are saved only on the device you use them on. The
 - `sw.js`: lets the phone keep a copy so it works offline
 - `fonts/`: the two optional fonts, both under the SIL Open Font License (license files included)
 - `manifest.webmanifest` and `icons/`: the home-screen name and icon
+- `docs/`: read-only copies of the agent review kit and starter file (see below)
+
+## How it's built
+
+I build the Trestleboard by directing AI coding agents. The rules they follow are in [AGENTS.md](AGENTS.md). How their work gets checked (red-team reviews, competing reviewers, and blind dry-run tests) is in [docs/review-kit.md](docs/review-kit.md). A version of the rules for other projects is in [docs/starter-agents.md](docs/starter-agents.md).

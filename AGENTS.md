@@ -34,6 +34,7 @@ If something I ask conflicts with this file, do what I asked and mention the con
   - `fonts/` holds the two optional fonts (Atkinson Hyperlegible Next and Hanken Grotesk, SIL Open Font License, licenses beside them), trimmed to the characters the app uses. A few aren't in them and show in the device's font: → with Atkinson, ḥ, ✓ and ⇅ with either. So does any new character outside that set.
   - `sw.js` is the service worker (the background script that keeps a copy of the app on the phone for offline use).
   - `manifest.webmanifest` and `icons/` set the home-screen name and icon. `README.md` is the repository's front page on GitHub, not part of the app.
+  - `docs/` holds read-only snapshots of the review kit and the generic starter file, for people reading the repository. They aren't part of the app and aren't the working copies; those are in `Agent instructions/` in the parent Trestleboard folder.
 - Preview locally: serve the folder over localhost (on Windows, `py -m http.server 8000`, then open http://localhost:8000). Opening index.html directly turns off the offline features.
 - Git: I commit and publish with GitHub Desktop myself. Don't commit, push, or publish.
 
