@@ -625,12 +625,12 @@ html.locked, html.locked body { overflow: hidden; }
 .wgrid > * { min-width: 0; }
 .wside { display: none; }
 .wside-h { font-size: var(--t-card); }
-/* the Dim slider's dark layer over the Watch page; taps go through it */
+/* the Dim slider's dark layer over the Watch page, under the sheets so it never darkens them; taps go through it */
 /* read by a screen reader, not shown */
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.wdim { position: fixed; inset: 0; z-index: 30; background: #000; pointer-events: none; }
+.wdim { position: fixed; inset: 0; z-index: 13; background: #000; pointer-events: none; }
 /* the breathing shape sits above that layer and fades less, so it stays easy to follow at full Dim */
-body.wdim-on .worb { position: relative; z-index: 31; opacity: calc(1 - var(--wdim) * 0.7); }
+body.wdim-on .worb { position: relative; z-index: 14; opacity: calc(1 - var(--wdim) * 0.7); }
 /* the Watch's slim bar above the tabs, while it runs and another page is open */
 .wmini {
   position: fixed; z-index: 7; max-width: 39rem; margin: 0 auto;
@@ -817,10 +817,12 @@ function loopable(c, chans, len, xf) {
   return buf;
 }
 // noise made once and looped: white (flat hiss), pink (a softer hiss, equal energy in each octave), brown (deep rumble)
+// secs: the loop's length (6 seconds unless given; the ocean uses longer ones so its loops can't be heard coming round)
 var noiseMade = {};
-function noiseBuffer(kind) {
-  if (noiseMade[kind]) return noiseMade[kind];
-  var c = ctx(), len = c.sampleRate * 6, xf = 4000, d = new Float32Array(len + xf), last = 0;
+function noiseBuffer(kind, secs) {
+  var key = kind + (secs || 6);
+  if (noiseMade[key]) return noiseMade[key];
+  var c = ctx(), len = Math.floor(c.sampleRate * (secs || 6)), xf = 4000, d = new Float32Array(len + xf), last = 0;
   var b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
   for (var i = 0; i < len + xf; i++) {
     var w = Math.random() * 2 - 1;
@@ -832,7 +834,7 @@ function noiseBuffer(kind) {
       d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11; b6 = w * 0.115926;
     } else { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; }
   }
-  return (noiseMade[kind] = loopable(c, [d], len, xf));
+  return (noiseMade[key] = loopable(c, [d], len, xf));
 }
 // a smooth random wander from 0 to 1 across len samples: n random points joined by gentle curves
 function wander(len, n) {
@@ -954,6 +956,8 @@ function startMusic(c, dest, level, mood) {
   var dry = c.createGain(); dry.gain.value = 0.6;
   var tone = c.createBiquadFilter(); tone.type = "lowpass"; tone.frequency.value = 2400;
   tone.connect(dry); tone.connect(room); room.connect(wet); dry.connect(out); wet.connect(out);
+  // the bells go through their own volume, so the Watch can hold them off while a set runs (see hold)
+  var bellG = c.createGain(); bellG.connect(tone);
   function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
   var ci = 0, nextChord = t0 + 0.2, played = [];
   function pad(notes, t, dur) {
@@ -967,10 +971,10 @@ function startMusic(c, dest, level, mood) {
     });
   }
   // the Piano mood: each note placed a little left or right by pitch, like sitting at the keys
-  function key(m, t, lvl) {
+  function key(m, t, lvl, to) {
     var src = c.createBufferSource(), g = c.createGain(), pn = c.createStereoPanner();
     src.buffer = pianoNote(c, m); g.gain.value = lvl * 0.26; pn.pan.value = Math.max(-0.5, Math.min(0.5, (m - 60) / 40));
-    src.connect(g); g.connect(pn); pn.connect(tone); src.start(t);
+    src.connect(g); g.connect(pn); pn.connect(to || tone); src.start(t);
   }
   // slow broken chords, low note first, twice per chord, the second time a little softer and looser
   function arp(notes, t) {
@@ -981,12 +985,12 @@ function startMusic(c, dest, level, mood) {
     });
   }
   function ding(m, t, lvl) {
-    if (M.piano) { key(m, t, 0.2 * lvl); return; }
+    if (M.piano) { key(m, t, 0.2 * lvl, bellG); return; }
     [[1, 0.045], [2, 0.012]].forEach(function (p) {
       var o = c.createOscillator(), g = c.createGain();
       o.type = "sine"; o.frequency.value = hz(m) * p[0];
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(p[1] * lvl, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 4.5 / p[0]);
-      o.connect(g); g.connect(tone); o.start(t); o.stop(t + 5);
+      o.connect(g); g.connect(bellG); o.start(t); o.stop(t + 5);
     });
   }
   // six bell loops, each ringing one note of the scale every so many seconds; the lengths share no pattern
@@ -1028,8 +1032,15 @@ function startMusic(c, dest, level, mood) {
   }
   function calm() {
     try { var t = c.currentTime; tone.frequency.cancelScheduledValues(t); tone.frequency.setTargetAtTime(2400, t, 0.4); } catch (e) {}
+    try { var u = c.currentTime; bellG.gain.cancelScheduledValues(u); bellG.gain.setTargetAtTime(1, u, 0.5); } catch (e) {}
   }
-  return { nodes: [tone, room, wet, dry, out], timer: setInterval(ahead, 2000), chord: chord, chordAt: chordAt, bright: bright, calm: calm };
+  // the Watch's sets: the bells fade out just before a set and come back in the rest after it, so they never ring
+  // over a breath tone (the Piano mood's broken chords aren't bells and keep playing). on: true to hold them off;
+  // at: when, on the audio clock
+  function hold(on, at) {
+    try { bellG.gain.setTargetAtTime(on ? 0.0001 : 1, Math.max(c.currentTime, at), on ? 0.4 : 1); } catch (e) {}
+  }
+  return { nodes: [tone, room, wet, dry, out, bellG], timer: setInterval(ahead, 2000), chord: chord, chordAt: chordAt, bright: bright, calm: calm, hold: hold };
 }
 /* the Watch's bell, at the start of each set: its notes come from the soft music's chord of the moment (or the
    music's home chord when it isn't playing), so it sounds like part of the music. Which notes, and whether
@@ -1050,29 +1061,34 @@ function watchBell(dest, at) {
     });
   }
   try {
-    var notes = (W.chord ? W.chord() : [48, 55, 64, 71]).slice();
+    var ca = W.layers.music && W.layers.music.chordAt ? W.layers.music.chordAt(at) : null;
+    var notes = ((ca && ca.notes) || wChordAt(at) || [48, 55, 64, 71]).slice();
+    // the chord changes while the bell still rings (it rings about 5 seconds): keep to notes both chords share, if any
+    if (ca && ca.next && ca.next[0] < at + 5) {
+      var both = notes.filter(function (m) { return ca.next[1].some(function (n) { return (n - m) % 12 === 0; }); });
+      if (both.length) notes = both;
+    }
     for (var i = notes.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = notes[i]; notes[i] = notes[j]; notes[j] = x; }
     strike(lift(notes[0]), at, 1);
-    if (Math.random() < 0.6) strike(lift(notes[1]) + 12, at + 0.9 + Math.random() * 0.6, 0.5);
+    if (Math.random() < 0.6) strike(lift(notes[1 % notes.length]) + 12, at + 0.9 + Math.random() * 0.6, 0.5);
   } catch (e) {}
 }
 
 /* the sound layers, made here (no files). The top bar's sound settings and the Watch's "Sound and screen" are
    two views of one mix: the same layers at the same volumes. Each background layer plays into dest at a level
-   matched to the others (W_CAL; the Watch's cues sit at their own levels), and its volume is set on its own gain. Returns { stop, fade }, plus
-   the own controls of the music, the hum, or the breath sound.
+   matched to the others (W_CAL), and its volume is set on its own gain. Returns { stop, fade }, plus the music's own
+   controls.
    The third field sorts the sliders into two groups. */
-var W_LAYERS = [["music", "Soft music", "music"], ["tones", "Breath tones", "music"], ["hum", "Hum", "music"], ["air", "Breath sound", "music"], ["drone", "Drone", "music"],
+var W_LAYERS = [["music", "Soft music", "music"], ["tones", "Breath tones", "music"], ["drone", "Drone", "music"],
   ["rain", "Rain", "nature"], ["ocean", "Ocean", "nature"], ["wind", "Wind", "nature"], ["fire", "Fire", "nature"], ["storm", "Thunderstorm", "nature"],
   ["crickets", "Crickets", "nature"], ["brown", "Brown noise", "nature"], ["pink", "Pink noise", "nature"]];
-// the Watch's cues (breath tones, the hum, the breath sound): they follow its breathing, so they sound only while it
-// runs, their sliders show in the top bar's sound settings only while it runs, and scenes leave them as they are
-var W_CUES = ["tones", "hum", "air"];
+// the Watch's cue (breath tones): it follows the Watch's breathing, so it sounds only while the Watch runs, its slider
+// shows in the top bar's sound settings only while it runs, and scenes leave it as it is
+var W_CUES = ["tones"];
 function wCue(kind) { return W_CUES.indexOf(kind) >= 0; }
 // each layer's level, measured as loudness (LUFS, the broadcast standard) so that every layer sounds about as
-// loud as the fire at the same slider position. The hum and the breath sound are cues and sit a little under the
-// music instead. Re-measure if a layer's recipe changes.
-var W_CAL = { music: 0.989, hum: 0.68, air: 0.378, drone: 1.059, rain: 0.86, ocean: 1.084, wind: 1.084, fire: 1, storm: 0.813, crickets: 2.39, brown: 0.543, pink: 0.49 };
+// loud as the fire at the same slider position. Re-measure if a layer's recipe changes.
+var W_CAL = { music: 0.989, drone: 1.059, rain: 0.86, ocean: 1.084, wind: 1.084, fire: 1, storm: 0.813, crickets: 2.39, brown: 0.543, pink: 0.49 };
 // the volumes start from the Watch's defaults each time the app opens; nothing plays until the sound is
 // turned on in the top bar or the Watch starts. The Watch's cues (W_CUES) only sound while it runs.
 var mixVol = {}, mixOn = false;
@@ -1102,7 +1118,7 @@ function wLayer(kind, c, dest) {
   if (kind === "music") {
     var m = startMusic(c, top, 2.2, musicMood);
     nodes = nodes.concat(m.nodes); timer = m.timer;
-    return { chord: m.chord, chordAt: m.chordAt, bright: m.bright, calm: m.calm, stop: stop, fade: fade };
+    return { chord: m.chord, chordAt: m.chordAt, bright: m.bright, calm: m.calm, hold: m.hold, stop: stop, fade: fade };
   }
   function node(n) { nodes.push(n); return n; }
   function loop(buf, off) { var s = node(c.createBufferSource()); s.buffer = buf; s.loop = true; s.start(c.currentTime, off || 0); return s; }
@@ -1121,7 +1137,7 @@ function wLayer(kind, c, dest) {
     });
   }
   // a sound that plays once at time t (a wave, a roll of thunder): source → filter → gain → pan, all freed after
-  function once(buf, t, end) { var s = c.createBufferSource(); s.buffer = buf; s.loop = true; s.start(t, Math.random() * 5); s.stop(end); live.push(s); if (live.length > 40) live.shift(); return s; }
+  function once(buf, t, end) { var s = c.createBufferSource(); s.buffer = buf; s.loop = true; s.start(t, Math.random() * Math.max(1, buf.duration - 1)); s.stop(end); live.push(s); if (live.length > 40) live.shift(); return s; }
   if (kind === "brown") chain([loop(noiseBuffer("brown")), amp(0.5)]);
   if (kind === "pink") chain([loop(noiseBuffer("pink")), amp(0.5)]);
   if (kind === "drone") {
@@ -1173,10 +1189,11 @@ function wLayer(kind, c, dest) {
   }
   if (kind === "ocean") {
     // waves: each builds for a few seconds, breaks (brightest there), then washes back as a long fizz; a new one
-    // every 6 to 11 seconds, from a slightly different place. Under them, a steady wash and a low rumble.
-    var lowB = noiseBuffer("brown"), whB = noiseBuffer("white"), wash = amp(1), nextW = c.currentTime + 0.5;
+    // every 6 to 11 seconds, from a slightly different place. Under them, a steady wash and a low rumble. Each part
+    // loops its own noise, of a length that shares no pattern with the others, so the sea doesn't audibly repeat
+    var lowB = noiseBuffer("brown", 17.3), whB = noiseBuffer("white", 10.7), wash = amp(1), nextW = c.currentTime + 0.5;
     chain([loop(lowB), filt("lowpass", 220), amp(0.25)]);
-    chain([loop(noiseBuffer("pink")), filt("lowpass", 700), filt("highpass", 90), wash, amp(0.22)]);
+    chain([loop(noiseBuffer("pink", 13.1)), filt("lowpass", 700), filt("highpass", 90), wash, amp(0.22)]);
     drift(wash.gain, 0.5, 1.1, 5);
     var wave = function (t) {
       var build = 2 + Math.random() * 2, fall = 5 + Math.random() * 3, big = 0.6 + Math.random() * 0.5, p = (Math.random() - 0.5) * 0.8;
@@ -1213,114 +1230,6 @@ function wLayer(kind, c, dest) {
     chain([loop(cricketBuffer(c, 13.7, false)), filt("lowpass", 9000)]);
     chain([loop(cricketBuffer(c, 17.3, true)), filt("lowpass", 4000)]);
     chain([loop(noiseBuffer("brown")), filt("lowpass", 300), amp(0.06)]);
-  }
-  if (kind === "hum") {
-    /* the hum: a soft, wordless "mmm" that fills each breath out, so you can hum along. From about 60% of the way
-       through the breath out it thins away on a curve (even steps in loudness, not in volume, so it never drops off
-       at the end) and darkens as it goes, and a soft room tail carries it a moment into the breath in. A few tones
-       a hair apart (a group hum is never quite in tune), through the soft filters of closed lips and a room.
-       It's a wordless sound, not speech. hum(notes, at, sec, tail, change): notes, the chord sounding at
-       the start (its lowest note, brought into a low voice's range, is the hum's note); at, when, on the audio clock;
-       sec, how long the breath out lasts; tail, extra seconds to let it fade (the set's last breath); change, the
-       music's next chord if it changes during the hum ([time, notes]): if the hum's note isn't in it, the hum slides
-       to the nearest note that is, so it never holds against the new chord */
-    var hlen = Math.floor(c.sampleRate * 4), hir = c.createBuffer(2, hlen, c.sampleRate);
-    for (var hc = 0; hc < 2; hc++) { var hd = hir.getChannelData(hc); for (var hi = 0; hi < hlen; hi++) hd[hi] = (Math.random() * 2 - 1) * Math.pow(1 - hi / hlen, 2); }
-    var hroom = node(c.createConvolver()), hbus = amp(1); hroom.buffer = hir;
-    chain([hbus, amp(0.68)]); chain([hroom, filt("lowpass", 1800), amp(0.55)]); hbus.connect(hroom);
-    var sung = [];
-    var hum = function (notes, at, sec, tail, change) {
-      var m = notes[0];
-      while (m < 43) m += 12; while (m > 54) m -= 12;
-      var f = 440 * Math.pow(2, (m - 69) / 12), end = at + sec + (tail || 0), to = 0;
-      if (change && change[1].every(function (n) { return (n - m) % 12; })) {
-        // the nearest note of the new chord, up or down
-        for (var d = 1; d < 7 && !to; d++) [m - d, m + d].forEach(function (x) { if (!to && change[1].some(function (n) { return !((n - x) % 12); })) to = x; });
-      }
-      var g = c.createGain(), lp = c.createBiquadFilter(), lp2 = c.createBiquadFilter(), body = c.createBiquadFilter();
-      lp.type = "lowpass"; lp.frequency.value = 650; lp.Q.value = 0.5;
-      lp2.type = "lowpass"; lp2.Q.value = 0.6;
-      body.type = "peaking"; body.frequency.value = 270; body.Q.value = 1; body.gain.value = 5;
-      // it opens a little through the middle of the breath, then closes as it fades
-      lp2.frequency.setValueAtTime(600, at); lp2.frequency.linearRampToValueAtTime(950, at + sec * 0.45); lp2.frequency.exponentialRampToValueAtTime(380, end);
-      var a = Math.min(0.7, sec * 0.15), fa = at + sec * 0.6, curve = new Float32Array(64);
-      for (var ci = 0; ci < 64; ci++) { var x = ci / 63; curve[ci] = 0.85 * (Math.pow(10, -2.5 * x) - Math.pow(10, -2.5)) / (1 - Math.pow(10, -2.5)); }
-      g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(1, at + a);
-      g.gain.linearRampToValueAtTime(0.85, fa); g.gain.setValueCurveAtTime(curve, fa, end - fa);
-      // a slow, small waver that starts a moment in, like a held voice
-      var vib = c.createOscillator(), vg = c.createGain();
-      vib.frequency.value = 4.3 + Math.random() * 0.8;
-      vg.gain.setValueAtTime(0, at); vg.gain.linearRampToValueAtTime(5, at + Math.min(1.5, sec * 0.4));
-      vib.connect(vg);
-      var parts = [vib];
-      [-9, -3, 4, 10].forEach(function (cents) {
-        var o = c.createOscillator(), og = c.createGain();
-        o.type = "sawtooth"; o.frequency.value = f; o.detune.value = cents + (Math.random() - 0.5) * 4;
-        vg.connect(o.detune); og.gain.value = 0.05; o.connect(og); og.connect(lp); parts.push(o);
-      });
-      // the note itself, for body
-      var sn = c.createOscillator(), sg = c.createGain();
-      sn.type = "sine"; sn.frequency.value = f; sg.gain.value = 0.12; sn.connect(sg); sg.connect(g); parts.push(sn);
-      lp.connect(lp2); lp2.connect(body); body.connect(g); g.connect(hbus);
-      // the slide to the new chord's note, a quarter second long, as the new chord comes in
-      if (to) parts.slice(1).forEach(function (o) {
-        o.frequency.setValueAtTime(f, change[0]); o.frequency.exponentialRampToValueAtTime(440 * Math.pow(2, (to - 69) / 12), change[0] + 0.25);
-      });
-      sung = sung.filter(function (x) { return x.end > c.currentTime; }); sung.push({ g: g, end: end });
-      parts.forEach(function (o) {
-        o.start(at); o.stop(end + 0.05);
-        // the layer's stop silences it; the Watch's pause and stop take back hums not yet begun, like its tones
-        live.push(o); if (live.length > 40) live.shift();
-        if (W.tones) W.tones.push({ o: o, at: at });
-      });
-    };
-    return { hum: hum, stop: stop, fade: fade,
-      // a pause, a hold, or a stop: a hum already sounding fades out in a third of a second, so it never carries on
-      // under a practice's own guide (hums not yet begun are taken back with the Watch's tones)
-      calm: function () {
-        var t = c.currentTime;
-        // if a browser won't take back a fade already under way, the hum is cut instead of left to run on
-        sung.forEach(function (x) { if (x.end > t) try { x.g.gain.cancelScheduledValues(t); x.g.gain.setValueAtTime(x.g.gain.value, t); x.g.gain.linearRampToValueAtTime(0, t + 0.3); } catch (e) { try { x.g.disconnect(); } catch (e2) {} } });
-        sung = [];
-      } };
-  }
-  if (kind === "air") {
-    /* the breath sound: a low rush of air, like surf, that rises as you breathe in, falls as you breathe out, and
-       holds still on a hold, so the pattern can be followed by ear. Two loops of noise a little left and right,
-       through one filter that opens with the breath. Silent until the Watch's first breath */
-    var lvl = amp(0), fl = filt("lowpass", 280, 0.5), FLOOR = 0.05, lo = 280, hi = 1100, full = 0, last = 0;
-    [-0.35, 0.35].forEach(function (p, k) { var s = loop(noiseBuffer("brown"), k * 2.7), pn = pan(p); s.connect(pn); pn.connect(fl); });
-    chain([fl, lvl]);
-    var lv = function (x) { return FLOOR + (1 - FLOOR) * x * x; }, fq = function (x) { return lo * Math.pow(hi / lo, x); };
-    return {
-      // to: how full the breath is at the end of this step (0 empty to 1 full), or null to hold still; at, sec: when
-      // and how long, on the audio clock. Steps arrive in order, each starting where the last one ended
-      breathe: function (to, at, sec) {
-        if (to == null) return;
-        try {
-          lvl.gain.setValueAtTime(last, at); lvl.gain.linearRampToValueAtTime(last = lv(to), at + sec);
-          fl.frequency.setValueAtTime(fq(full), at); fl.frequency.exponentialRampToValueAtTime(fq(to), at + sec);
-        } catch (e) {}
-        full = to;
-      },
-      // a rest after a set: fade away over two seconds; the next breath starts from empty
-      settle: function (at) {
-        try {
-          lvl.gain.setValueAtTime(last, at); lvl.gain.linearRampToValueAtTime(0, at + 2);
-          fl.frequency.setValueAtTime(fq(full), at); fl.frequency.exponentialRampToValueAtTime(lo, at + 2);
-        } catch (e) {}
-        full = 0; last = 0;
-      },
-      // a pause, a hold, or a stop: drop what was set ahead and fade from wherever it is now
-      calm: function () {
-        try {
-          var t = c.currentTime;
-          lvl.gain.cancelScheduledValues(t); lvl.gain.setValueAtTime(lvl.gain.value, t); lvl.gain.linearRampToValueAtTime(0, t + 1);
-          fl.frequency.cancelScheduledValues(t); fl.frequency.setValueAtTime(fl.frequency.value, t);
-        } catch (e) {}
-        full = 0; last = 0;
-      },
-      stop: stop, fade: fade };
   }
   // waves and thunder are set a few seconds ahead; after the page's timers were stopped, skip what was missed
   if (tick) { tick(); timer = setInterval(tick, 2000); }
@@ -1668,7 +1577,7 @@ function parking() {
   thought.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
   wrap.appendChild(h("label", { for: "park-t" }, [h("span", { class: "label" }, ["Tap thumb to finger. Write it down."]), thought]));
   wrap.appendChild(h("label", { for: "park-time" }, [h("span", { class: "label" }, ["Come back to it at"]), time]));
-  wrap.appendChild(h("div", { class: "row" }, [add]));
+  wrap.appendChild(h("div", { class: "row" }, [add, tonesButton()]));
   wrap.appendChild(list); draw();
   return wrap;
 }
@@ -2520,8 +2429,7 @@ var WB = {
   vessel: { n: 3, phases: P.resonance, unit: "min", def: 3, max: 10, plain: "Slow breathing, six breaths a minute",
     cue: "About 5 seconds in, 5 to 6 out.",
     why: "Breathing near six breaths a minute raises heart rate variability, a measure of how flexibly the nervous system shifts between activation and rest, though most studies are small." },
-  // noHum: no hum on this pattern (Tzimtzum cuts input first), so no dip in the rest after it either
-  tzim: { n: 7, phases: P.exhale, noHum: true, def: 3, max: 5, plain: "A long breath out through pursed lips",
+  tzim: { n: 7, phases: P.exhale, def: 3, max: 5, plain: "A long breath out through pursed lips",
     cue: "Breathe out long and slow through pursed lips, and let the next breath come on its own.",
     why: "Heart rate dips a little on every out-breath. Whether a longer out-breath adds anything beyond slow breathing itself is unsettled, but people often report feeling more relaxed with it." },
   box: { n: 11, phases: P.box4, shape: "square", def: 4, max: 6, plain: "Box breathing, 4-4-4-4",
@@ -2536,7 +2444,7 @@ var WB_ORDER = ["vessel", "tzim", "box", "statue"];
 // random, weighted toward the main ones. A mix's sets run each pattern's own default length (WB def), not Custom's;
 // len: a set's length for this mix instead (minutes or rounds, by the pattern's unit); rest: the rest after each
 // set, in ms, instead of wRest's. drive: Drive's rules
-// (breath tones and the breath sound come on, no thunder, no dip in the rests, Lights out on start; see watchStart)
+// (breath tones come on, no thunder, Lights out on start; see watchStart)
 var W_MIXES = {
   slow: { name: "Slow", plain: "Slow breathing only, for long stretches", w: { vessel: 1 }, len: { vessel: 8 } },
   settle: { name: "Settle", plain: "Mostly slow breathing, now and then a sigh or a box", w: { vessel: 8, statue: 1, box: 1 } },
@@ -2560,7 +2468,7 @@ function wUses(set) { return set.mix ? WB_ORDER.filter(function (k) { return W_M
    The Watch page and the slim bar above the tabs are two views of it. Its clock is Date.now(), stopped
    while paused (or while a practice, a routine, or the timer is on screen) and picked up where it stopped. */
 var W = { running: false, set: null, segs: [], iv: null, raf: null, paused: false, held: false, frozenAt: 0, off: 0, last: null, bag: [], pi: 0,
-  master: null, hush: null, gains: {}, layers: {}, chord: null, toneTo: 0, tones: [], view: null };
+  master: null, gains: {}, layers: {}, chord: null, toneTo: 0, tones: [], view: null };
 function wNow() { return (W.frozenAt || Date.now()) - W.off; }
 // breathing (and its breath tones) waits while a practice's tool is running (apart from a quiet one, such as the switch countdown), or while a routine or the timer
 // is on screen, so two breath cues never sound at once; a practice page that is only being read leaves it breathing
@@ -2679,28 +2587,27 @@ function mixStart() {
   audioMode(true);
   try {
     ctx();
-    // master: the overall volume (the Watch's Pause fades it); hush: the soft dip in the rests (see wSchedule)
-    W.master = actx.createGain(); W.master.gain.value = 0.0001; W.hush = actx.createGain();
-    W.master.connect(W.hush); W.hush.connect(mixLimiter());
+    // master: the overall volume (the Watch's Pause fades it)
+    W.master = actx.createGain(); W.master.gain.value = 0.0001;
+    W.master.connect(mixLimiter());
     mixOn = true;
     W_LAYERS.forEach(function (l) { wVol(l[0], mixVol[l[0]]); });
     wGlide(3);
-  } catch (e) { W.master = null; W.hush = null; mixOn = false; }
+  } catch (e) { W.master = null; mixOn = false; }
   mixSync();
   if (redrawSound) redrawSound();
 }
 // sec: how long the fade out takes (slower when the Watch stops)
 function mixStop(sec) {
   wUntone(); lockPaused = false;
-  var m = W.master, hush = W.hush, layers = W.layers, gains = W.gains;
-  mixOn = false; W.master = null; W.hush = null; W.layers = {}; W.gains = {}; W.chord = null;
+  var m = W.master, layers = W.layers, gains = W.gains;
+  mixOn = false; W.master = null; W.layers = {}; W.gains = {}; W.chord = null;
   if (m) {
     try { m.gain.cancelScheduledValues(actx.currentTime); m.gain.setValueAtTime(m.gain.value, actx.currentTime); m.gain.setTargetAtTime(0.0001, actx.currentTime, sec / 3); } catch (e) {}
     setTimeout(function () {
       Object.keys(layers).forEach(function (k) { if (layers[k]) layers[k].stop(); });
       Object.keys(gains).forEach(function (k) { try { gains[k].disconnect(); } catch (e) {} });
       try { m.disconnect(); } catch (e) {}
-      try { if (hush) hush.disconnect(); } catch (e) {}
       if (!mixOn) audioMode(false);
     }, sec * 1500);
   } else audioMode(false);
@@ -2762,6 +2669,8 @@ function mixSaveScene() {
 }
 // the scenes, the music's mood, and every layer's slider in two groups, built the same for the top bar's sound
 // settings and the Watch's "Sound and screen". id: the sliders' id prefix; wake: as for mixSlider
+// every copy of the scene buttons on screen, so saving My scene shows it in all of them at once
+var sceneLists = [];
 function mixControls(id, wake, showTones) {
   function group(title, kids) { return h("div", { class: "pgroup", role: "group", "aria-label": title }, [h("span", { class: "label", "aria-hidden": "true" }, [title])].concat(kids)); }
   var scenes = h("div", { class: "row left" }), said = h("span", { class: "vh", "aria-live": "polite" });
@@ -2775,8 +2684,14 @@ function mixControls(id, wake, showTones) {
     });
   }
   drawScenes();
+  // copies that have left the screen are dropped once this one is in place (a page builds its copies before showing them)
+  sceneLists.push({ el: scenes, draw: drawScenes });
+  setTimeout(function () { sceneLists = sceneLists.filter(function (x) { return x.el.isConnected; }); }, 0);
   var save = h("button", { class: "linkbtn", type: "button" }, ["Save as my scene"]);
-  save.addEventListener("click", function () { mixSaveScene(); drawScenes(); said.textContent = ""; setTimeout(function () { said.textContent = "Saved as My scene."; }, 50); });
+  save.addEventListener("click", function () {
+    mixSaveScene(); drawScenes();
+    sceneLists.forEach(function (x) { if (x.el !== scenes && x.el.isConnected) x.draw(); });
+    said.textContent = ""; setTimeout(function () { said.textContent = "Saved as My scene."; }, 50); });
   var moods = h("div", { class: "row left", role: "group", "aria-label": "Music mood" }, Object.keys(MOODS).map(function (k) {
     var b = h("button", { class: "opt", type: "button", "data-mood": k, "aria-pressed": String(k === musicMood) }, [MOODS[k].name]);
     b.addEventListener("click", function () { mixMood(k); });
@@ -2790,14 +2705,21 @@ function mixControls(id, wake, showTones) {
 // a soft tone at each change of breath, picked from the soft music's chord of the moment so it sounds like part of it
 // (or the music's home chord when it isn't playing): the top note to breathe in, the bottom one to breathe out,
 // one between for a hold, and the bottom note an octave up to top off a breath
-function chordNotes() {
-  var notes = (W.chord ? W.chord() : [48, 55, 64, 71]).map(function (m) { while (m < 65) m += 12; while (m > 77) m -= 12; return m; });
+// the music's chord at a time on the audio clock, or now if at is left out (null when the music is off). Tones and
+// the bell are set a few seconds ahead, so they ask for the chord at the moment they will ring, not the one playing now
+function wChordAt(at) {
+  var m = W.layers.music;
+  if (at != null && m && m.chordAt) return m.chordAt(at).notes;
+  return W.chord ? W.chord() : null;
+}
+function chordNotes(at) {
+  var notes = (wChordAt(at) || [48, 55, 64, 71]).map(function (m) { while (m < 65) m += 12; while (m > 77) m -= 12; return m; });
   // a chord with the same note in two octaves folds onto one pitch twice; keep it once, so a hold never sounds
   // the same as a breath out (every chord in MOODS keeps at least three different notes)
   return notes.sort(function (a, b) { return a - b; }).filter(function (m, i, a) { return !i || m !== a[i - 1]; });
 }
-function wToneNote(hz) {
-  var notes = chordNotes();
+function wToneNote(hz, at) {
+  var notes = chordNotes(at);
   return hz === IN ? notes[notes.length - 1] : hz === OUT ? notes[0] : hz === HOLD ? notes[1] : notes[0] + 12;
 }
 // a practice step's note (as a MIDI number) in the music's chord: the same as the Watch's for in, out, hold,
@@ -2806,13 +2728,6 @@ function chordTone(hz) {
   if (hz === IN || hz === OUT || hz === HOLD || hz > IN) return wToneNote(hz);
   var notes = chordNotes();
   return hz < OUT ? notes[0] - 12 : notes[1];
-}
-// the breath sound: how full the breath is at the end of a step, 0 (empty) to 1 (full). The breathing shape's own
-// size where the pattern gives one (0.35 to 1); else full after a breath in or topping off, empty after a breath
-// out, and null (hold still) on a hold
-function airTo(ph) {
-  if (ph.to != null) return Math.max(0, Math.min(1, (ph.to - 0.35) / 0.65));
-  return ph.hz === HOLD ? null : ph.hz === OUT ? 0 : 1;
 }
 function wTone(m, at, len) {
   var c = actx, f = 440 * Math.pow(2, (m - 69) / 12);
@@ -2831,24 +2746,39 @@ function wSchedule() {
   if (actx.state !== "running") { wUntone(); return; }
   var now = wNow(), to = now + 3000, from = Math.max(W.toneTo, now - 400), ct = actx.currentTime;
   W.tones = W.tones.filter(function (x) { return x.at > ct - 1; });
-  var mus = W.layers.music && W.layers.music.bright ? W.layers.music : null, hum = W.layers.hum, air = W.layers.air;
+  var mus = W.layers.music && W.layers.music.bright ? W.layers.music : null;
+  // music that hasn't been told about the Watch yet (just started, or after a pause): if a set is running, its
+  // bells hold off now; later sets and rests are handled as they come into view below
+  // with breath tones off nothing can clash, so the bells keep ringing
+  var holdOK = !!(mus && mus.hold && mixVol.tones > 0);
+  // a music layer that hasn't been told about the Watch yet (just started, a new mood or scene, or after a pause):
+  // if a set is running, its bells hold off now, and every set or rest start already planned gets replayed to it
+  if (mus && mus.hold && !mus.told) {
+    mus.told = true;
+    W.segs.forEach(function (sg) {
+      if (sg.start <= now) { if (sg.kind === "set" && sg.end > now && holdOK) mus.hold(true, ct); }
+      else if (sg.start < W.toneTo) {
+        var a = ct + (sg.start - now) / 1000;
+        if (sg.kind === "set") { if (holdOK) mus.hold(true, a - 1.5); } else mus.hold(false, a + 0.5);
+      }
+    });
+  }
   W.segs.forEach(function (sg) {
     if (sg.end <= from || sg.start >= to) return;
-    // the music's tone breathes with the sets and settles in the rests; the breath sound fades away
+    // the music's tone breathes with the sets and settles in the rests
     if (sg.kind !== "set") {
       if (sg.start < from) return;
       var rs = ct + Math.max(0, sg.start - now) / 1000;
       if (mus) mus.bright("rest", rs, 2);
-      if (air) air.settle(rs);
-      // a long voiced breath, then silence: with the hum on, the whole mix softens in the rest after a set that had
-      // a hum, once the set's last hum has faded, and comes back before the next set's bell
-      if (hum && sg.kind === "rest" && sg.prev && !WB[sg.prev].noHum && W.hush && !wDrive()) try {
-        W.hush.gain.setTargetAtTime(0.4, rs + 1.8, 1.2);
-        W.hush.gain.setTargetAtTime(1, ct + Math.max(0, sg.end - now) / 1000 - 4, 1.5);
-      } catch (e) {}
+      if (mus && mus.hold) mus.hold(false, rs + 0.5);
       return;
     }
-    if (sg.start >= from && sg.start < to) watchBell(W.gains.tones, ct + Math.max(0, sg.start - now) / 1000);
+    if (sg.start >= from && sg.start < to) {
+      var bt = ct + Math.max(0, sg.start - now) / 1000;
+      watchBell(W.gains.tones, bt);
+      // the music's bells fade out just before the set's bell
+      if (holdOK) mus.hold(true, bt - 1.5);
+    }
     var ph = WB[sg.k].phases;
     for (var r = Math.max(0, Math.floor((from - sg.start) / sg.C)); r < sg.n; r++) {
       var t = sg.start + r * sg.C;
@@ -2857,15 +2787,8 @@ function wSchedule() {
         if (t >= from && t < to) {
           var at = ct + Math.max(0, t - now) / 1000;
           // the bell marks the set's first breath, so that one gets no tone of its own
-          if (r || i) wTone(wToneNote(ph[i].hz), at, Math.min(1.8, ph[i].s * 0.6 + 0.6));
+          if (r || i) wTone(wToneNote(ph[i].hz, at), at, Math.min(1.8, ph[i].s * 0.6 + 0.6));
           if (mus && (ph[i].hz === IN || ph[i].hz === OUT)) mus.bright(ph[i].hz === IN ? "in" : "out", at, ph[i].s);
-          if (air) air.breathe(airTo(ph[i]), at, ph[i].s);
-          // the hum, on the music's chord at that moment; when the set ends on a breath out, the last one fades on
-          // into the rest
-          if (hum && ph[i].hz === OUT && !WB[sg.k].noHum) {
-            var tail = r === sg.n - 1 && i === ph.length - 1 ? 3 : 0, ca = mus && mus.chordAt ? mus.chordAt(at) : null;
-            hum.hum(ca ? ca.notes : (MOODS[musicMood] || MOODS.warm).home, at, ph[i].s, tail, ca && ca.next && ca.next[0] < at + ph[i].s + tail - 0.5 ? ca.next : null);
-          }
         }
         t += ph[i].s * 1000;
       }
@@ -2876,10 +2799,7 @@ function wSchedule() {
 // stopping or pausing: tones already set for later are taken back
 function wUntone() {
   var ct = actx ? actx.currentTime : 0;
-  if (W.layers.music && W.layers.music.calm) W.layers.music.calm();
-  if (W.layers.air) W.layers.air.calm();
-  if (W.layers.hum) W.layers.hum.calm();
-  if (W.hush) try { W.hush.gain.cancelScheduledValues(ct); W.hush.gain.setTargetAtTime(1, ct, 0.5); } catch (e) {}
+  if (W.layers.music && W.layers.music.calm) { W.layers.music.calm(); W.layers.music.told = false; }
   W.tones.forEach(function (x) { if (x.at > ct) try { x.o.stop(); x.o.disconnect(); } catch (e) {} });
   W.tones = []; W.toneTo = wNow();
 }
@@ -2909,14 +2829,13 @@ function wShow(fresh) { if (W.view) W.view.draw(fresh); else wMiniDraw(); }
 function watchStart() {
   try { ctx(); } catch (e) {}
   lockPaused = false; W.running = true; W.paused = false; W.held = false; W.frozenAt = 0; W.off = 0; W.last = null; W.bag = []; W.pi = 0; W.toneTo = 0; W.tones = [];
-  // Drive: followed by ear, so breath tones and the breath sound come on if they're off; thunder's sudden cracks
+  // Drive: followed by ear, so breath tones come on if they're off; thunder's sudden cracks
   // don't belong on the road, so its level moves to plain rain (its slider stays off while Drive runs, see mixSync)
   // what Drive changes is put back when the Watch stops (W.driveWas)
   W.driveWas = null;
   if (wDrive()) {
-    W.driveWas = { tones: mixVol.tones || 0, air: mixVol.air || 0, storm: mixVol.storm || 0, rain: mixVol.rain || 0 };
+    W.driveWas = { tones: mixVol.tones || 0, storm: mixVol.storm || 0, rain: mixVol.rain || 0 };
     if (!mixVol.tones) mixVol.tones = 0.5;
-    if (!mixVol.air) mixVol.air = 0.45;
     if (mixVol.storm) { mixVol.rain = Math.max(mixVol.rain || 0, mixVol.storm); mixVol.storm = 0; }
   }
   // the Watch plays the same mix as the background sound: whatever is already on carries straight on
@@ -3333,15 +3252,16 @@ function watchView() {
   }
   // id: the sliders' id prefix, so the side panel and the sheet never share ids
   function soundScreen(id) {
+    // the screen settings come first: two short controls, in reach without scrolling past every slider
     var p = h("div", { class: "panel" }, [
-      h("div", { class: "psec" }, mixControls(id, function () { return W.running; }, true)),
       h("div", { class: "psec" }, [
         chooser("Screen while running", [[true, "Stays on"], [false, "Sleeps as usual"]], "awake", function () { if (W.running && set.awake) holdAwake(); else if (!set.awake) letSleep(); }),
         slider("Dim", id + "dim", set.dim, function (v) {
           set.dim = v; wDim();
           [].forEach.call(document.querySelectorAll("input[data-wdim]"), function (r) { if (+r.value !== v) { r.value = v; r.nextSibling.textContent = Math.round(v * 100) + "%"; } });
         })
-      ])
+      ]),
+      h("div", { class: "psec" }, mixControls(id, function () { return W.running; }, true))
     ]);
     p.querySelector("#" + id + "dim").setAttribute("data-wdim", "");
     return p;
