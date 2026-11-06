@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Trestleboard</title>
-<meta name="description" content="Twenty-four practices built on images from old traditions, a breathing companion to leave running, and a field guide to those traditions.">
+<meta name="description" content="Twenty-four practices built on images from Western esoteric traditions, a breathing companion to leave running, and a field guide to those traditions.">
 <meta name="theme-color" content="#2b3541" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1f2832" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2363,7 +2363,7 @@ function groupView(key) {
 /* ---------- Practices tab: where to start, all 24, routines ---------- */
 function practicesView() {
   topbar({ sound: true }); tabs("practices");
-  app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["Practices"]), h("p", null, ["Twenty-four practices built on images from old traditions, in eight groups, plus routines and a quiet timer."])]));
+  app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["Practices"]), h("p", null, ["Twenty-four practices built on images from Western esoteric traditions, in eight groups, plus routines and a quiet timer."])]));
 
   // where to start
   app.appendChild(h("section", { class: "group" }, [
@@ -2449,7 +2449,7 @@ var W_MIXES = {
   slow: { name: "Slow", plain: "Slow breathing only, for long stretches", w: { vessel: 1 }, len: { vessel: 8 } },
   settle: { name: "Settle", plain: "Mostly slow breathing, now and then a sigh or a box", w: { vessel: 8, statue: 1, box: 1 } },
   reset: { name: "Reset", plain: "Mostly the sigh and box breathing", w: { statue: 4, box: 4, tzim: 2 } },
-  drive: { name: "Drive", plain: "Slow breathing by ear, with quiet stretches between", w: { vessel: 1 }, len: { vessel: 2 }, rest: 240000, drive: true }
+  drive: { name: "Drive", plain: "For driving: slow breathing by ear, with quiet stretches between", w: { vessel: 1 }, len: { vessel: 2 }, rest: 240000, drive: true }
 };
 function wDrive() { return !!(W.set && W.set.mix && W_MIXES[W.set.mix].drive); }
 // the rest after a set: a quarter of the set's length, between 12 and 30 seconds (a mix may set its own, as Drive does)
@@ -3228,7 +3228,7 @@ function watchView() {
     if (stLabel.textContent !== top) { stLabel.innerHTML = ""; stLabel.appendChild(document.createTextNode(st.top)); if (st.hid) stLabel.appendChild(h("span", { class: "vh" }, [st.hid])); }
     barI.style.width = Math.min(100, (now - sg.start) / (sg.end - sg.start) * 100).toFixed(1) + "%";
     if (wDrive()) { foot.textContent = "Drive: about 2 minutes of breathing, then 4 of quiet. Keep it low enough to hear the road."; return; }
-    foot.textContent = sg.kind === "set" ? "Then a short rest" + (nx && nx.k !== sg.k ? ", and " + wName(nx.k) + " after it." : ".")
+    foot.textContent = sg.kind === "set" ? "Then a short rest" + (nx && nx.k !== sg.k ? ", and " + wName(nx.k) + " after it: " + WB[nx.k].plain.charAt(0).toLowerCase() + WB[nx.k].plain.slice(1) + "." : ".")
       : sg.kind === "rest" ? "A rest between sets." : "Starting with " + wName(sg.k) + ".";
   }
   mainB.addEventListener("click", function () { if (W.running) watchPause(!W.paused); });
@@ -3291,7 +3291,7 @@ function showWelcome(full) {
     h("div", { class: "w-in" }, [
       h("div", { class: "w-mark" }, [stoneMark()]),
       h("h1", null, ["Trestleboard"]),
-      h("p", { class: "w-lede" }, ["Small practices built on images from old traditions, for keeping a steady baseline and finding it again."]),
+      h("p", { class: "w-lede" }, ["Small practices built on images from Western esoteric traditions, for keeping a steady baseline and finding it again."]),
       full ? h("ul", { class: "w-list" }, rows.map(function (r) {
         return h("li", null, [h("span", { class: "w-ic", html: r[0] }), h("span", null, [h("b", null, [r[1]]), h("span", null, [r[2]])])]);
       })) : null,
