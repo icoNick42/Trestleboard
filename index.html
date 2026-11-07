@@ -912,6 +912,8 @@ var MOODS = {
     bells: [72, 74, 76, 79, 81, 84, 86, 88], home: [36, 43] }
 };
 var musicMood = "warm";
+// the music's flutter (see wLayer): off each time the app opens, like the mood; not saved, and not part of a scene
+var musicFlutter = false;
 /* a soft felt piano note, made the first time it's needed and kept: a few overtones that run slightly sharp (piano
    strings are a little stiff), each fading at its own pace in two stages (the quick drop, then the long ring), two
    strings a hair apart for a real piano's slow shimmer, and a soft hammer thump. Made at a lower sample rate, since
@@ -1079,7 +1081,7 @@ function watchBell(dest, at) {
    matched to the others (W_CAL), and its volume is set on its own gain. Returns { stop, fade }, plus the music's own
    controls.
    The third field sorts the sliders into two groups. */
-var W_LAYERS = [["music", "Soft music", "music"], ["tones", "Breath tones", "music"], ["drone", "Drone", "music"],
+var W_LAYERS = [["music", "Soft music", "music"], ["tones", "Breath tones", "music"], ["drone", "Drone", "music"], ["pulse", "40 Hz pulse", "music"],
   ["rain", "Rain", "nature"], ["ocean", "Ocean", "nature"], ["wind", "Wind", "nature"], ["fire", "Fire", "nature"], ["storm", "Thunderstorm", "nature"],
   ["crickets", "Crickets", "nature"], ["brown", "Brown noise", "nature"], ["pink", "Pink noise", "nature"]];
 // the Watch's cue (breath tones): it follows the Watch's breathing, so it sounds only while the Watch runs, its slider
@@ -1088,7 +1090,7 @@ var W_CUES = ["tones"];
 function wCue(kind) { return W_CUES.indexOf(kind) >= 0; }
 // each layer's level, measured as loudness (LUFS, the broadcast standard) so that every layer sounds about as
 // loud as the fire at the same slider position. Re-measure if a layer's recipe changes.
-var W_CAL = { music: 0.989, drone: 1.059, rain: 0.86, ocean: 1.084, wind: 1.084, fire: 1, storm: 0.813, crickets: 2.39, brown: 0.543, pink: 0.49 };
+var W_CAL = { music: 0.989, drone: 1.059, pulse: 0.13, rain: 0.86, ocean: 1.084, wind: 1.084, fire: 1, storm: 0.813, crickets: 2.39, brown: 0.543, pink: 0.49 };
 // the volumes start from the Watch's defaults each time the app opens; nothing plays until the sound is
 // turned on in the top bar or the Watch starts. The Watch's cues (W_CUES) only sound while it runs.
 var mixVol = {}, mixOn = false;
@@ -1116,9 +1118,21 @@ function wLayer(kind, c, dest) {
   // a slow fade, then stop: for swapping the music's mood while it plays
   function fade() { try { top.gain.setTargetAtTime(0.0001, c.currentTime, 1); } catch (e) {} setTimeout(stop, 5000); }
   if (kind === "music") {
-    var m = startMusic(c, top, 2.2, musicMood);
-    nodes = nodes.concat(m.nodes); timer = m.timer;
-    return { chord: m.chord, chordAt: m.chordAt, bright: m.bright, calm: m.calm, hold: m.hold, stop: stop, fade: fade };
+    // the flutter: the whole music's volume pulsed 16 times a second, between half and full, when it's on
+    // (musicFlutter). Off, it sits at full and doesn't move. Turning it on or off eases in over a few seconds
+    var fl = c.createGain(), flo = c.createOscillator(), fld = c.createGain();
+    flo.frequency.value = 16; flo.connect(fld); fld.connect(fl.gain); fl.connect(top);
+    function flutter(on, now) {
+      // on: 0.975 ± 0.325 (the half-to-full swing, raised so it plays about as loud as the music without it)
+      var base = on ? 0.975 : 1, depth = on ? 0.325 : 0, t = c.currentTime;
+      [[fl.gain, base], [fld.gain, depth]].forEach(function (p) {
+        try { p[0].cancelScheduledValues(t); if (now) p[0].value = p[1]; else { p[0].setValueAtTime(p[0].value, t); p[0].setTargetAtTime(p[1], t, 1); } } catch (e) {}
+      });
+    }
+    flutter(musicFlutter, true); flo.start();
+    var m = startMusic(c, fl, 2.2, musicMood);
+    nodes = nodes.concat([fl, flo, fld], m.nodes); timer = m.timer;
+    return { chord: m.chord, chordAt: m.chordAt, bright: m.bright, calm: m.calm, hold: m.hold, flutter: flutter, stop: stop, fade: fade };
   }
   function node(n) { nodes.push(n); return n; }
   function loop(buf, off) { var s = node(c.createBufferSource()); s.buffer = buf; s.loop = true; s.start(c.currentTime, off || 0); return s; }
@@ -1152,6 +1166,15 @@ function wLayer(kind, c, dest) {
     });
     chain([dlp, dg]);
     drift(dg.gain, 0.75, 1, 6); drift(dlp.frequency, 450, 900, 7);
+  }
+  if (kind === "pulse") {
+    // one soft tone on the mood's home note (two octaves above the drone, about 220 to 290 Hz, high enough for a
+    // phone speaker to carry, if faintly), its volume pulsed 40 times a second in a smooth wave, easing in over a few seconds
+    var PM = MOODS[musicMood] || MOODS.warm, po = node(c.createOscillator()), pa = amp(0.5), plfo = node(c.createOscillator()), pd = amp(0.5), pin = amp(0);
+    po.type = "sine"; po.frequency.value = 440 * Math.pow(2, (PM.home[0] + 24 - 69) / 12);
+    plfo.frequency.value = 40; plfo.connect(pd); pd.connect(pa.gain);
+    po.connect(pa); chain([pa, pin]); po.start(); plfo.start();
+    pin.gain.setTargetAtTime(1, c.currentTime, 1.5);
   }
   if (kind === "rain" || kind === "storm") {
     // the patter, two copies of unrelated lengths so the loop doesn't show, under the low roar of heavy rain
@@ -2630,12 +2653,18 @@ function mixSync() {
   });
   [].forEach.call(document.querySelectorAll("[data-mixon]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-mixon") === String(mixOn))); });
   [].forEach.call(document.querySelectorAll("[data-mood]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-mood") === musicMood)); });
+  [].forEach.call(document.querySelectorAll("[data-flutter]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-flutter") === String(musicFlutter))); });
 }
-/* the music's mood: changing it while the music or drone plays fades the old one out under the new one */
+function mixFlutter(on) {
+  musicFlutter = on;
+  if (W.layers.music && W.layers.music.flutter) W.layers.music.flutter(on);
+  mixSync();
+}
+/* the music's mood: changing it while the music, drone, or pulse plays fades the old one out under the new one */
 function mixMood(m) {
   if (m === musicMood || !MOODS.hasOwnProperty(m)) return;
   musicMood = m;
-  if (mixOn && W.master) ["music", "drone"].forEach(function (k) {
+  if (mixOn && W.master) ["music", "drone", "pulse"].forEach(function (k) {
     var old = W.layers[k];
     if (!old) return;
     try { W.layers[k] = wLayer(k, actx, W.gains[k]); } catch (e) { W.layers[k] = null; }
@@ -2698,8 +2727,15 @@ function mixControls(id, wake, showTones) {
     return b;
   }));
   function sliders(g) { return W_LAYERS.filter(function (l) { return l[2] === g && (!wCue(l[0]) || showTones); }).map(function (l) { return mixSlider(l[0], l[1], id + l[0], wake); }); }
+  // the music's flutter, on or off, below the sliders
+  var flutter = h("div", { class: "pgroup", role: "group", "aria-label": "Music flutter" }, [h("span", { class: "label", "aria-hidden": "true" }, ["Music flutter"]),
+    h("div", { class: "row left" }, [[false, "Off"], [true, "On"]].map(function (o) {
+      var b = h("button", { class: "opt", type: "button", "data-flutter": String(o[0]), "aria-pressed": String(musicFlutter === o[0]) }, [o[1]]);
+      b.addEventListener("click", function () { mixFlutter(o[0]); });
+      return b;
+    }))]);
   return [group("Scenes", [scenes, h("div", { class: "row left" }, [save, said])]),
-    group("Music and tones", [moods].concat(sliders("music"))),
+    group("Music and tones", [moods].concat(sliders("music"), [flutter])),
     group("Nature and noise", sliders("nature"))];
 }
 // a soft tone at each change of breath, picked from the soft music's chord of the moment so it sounds like part of it
