@@ -549,8 +549,12 @@ html.locked, html.locked body { overflow: hidden; }
 .w-list li > span:last-child > span { color: var(--on-slate-muted); font-size: var(--t-small); line-height: 1.4; }
 .w-note { color: var(--on-slate-muted); font-size: var(--t-small); font-style: italic; }
 .welcome .go { background: var(--slate-mark); color: var(--slate); border-color: var(--slate-mark); min-width: 12rem; }
-/* Begin stays in view at the bottom on short screens, with the tour scrolling under it */
-.w-go { position: sticky; bottom: 0; width: 100%; display: grid; justify-items: center; padding: var(--s5) 0 calc(env(safe-area-inset-bottom, 0px) + var(--s3)); background: linear-gradient(to top, var(--slate) 65%, transparent); }
+/* Begin stays in view at the bottom on short screens, with the tour scrolling under it; the "stays on this device"
+   line rides with it, on solid color, so the fade never covers it. Its color reaches down over the welcome's own
+   bottom padding (the negative bottom and margin), so no text shows through below Begin */
+.w-go { position: sticky; bottom: calc(-1 * (env(safe-area-inset-bottom, 0px) + var(--s6))); margin-bottom: calc(-1 * (env(safe-area-inset-bottom, 0px) + var(--s6)));
+  width: 100%; display: grid; justify-items: center; gap: var(--s3); padding: var(--s5) 0 calc(2 * env(safe-area-inset-bottom, 0px) + var(--s3) + var(--s6));
+  background: linear-gradient(to top, var(--slate) calc(100% - var(--s5)), transparent); }
 
 /* ---------- the day's question (not on Home since v30) and the Watch ---------- */
 .foldbody .subhead { margin-top: var(--s2); }
@@ -608,11 +612,14 @@ html.locked, html.locked body { overflow: hidden; }
   background: transparent; color: var(--on-slate); border: 1px solid color-mix(in srgb, var(--on-slate-muted) 35%, transparent); border-radius: var(--r); padding: 6px var(--s3); cursor: pointer; }
 .wpats.two .wpat { grid-template-columns: minmax(0, 1fr); align-content: start; }
 .wpats.two .wpat .ck { display: none; }
-.wpat .ck { width: 1.1rem; height: 1.1rem; border-radius: 50%; border: 1.5px solid var(--on-slate-muted); }
+/* square marks with a check, since Custom takes more than one pattern (round ones read as "pick one") */
+.wpat .ck { width: 1.1rem; height: 1.1rem; border-radius: 4px; border: 1.5px solid var(--on-slate-muted); display: grid; place-items: center; }
+.wpat .ck .ico { width: 0.85rem; height: 0.85rem; opacity: 0; color: var(--slate); }
 .wpat .vname { display: grid; min-width: 0; }
 .wpat .vname small { color: var(--on-slate-muted); font-size: var(--t-tiny); }
 .wpat[aria-pressed="true"] { border-color: var(--slate-mark); background: color-mix(in srgb, var(--slate-mark) 18%, transparent); }
-.wpat[aria-pressed="true"] .ck { border-color: var(--slate-mark); background: var(--slate-mark); box-shadow: inset 0 0 0 3px var(--slate); }
+.wpat[aria-pressed="true"] .ck { border-color: var(--slate-mark); background: var(--slate-mark); }
+.wpat[aria-pressed="true"] .ck .ico { opacity: 1; }
 .wnum { font-size: var(--t-small); font-weight: 600; color: var(--slate-mark); font-variant-numeric: tabular-nums; }
 .wstep { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
 .wstep .label { min-width: 0; }
@@ -685,10 +692,16 @@ body.wmini-on .app { padding-bottom: calc(var(--tabs-h) + env(safe-area-inset-bo
   }
   /* the Watch page is the Watch itself: no side pane; its own Sound and screen sits in that room instead */
   body.on-watch .side { display: none; }
-  body.on-watch .top-in { padding-right: 0; }
+  /* the top bar keeps its pane-width margin here too, so the speaker and Aa sit in the same place on every page */
   body.on-watch .app { padding-right: max(var(--s4), env(safe-area-inset-right, 0px)); }
   .wgrid { grid-template-columns: minmax(0, 1fr) var(--pane); gap: var(--s5); align-items: start; }
-  .wside { display: grid; gap: var(--s3); position: sticky; top: calc(52px + env(safe-area-inset-top, 0px) + var(--s4)); max-height: calc(100vh - 52px - env(safe-area-inset-top, 0px) - 2 * var(--s4)); overflow-y: auto; overscroll-behavior: contain; }
+  /* scrolls on its own while it stays beside the Watch; at its end, scrolling goes on to the page (so the Watch's
+     own text below is never out of reach) */
+  .wside { display: grid; gap: var(--s3); position: sticky; top: calc(52px + env(safe-area-inset-top, 0px) + var(--s4)); max-height: calc(100vh - 52px - env(safe-area-inset-top, 0px) - 2 * var(--s4)); overflow-y: auto; }
+  /* the Dim slider's dark layer leaves this copy of Sound and screen alone, as it does the sheet; while the Aa menu
+     is open, the top bar comes up over both, so the menu is never hidden behind this copy */
+  body.wdim-on .wside { z-index: 14; }
+  body.wdim-on .top:has(.sizepop) { z-index: 15; }
   .wsound-b { display: none; }
 }
 /* the pane's cards: the Watch (to start it, or running), and the page's own card below */
@@ -1275,12 +1288,13 @@ function openLights(stopFn, opts) {
     opts.shape ? h("div", { class: "lights-shape", "aria-hidden": "true" }, [opts.shape]) : null,
     big, small, h("div", { class: "row" }, [leave, halt])]);
   leave.addEventListener("click", function () { closeLights(); });
-  halt.addEventListener("click", function () { if (opts.onHalt) { opts.onHalt(); return; } if (stopFn) stopFn(); closeLights(); });
+  // once the tool has finished (lightsDone), this button only closes, leaving its Done on the page
+  halt.addEventListener("click", function () { if (lights && lights.done) { closeLights(); return; } if (opts.onHalt) { opts.onHalt(); return; } if (stopFn) stopFn(); closeLights(); });
   // while it's up, the page behind can't be reached by Tab or VoiceOver; on close, the keyboard goes back to the button that opened it
   var behind = [app, topEl, tabsEl, document.getElementById("side"), wMini && wMini.el].filter(Boolean);
   behind.forEach(function (x) { x.inert = true; });
   document.body.appendChild(el);
-  lights = { el: el, big: big, small: small, halt: halt, onClose: opts.onClose, behind: behind, opener: document.activeElement };
+  lights = { el: el, big: big, small: small, halt: halt, leave: leave, onClose: opts.onClose, behind: behind, opener: document.activeElement };
   big.textContent = "…"; small.textContent = "Keep your eyes closed if you like.";
   leave.focus();
 }
@@ -1292,6 +1306,13 @@ function closeLights() {
   if (l.opener && l.opener.isConnected && !l.opener.hidden) l.opener.focus();
 }
 function mirror(a, b) { if (!lights) return; lights.big.textContent = a; lights.small.textContent = b || ""; }
+// a practice's tool (or the timer) finished while Lights out is up: its Stop becomes Close, since there's nothing
+// left to stop, and Brighten goes, so there's one way out (the keyboard moves to Close if it was on Brighten)
+function lightsDone() {
+  if (!lights) return;
+  lights.done = true; lights.halt.textContent = "Close";
+  if (lights.leave) { var had = document.activeElement === lights.leave; lights.leave.hidden = true; if (had) lights.halt.focus(); }
+}
 
 var wake = null;
 function holdAwake() { if (wake && !wake.released) return; try { if (navigator.wakeLock) navigator.wakeLock.request("screen").then(function (w) { wake = w; }).catch(function () {}); } catch (e) {} }
@@ -1440,7 +1461,7 @@ function breath(cfg) {
   }
   function finish() {
     stop(); phase.textContent = "Done"; sub.textContent = cfg.done || "Notice how you feel now.";
-    mirror("Done", sub.textContent); chime(396, 1.2); toolDone();
+    mirror("Done", sub.textContent); lightsDone(); chime(396, 1.2); toolDone();
   }
   function stop() {
     if (raf) cancelAnimationFrame(raf); raf = null; lastIdx = -1; quit(stop);
@@ -1496,8 +1517,9 @@ function steps(cfg) {
     bar.firstChild.style.width = "100%"; sub.textContent = cfg.doneText || "";
     btn.textContent = "Again"; btn.classList.remove("ghost");
     chime(396, 1.2);
-    mirror(cfg.doneLabel || "Done", cfg.doneText || ""); toolDone();
-    if (cfg.then) { after.innerHTML = ""; after.appendChild(cfg.then()); }
+    mirror(cfg.doneLabel || "Done", cfg.doneText || ""); lightsDone(); toolDone();
+    // then: what follows the countdown; it can call finish() to show the usual Done and ✓ once its own step is done
+    if (cfg.then) { after.innerHTML = ""; after.appendChild(cfg.then(function () { label.textContent = "Done"; big.textContent = "✓"; })); }
   }
   function stop() {
     clearInterval(timer); timer = null; letSleep(); idx = 0; quit(stop);
@@ -1730,8 +1752,8 @@ var E = {
     tool: function () { return note("e9", [{ label: "First", ph: "" }, { label: "Second", ph: "" }, { label: "Third", ph: "" }, { label: "Everything else gets looked at", type: "time" }]); } },
   10: { name: "The Tyler's Sword", trad: "Freemasonry · Stoicism", sit: "A reaction about to fire",
     tool: function () { return steps({ steps: [{ label: "Freeze. Jaw loose. Weight to heels.", s: 3 }], doneLabel: "Name the visitor", doneBig: "?",
-      then: function () { return chips([{ name: "Feeling", items: ["Anger", "Fear", "Hurry", "Hurt"] }, { name: "Body", items: ["Hot", "Tight", "Buzzing", "Heavy"] }, { name: "Number", items: ["1", "2", "3", "4", "5"] }],
-        "", function (it, g) { return (g === "Number" ? "Level " + it : it) + ". Named. Now decide whether it gets in."; }); } }); } },
+      then: function (finish) { return chips([{ name: "Feeling", items: ["Anger", "Fear", "Hurry", "Hurt"] }, { name: "Body", items: ["Hot", "Tight", "Buzzing", "Heavy"] }, { name: "Number", items: ["1", "2", "3", "4", "5"] }],
+        "", function (it, g) { finish(); return (g === "Number" ? "Level " + it : it) + ". Named. Now decide whether it gets in."; }); } }); } },
   11: { name: "The Law of Neutralization", trad: "The Kybalion · Rhythm", sit: "Frustration climbing",
     tool: function () { return breath({ shape: "square", rounds: 4, variants: [{ name: "4-4-4-4", phases: P.box4 }, { name: "Short holds", phases: P.box2 }], idle: "Four rounds" }); } },
   12: { name: "Gevurah's Restraint", trad: "Kabbalah", sit: "About to send something final",
@@ -2045,7 +2067,7 @@ function timerView() {
     if (cfg.every && now - lastBell >= cfg.every * 60000 && left > 5) { lastBell += cfg.every * 60000; bell(1); }
     if (left === 0) {
       clearInterval(timer); timer = null; letSleep(); quit(stop); bell(3); markDay();
-      label.textContent = "Time"; mirror("Time", ""); btn.textContent = "Again"; btn.classList.remove("ghost");
+      label.textContent = "Time"; mirror("Time", ""); lightsDone(); btn.textContent = "Again"; btn.classList.remove("ghost");
     }
   }
   btn.addEventListener("click", function () {
@@ -2254,7 +2276,8 @@ function closeSizePop(back) {
   sizePop.remove(); sizePop = null;
   if (sizeBtn) { sizeBtn.setAttribute("aria-expanded", "false"); if (back) sizeBtn.focus(); }
 }
-document.addEventListener("keydown", function (e) { if (e.key !== "Escape") return; if (sizePop) closeSizePop(true); else if (lights && !document.getElementById("welcome")) closeLights(); });
+// Esc closes the Aa menu, Lights out, or an open sheet (sound settings, the Watch's Sound and screen, a glossary word)
+document.addEventListener("keydown", function (e) { if (e.key !== "Escape") return; if (sizePop) closeSizePop(true); else if (document.getElementById("welcome")) return; else if (lights) closeLights(); else if (sheet) closeSheet(); });
 // light or dark: "auto" follows the device; the phone's status bar takes the top bar's color in each color theme
 var THEME_BAR = { slate: { light: "#2b3541", dark: "#1f2832" }, linen: { light: "#3a2f27", dark: "#2b231d" }, moss: { light: "#2c382f", dark: "#1e2a20" } };
 function applyTheme(v) {
@@ -2464,7 +2487,9 @@ var WB = {
 };
 var WB_ORDER = ["vessel", "tzim", "box", "statue"];
 // mixes, shown as the Watch's front screen in this order; a tap starts one. Which pattern comes next is picked at
-// random, weighted toward the main ones. A mix's sets run each pattern's own default length (WB def), not Custom's;
+// random, weighted toward the main ones; a mix whose top pattern has more than half the weight (Settle, see wLed)
+// instead opens with that pattern and runs it in stretches of a few sets, so changing a mix's weights can change
+// which way it picks. A mix's sets run each pattern's own default length (WB def), not Custom's;
 // len: a set's length for this mix instead (minutes or rounds, by the pattern's unit); rest: the rest after each
 // set, in ms, instead of wRest's. drive: Drive's rules
 // (breath tones come on, no thunder, Lights out on start; see watchStart)
@@ -2490,16 +2515,38 @@ function wUses(set) { return set.mix ? WB_ORDER.filter(function (k) { return W_M
 /* the running Watch lives here, outside the page, so it keeps going while you read elsewhere in the app.
    The Watch page and the slim bar above the tabs are two views of it. Its clock is Date.now(), stopped
    while paused (or while a practice, a routine, or the timer is on screen) and picked up where it stopped. */
-var W = { running: false, set: null, segs: [], iv: null, raf: null, paused: false, held: false, frozenAt: 0, off: 0, last: null, bag: [], pi: 0,
+var W = { running: false, set: null, segs: [], iv: null, raf: null, paused: false, held: false, frozenAt: 0, off: 0, last: null, bag: [], pi: 0, run: null,
   master: null, gains: {}, layers: {}, chord: null, toneTo: 0, tones: [], view: null };
 function wNow() { return (W.frozenAt || Date.now()) - W.off; }
 // breathing (and its breath tones) waits while a practice's tool is running (apart from a quiet one, such as the switch countdown), or while a routine or the timer
 // is on screen, so two breath cues never sound at once; a practice page that is only being read leaves it breathing
 function wHeld() { return !!(active && !active.quiet) || /^#\/(r\/|timer)/.test(location.hash); }
 function wCycle(k) { var c = 0; WB[k].phases.forEach(function (p) { c += p.s * 1000; }); return c; }
+// the pattern that leads a mix: the one with more than half the weight (Settle's slow breathing), or none
+function wLed(list, w) {
+  var total = 0, top = null;
+  list.forEach(function (x) { total += w[x]; if (!top || w[x] > w[top]) top = x; });
+  return list.length > 1 && w[top] * 2 > total ? top : null;
+}
+// how many sets of the leading pattern before the next other one: about the average, give or take one (3 to 5 for Settle)
+function wStretch(avg) { return Math.max(1, Math.round(avg) - 1 + Math.floor(Math.random() * 3)); }
 function wPick() {
   var set = W.set, k, list = wUses(set);
-  if (set.mix) {
+  if (set.mix && wLed(list, W_MIXES[set.mix].w)) {
+    // a mix led by one pattern (Settle): it opens with that pattern and runs it in stretches of a few sets, then one
+    // of the others, so "now and then" holds; picking each set at random left long streaks and could open on a box.
+    // The stretches average the weights' share (8 to 2: 4 sets), so the mix keeps the same balance overall
+    var lw = W_MIXES[set.mix].w, lead = wLed(list, lw), rest = list.filter(function (x) { return x !== lead; }), others = 0;
+    rest.forEach(function (x) { others += lw[x]; });
+    if (W.run == null) W.run = wStretch(lw[lead] / others);
+    if (W.run > 0) { W.run--; k = lead; }
+    else {
+      var q = Math.random() * others;
+      for (var n = 0; n < rest.length; n++) { q -= lw[rest[n]]; if (q < 0) { k = rest[n]; break; } }
+      k = k || rest[0];
+      W.run = wStretch(lw[lead] / others);
+    }
+  } else if (set.mix) {
     var w = W_MIXES[set.mix].w, total = 0;
     for (var tries = 0; tries < 3; tries++) {
       total = 0; list.forEach(function (x) { total += w[x]; });
@@ -2654,6 +2701,7 @@ function mixSync() {
   [].forEach.call(document.querySelectorAll("[data-mixon]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-mixon") === String(mixOn))); });
   [].forEach.call(document.querySelectorAll("[data-mood]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-mood") === musicMood)); });
   [].forEach.call(document.querySelectorAll("[data-flutter]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-flutter") === String(musicFlutter))); });
+  [].forEach.call(document.querySelectorAll("[data-scene]"), function (b) { var k = b.getAttribute("data-scene"); b.setAttribute("aria-pressed", String(sceneIs(k === "mine" ? myScene() : SCENES[+k]))); });
 }
 function mixFlutter(on) {
   musicFlutter = on;
@@ -2689,6 +2737,12 @@ function mixScene(s, wake) {
   W_LAYERS.forEach(function (l) { if (!wCue(l[0])) wVol(l[0], Math.max(0, Math.min(1, +s.v[l[0]] || 0))); });
   if (wake && !mixOn) mixStart();
 }
+// whether the sound right now is this scene: its mood, and every layer at its level (a layer it leaves out at zero).
+// A scene button shows as picked while this holds, so moving a slider or the mood afterward lets it go
+function sceneIs(s) {
+  if (!s || s.mood !== musicMood) return false;
+  return W_LAYERS.every(function (l) { return wCue(l[0]) || Math.abs((mixVol[l[0]] || 0) - Math.max(0, Math.min(1, +s.v[l[0]] || 0))) < 0.001; });
+}
 function mixSaveScene() {
   var v = {};
   // during Drive, the levels from before it (Drive's changes don't belong in a scene)
@@ -2706,8 +2760,8 @@ function mixControls(id, wake, showTones) {
   function drawScenes() {
     scenes.innerHTML = "";
     var mine = myScene();
-    SCENES.concat(mine ? [{ name: "My scene", mood: mine.mood, v: mine.v }] : []).forEach(function (s) {
-      var b = h("button", { class: "opt", type: "button" }, [s.name]);
+    SCENES.concat(mine ? [{ name: "My scene", mood: mine.mood, v: mine.v }] : []).forEach(function (s, i) {
+      var b = h("button", { class: "opt", type: "button", "data-scene": i < SCENES.length ? String(i) : "mine", "aria-pressed": String(sceneIs(s)) }, [s.name]);
       b.addEventListener("click", function () { mixScene(s, wake()); said.textContent = ""; setTimeout(function () { said.textContent = s.name + " set."; }, 50); });
       scenes.appendChild(b);
     });
@@ -2864,7 +2918,7 @@ function wTick() {
 function wShow(fresh) { if (W.view) W.view.draw(fresh); else wMiniDraw(); }
 function watchStart() {
   try { ctx(); } catch (e) {}
-  lockPaused = false; W.running = true; W.paused = false; W.held = false; W.frozenAt = 0; W.off = 0; W.last = null; W.bag = []; W.pi = 0; W.toneTo = 0; W.tones = [];
+  lockPaused = false; W.running = true; W.paused = false; W.held = false; W.frozenAt = 0; W.off = 0; W.last = null; W.bag = []; W.pi = 0; W.run = null; W.toneTo = 0; W.tones = [];
   // Drive: followed by ear, so breath tones come on if they're off; thunder's sudden cracks
   // don't belong on the road, so its level moves to plain rain (its slider stays off while Drive runs, see mixSync)
   // what Drive changes is put back when the Watch stops (W.driveWas)
@@ -3112,7 +3166,7 @@ function watchView() {
   // the setup: patterns or a mix, the order, and how long each set runs
   function toggleRow(name, plain, on, badge, onTap) {
     var b = h("button", { class: "wpat", type: "button", "aria-pressed": String(on) }, [
-      h("span", { class: "ck", "aria-hidden": "true" }),
+      h("span", { class: "ck", "aria-hidden": "true" }, [icon("check")]),
       h("span", { class: "vname" }, [name, h("small", null, [plain])]),
       badge ? h("span", { class: "wnum", "aria-hidden": "true" }, [badge]) : null
     ]);
@@ -3331,8 +3385,7 @@ function showWelcome(full) {
       full ? h("ul", { class: "w-list" }, rows.map(function (r) {
         return h("li", null, [h("span", { class: "w-ic", html: r[0] }), h("span", null, [h("b", null, [r[1]]), h("span", null, [r[2]])])]);
       })) : null,
-      full ? h("p", { class: "w-note" }, ["Everything you save stays on this device. No account, nothing to sign up for."]) : null,
-      h("div", { class: "w-go" }, [begin])
+      h("div", { class: "w-go" }, [full ? h("p", { class: "w-note" }, ["Everything you save stays on this device. No account, nothing to sign up for."]) : null, begin])
     ])
   ]);
   begin.addEventListener("click", function () {
