@@ -45,7 +45,7 @@
   --on-slate: #eef2f6;
   --on-slate-muted: #b6c1cc;
   --slate-mark: #a3c0db;
-  --accent3: #7d5e12;      /* the third color: small markers only (practice number, Start here, pin, the Watch's label, current tab) */
+  --accent3: #7d5e12;      /* the third color: small markers only (practice number, Start here, pin, current tab, a pressed top-bar button) */
   --accent3-slate: #e3c27a; /* the same, on slate backgrounds */
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
   --display: var(--sans);
@@ -171,7 +171,7 @@ p { margin: 0; }
 
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 7;
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(3, 1fr);
   background: color-mix(in srgb, var(--paper) 94%, transparent);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   border-top: 1px solid var(--rule);
@@ -246,17 +246,6 @@ p { margin: 0; }
 .card { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s4); display: grid; gap: var(--s3); }
 .card h2 { font-size: var(--t-card); }
 
-/* the Watch, offered on the home page: the one slate card there */
-.wpromo { background: var(--slate); color: var(--on-slate); border: 0; padding: var(--s5); gap: var(--s4); }
-.wpromo-top { display: flex; align-items: center; gap: var(--s3); }
-.wpromo .emb.tile { width: 2.8rem; height: 2.8rem; background: transparent; color: var(--slate-mark); border-color: color-mix(in srgb, var(--on-slate-muted) 45%, transparent); }
-.wpromo .emb.tile svg { width: 1.5rem; height: 1.5rem; }
-.wpromo .label { color: var(--accent3-slate); }
-.wpromo h2 { font-size: var(--t-head); }
-.wpromo p { color: color-mix(in srgb, var(--on-slate) 82%, var(--slate)); }
-.wpromo .go { background: var(--slate-mark); color: var(--slate); border-color: var(--slate-mark); }
-.wpromo .opt { background: transparent; color: var(--on-slate); border-color: color-mix(in srgb, var(--on-slate-muted) 45%, transparent); }
-
 /* a line for today (not on Home since v30; kept for possible Watch prompts) */
 .linecard { gap: var(--s3); }
 .linecard .quote { margin: 0; border: 0; padding: 0; font-style: italic; font-size: var(--t-card); line-height: 1.45; }
@@ -265,8 +254,19 @@ p { margin: 0; }
 .minis .gtile { background: transparent; }
 .minis .emb svg { width: 1.35rem; height: 1.35rem; }
 
-/* how are you: eight even tiles */
+/* when something snags: eight even tiles, four across once the main column has room for them beside the side
+   pane (about 600 px of column from 64rem wide; between 52.5 and 64rem the pane leaves too little). Four across,
+   the tiles' side padding is a little less, so the longest name (Rumination) fits. The Large text size (set on
+   <html>, which a media query's rem doesn't follow) needs a wider window for the same room: 64rem x 1.148 */
 .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
+@media (min-width: 64rem) and (min-height: 30rem) {
+  .tiles.snags { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .tiles.snags .gtile { padding-left: var(--s3); padding-right: var(--s2); }
+}
+@media (max-width: 73.49rem) {
+  html[data-size="l"] .tiles.snags { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-size="l"] .tiles.snags .gtile { padding-left: var(--s4); padding-right: var(--s3); }
+}
 .gtile {
   display: grid; grid-template-columns: 1.5rem minmax(0, 1fr); column-gap: var(--s2); align-items: center; align-content: start;
   padding: var(--s3) var(--s3) var(--s3) var(--s4); min-height: 72px;
@@ -516,6 +516,9 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 .gw { display: inline; background: none; border: 0; margin: -10px -2px; padding: 10px 2px; font: inherit; color: inherit; text-align: inherit; cursor: pointer;
   text-decoration: underline dotted; text-decoration-color: var(--muted); text-decoration-thickness: 1px; text-underline-offset: 0.22em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 @media (hover: hover) and (pointer: fine) { .gw:hover { text-decoration-color: var(--steel); } }
+/* a control's name that opens its glossary entry (glossName): a full 44px tap height around the small label, without
+   moving anything (the negative margin), over the empty top edge of the slider below it */
+.label > a.gw { position: relative; z-index: 1; display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 var(--s2); margin: calc((var(--tap) - 1.4em) / -2) calc(var(--s2) * -1); }
 .glossdef { display: grid; gap: var(--s3); }
 .glossdef .uses { font-size: var(--t-small); color: var(--muted); }
 .gloss .letter { font-family: var(--display); font-size: var(--t-head); font-weight: 600; color: var(--steel); padding: var(--s3) 0 var(--s1); border-bottom: 1px solid var(--rule); margin-top: var(--s2); }
@@ -534,27 +537,32 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 
 /* ---------- welcome (first open) ---------- */
 html.locked, html.locked body { overflow: hidden; }
-.welcome { position: fixed; inset: 0; z-index: 33; background: var(--slate); color: var(--on-slate); overflow-y: auto; display: grid; place-items: center;
+/* it follows the color theme (the page's own paper and ink), light or dark */
+.welcome { position: fixed; inset: 0; z-index: 33; background: var(--paper); color: var(--ink); overflow-y: auto; display: grid; place-items: center;
   padding: calc(env(safe-area-inset-top, 0px) + var(--s6)) max(var(--s4), env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + var(--s6)) max(var(--s4), env(safe-area-inset-left, 0px)); }
+/* the installed iPhone app draws its clock and battery in white (black-translucent, in the head): under them, a strip
+   in the top bar's dark color, so they stay readable on light paper. No strip where there's no status bar inset */
+.welcome::before { content: ""; position: fixed; top: 0; left: 0; right: 0; z-index: 1; height: env(safe-area-inset-top, 0px); background: var(--slate); }
 .w-in { width: 100%; max-width: 25rem; display: grid; gap: var(--s5); justify-items: center; text-align: center; }
-.w-mark { width: 4rem; height: 4rem; color: var(--slate-mark); }
+.w-mark { width: 4rem; height: 4rem; color: var(--steel); }
 .w-mark svg { width: 100%; height: 100%; }
 .welcome h1 { font-size: var(--t-title); }
-.w-lede { color: var(--on-slate-muted); font-size: var(--t-body); max-width: 22rem; }
-.w-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s4); text-align: left; width: 100%; }
-.w-list li { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: var(--s3); align-items: start; }
-.w-ic { width: 2.6rem; height: 2.6rem; border-radius: 50%; display: grid; place-items: center; color: var(--slate-mark); border: 1px solid color-mix(in srgb, var(--on-slate-muted) 40%, transparent); }
-.w-ic svg { width: 1.3rem; height: 1.3rem; }
-.w-list b { display: block; font-family: var(--display); font-weight: 600; font-size: var(--t-body); color: var(--on-slate); }
-.w-list li > span:last-child > span { color: var(--on-slate-muted); font-size: var(--t-small); line-height: 1.4; }
-.w-note { color: var(--on-slate-muted); font-size: var(--t-small); font-style: italic; }
-.welcome .go { background: var(--slate-mark); color: var(--slate); border-color: var(--slate-mark); min-width: 12rem; }
+.w-lede { color: var(--muted); font-size: var(--t-body); max-width: 22rem; }
+.w-list { list-style: none; margin: 0; padding: var(--s4); display: grid; gap: var(--s4); text-align: left; width: 100%;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); }
+.w-list li { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); gap: var(--s3); align-items: start; }
+.w-ic { width: 1.75rem; height: 1.75rem; display: grid; place-items: center; color: var(--steel); }
+.w-ic svg { width: 1.4rem; height: 1.4rem; }
+.w-list b { display: block; font-family: var(--display); font-weight: 600; font-size: var(--t-body); color: var(--ink); }
+.w-list li > span:last-child > span { color: var(--muted); font-size: var(--t-small); line-height: 1.4; }
+.w-note { color: var(--muted); font-size: var(--t-small); font-style: italic; }
+.welcome .go { min-width: 12rem; }
 /* Begin stays in view at the bottom on short screens, with the tour scrolling under it; the "stays on this device"
    line rides with it, on solid color, so the fade never covers it. Its color reaches down over the welcome's own
    bottom padding (the negative bottom and margin), so no text shows through below Begin */
 .w-go { position: sticky; bottom: calc(-1 * (env(safe-area-inset-bottom, 0px) + var(--s6))); margin-bottom: calc(-1 * (env(safe-area-inset-bottom, 0px) + var(--s6)));
   width: 100%; display: grid; justify-items: center; gap: var(--s3); padding: var(--s5) 0 calc(2 * env(safe-area-inset-bottom, 0px) + var(--s3) + var(--s6));
-  background: linear-gradient(to top, var(--slate) calc(100% - var(--s5)), transparent); }
+  background: linear-gradient(to top, var(--paper) calc(100% - var(--s5)), transparent); }
 
 /* ---------- the day's question (not on Home since v30) and the Watch ---------- */
 .foldbody .subhead { margin-top: var(--s2); }
@@ -695,13 +703,16 @@ body.wmini-on .app { padding-bottom: calc(var(--tabs-h) + env(safe-area-inset-bo
   /* the top bar keeps its pane-width margin here too, so the speaker and Aa sit in the same place on every page */
   body.on-watch .app { padding-right: max(var(--s4), env(safe-area-inset-right, 0px)); }
   .wgrid { grid-template-columns: minmax(0, 1fr) var(--pane); gap: var(--s5); align-items: start; }
-  /* scrolls on its own while it stays beside the Watch; at its end, scrolling goes on to the page (so the Watch's
-     own text below is never out of reach) */
-  .wside { display: grid; gap: var(--s3); position: sticky; top: calc(52px + env(safe-area-inset-top, 0px) + var(--s4)); max-height: calc(100vh - 52px - env(safe-area-inset-top, 0px) - 2 * var(--s4)); overflow-y: auto; }
-  /* the Dim slider's dark layer leaves this copy of Sound and screen alone, as it does the sheet; while the Aa menu
-     is open, the top bar comes up over both, so the menu is never hidden behind this copy */
+  /* beside the Watch, it scrolls with the page: no scroll of its own, and it doesn't stay put. It stays positioned
+     (relative), so the Dim layer's z-index rule below still applies to it */
+  .wside { display: grid; gap: var(--s3); position: relative; }
+  /* the Dim slider's dark layer leaves this copy of Sound and screen alone, as it does the sheet; the top bar comes
+     up over both, so this copy never scrolls over the bar and the Aa menu is never hidden behind it. Above the dark
+     layer, the bar dims itself by the same amount (as wDim sets the layer: --wdim × 0.85), except while Aa is open */
   body.wdim-on .wside { z-index: 14; }
-  body.wdim-on .top:has(.sizepop) { z-index: 15; }
+  body.wdim-on .top { z-index: 15; }
+  body.wdim-on .top::after { content: ""; position: absolute; inset: 0; background: #000; opacity: calc(var(--wdim) * 0.85); pointer-events: none; }
+  body.wdim-on .top:has(.sizepop)::after { display: none; }
   .wsound-b { display: none; }
 }
 /* the pane's cards: the Watch (to start it, or running), and the page's own card below */
@@ -2151,7 +2162,6 @@ function stoneMark() {
   v.appendChild(g); return v;
 }
 var TAB_ICONS = {
-  home: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="6" y="8" width="12" height="12"/><path d="M6 8 L12 4.5 L18 8"/></svg>',
   read: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 6.5 C9.5 5 6.5 4.6 3.5 5 V18.5 C6.5 18.1 9.5 18.5 12 20 C14.5 18.5 17.5 18.1 20.5 18.5 V5 C17.5 4.6 14.5 5 12 6.5 Z"/><path d="M12 6.5 V20"/></svg>',
   watch: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.2 20.5 12 12 20.8 3.5 12Z"/><circle cx="12" cy="12" r="2.4"/></svg>',
   practices: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 6.5 H20"/><path d="M9 12 H20"/><path d="M9 17.5 H20"/><circle cx="4.8" cy="6.5" r="1" fill="currentColor" stroke="none"/><circle cx="4.8" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4.8" cy="17.5" r="1" fill="currentColor" stroke="none"/></svg>'
@@ -2237,7 +2247,7 @@ function stackTables(root) {
 var lastTab = null;
 function tabs(current) {
   tabsEl.innerHTML = "";
-  [["home", "#/", "Home"], ["watch", "#/watch", "Watch"], ["practices", "#/practices", "Practices"], ["read", "#/read", "Read"]].forEach(function (t) {
+  [["watch", "#/watch", "Watch"], ["practices", "#/practices", "Practices"], ["read", "#/read", "Read"]].forEach(function (t) {
     var a = h("a", { href: t[1], html: TAB_ICONS[t[0]] + "<span>" + t[2] + "</span>" });
     if (t[0] === current) { a.setAttribute("aria-current", "page"); if (lastTab !== current && lastTab !== null) a.classList.add("fresh"); }
     tabsEl.appendChild(a);
@@ -2253,7 +2263,7 @@ function topbar(opts) {
     row.appendChild(h("button", { class: "tb backlink", type: "button", onclick: function () { location.hash = opts.back[1]; } }, [icon("back"), opts.back[0]]));
     row.appendChild(h("div", { class: "spacer" }));
   } else {
-    row.appendChild(h("a", { class: "brand", href: "#/" }, [stoneMark(), h("span", null, ["Trestleboard"])]));
+    row.appendChild(h("a", { class: "brand", href: "#/watch" }, [stoneMark(), h("span", null, ["Trestleboard"])]));
     row.appendChild(h("div", { class: "spacer" }));
   }
   if (opts.pin) row.appendChild(pinButton(opts.pin));
@@ -2354,49 +2364,10 @@ function pick(id, noPin) {
   ]);
 }
 
-/* ---------- Practices: home ---------- */
-function greeting() {
-  var hr = new Date().getHours();
-  return hr < 5 ? "Still up" : hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening";
-}
-function homeView() {
-  topbar({ sound: true }); tabs("home");
-
-  // 1. a quiet hello
-  var today = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
-  app.appendChild(h("header", { class: "hello" }, [h("h1", null, [greeting()]), h("p", null, [today]),
-    h("p", null, ["Something steady to leave running, and old tools for when the day snags."])]));
-
-  // 2. for ordinary hours: the Watch
-  app.appendChild(h("section", { class: "card wpromo", "aria-labelledby": "wpromo-h" }, [
-    h("div", { class: "wpromo-top" }, [emblem("watch", "tile"), h("div", null, [
-      h("span", { class: "label" }, ["For steady moments"]),
-      h("h2", { id: "wpromo-h" }, ["The Watch"])
-    ])]),
-    h("p", null, ["Leave it open in the background, the way you might leave a video playing. It breathes with you, one pattern at a time with short rests between, over soft music or rain, and shows where each pattern’s image comes from."]),
-    h("div", { class: "btnrow" }, [h("a", { class: "go", href: "#/watch" }, ["Open the Watch"])])
-  ]));
-
-  // 3. for a hard moment: eight common snags
-  var tiles = h("div", { class: "tiles" });
-  BOOK.sections.forEach(function (g) {
-    tiles.appendChild(h("a", { class: "gtile", href: "#/g/" + g.key }, [groupIcon(g), h("span", { class: "tname" }, [g.name]), h("span", { class: "thint" }, [g.hint])]));
-  });
-  app.appendChild(h("section", { class: "group checkin-wrap" }, [
-    h("h2", null, ["When something snags"]),
-    h("p", { class: "gdesc" }, ["Eight common snags, three practices each. Tap the one that sounds closest to now."]),
-    tiles
-  ]));
-
-  app.appendChild(h("footer", { class: "ending" }, [
-    h("span", { class: "ico", html: BOOK.final.svg }), h("h2", null, [BOOK.final.title]), h("p", { html: BOOK.final.text })
-  ]));
-}
-
 /* ---------- Practices: one group ---------- */
 function groupView(key) {
   var g = GROUP_BY_KEY[key];
-  topbar({ back: ["Home", "#/"], sound: true }); tabs("practices");
+  topbar({ back: ["Practices", "#/practices"], sound: true }); tabs("practices");
   app.appendChild(h("header", { class: "g-head" }, [groupIcon(g), h("h1", null, [g.name]), h("p", null, [g.desc])]));
   app.appendChild(h("div", { class: "rows" }, g.ids.map(function (id) { return pick(id); })));
   var others = h("div", { class: "row left" });
@@ -2406,27 +2377,24 @@ function groupView(key) {
   app.appendChild(h("section", { class: "group" }, [h("span", { class: "label" }, ["Not quite it?"]), others]));
 }
 
-/* ---------- Practices tab: where to start, all 24, routines ---------- */
+/* ---------- Practices tab: the eight snags (each opens its group page), pinned, routines, and the closing ---------- */
 function practicesView() {
   topbar({ sound: true }); tabs("practices");
   app.appendChild(h("header", { class: "hello" }, [h("h1", null, ["Practices"]), h("p", null, ["Twenty-four practices built on images from Western esoteric traditions, in eight groups, plus routines and a quiet timer."])]));
 
-  // where to start
+  // eight common snags: two across on phones, four on wide windows
+  var tiles = h("div", { class: "tiles snags" });
+  BOOK.sections.forEach(function (g) {
+    tiles.appendChild(h("a", { class: "gtile", href: "#/g/" + g.key }, [groupIcon(g), h("span", { class: "tname" }, [g.name]), h("span", { class: "thint" }, [g.hint])]));
+  });
   app.appendChild(h("section", { class: "group" }, [
-    h("h2", null, ["Where to start"]),
-    h("p", { class: "gdesc" }, ["Something in the way? Find it below and begin with the one marked Start here."])
+    h("h2", null, ["When something snags"]),
+    h("p", { class: "gdesc" }, ["Eight common snags, three practices each. Tap the one that sounds closest to now."]),
+    tiles
   ]));
 
   var f = favs();
   if (f.length) app.appendChild(h("section", { class: "group" }, [h("h2", null, ["Pinned"]), h("div", { class: "rows" }, f.map(function (id) { return pick(id, true); }))]));
-
-  BOOK.sections.forEach(function (g) {
-    var sec = h("section", { class: "group", id: "g-" + g.key }, [h("h2", null, [groupIcon(g), g.name]), h("p", { class: "gdesc" }, [g.desc])]);
-    g.ids.forEach(function (id) { sec.appendChild(pick(id)); });
-    app.appendChild(sec);
-  });
-
-
 
   // routines + quiet timer, as four small tiles
   var RICON = { morning: "sun", reset: "noon", evening: "moon" };
@@ -2437,6 +2405,11 @@ function practicesView() {
   });
   rs.appendChild(h("a", { class: "gtile", href: "#/timer" }, [emblem("bell"), h("span", { class: "tname" }, ["Quiet Timer"]), h("span", { class: "thint" }, ["Bells only · for prayer, reading, or sitting still"])]));
   app.appendChild(h("section", { class: "group" }, [h("h2", null, ["Routines and timer"]), h("p", { class: "gdesc" }, ["A few practices back to back, or a quiet timer with bells."]), rs]));
+
+  // the closing: The Perfect Ashlar
+  app.appendChild(h("footer", { class: "ending" }, [
+    h("span", { class: "ico", html: BOOK.final.svg }), h("h2", null, [BOOK.final.title]), h("p", { html: BOOK.final.text })
+  ]));
 }
 
 /* ---------- the day's question (not on Home since v30), and what the evening review shows ---------- */
@@ -2686,9 +2659,13 @@ function mixStop(sec) {
 }
 // a volume slider for one layer; every slider for that layer, here or in the top bar, moves together.
 // wake: whether moving it up turns the sound on (always for the top bar's sliders; the Watch's only once it runs)
+// sound layers with a glossary entry: the slider's name opens it (found by the entry's term, since entry numbers shift)
+var MIX_GLOSS = { drone: "Drone", pulse: "40 Hz pulse" };
 function mixSlider(kind, name, id, wake) {
-  var el = slider(name, id, mixVol[kind], function (v) { if (wake && wake() && v > 0 && !mixOn) mixStart(); wVol(kind, v); });
+  var el = slider(MIX_GLOSS[kind] ? glossName(MIX_GLOSS[kind], name) : name, id, mixVol[kind], function (v) { if (wake && wake() && v > 0 && !mixOn) mixStart(); wVol(kind, v); });
   el.querySelector("input").setAttribute("data-mix", kind);
+  // with a link in its label, the slider keeps its plain name for VoiceOver ("Drone", not "Drone, see the definition")
+  if (MIX_GLOSS[kind]) el.querySelector("input").setAttribute("aria-label", name);
   return el;
 }
 function mixSync() {
@@ -2782,7 +2759,7 @@ function mixControls(id, wake, showTones) {
   }));
   function sliders(g) { return W_LAYERS.filter(function (l) { return l[2] === g && (!wCue(l[0]) || showTones); }).map(function (l) { return mixSlider(l[0], l[1], id + l[0], wake); }); }
   // the music's flutter, on or off, below the sliders
-  var flutter = h("div", { class: "pgroup", role: "group", "aria-label": "Music flutter" }, [h("span", { class: "label", "aria-hidden": "true" }, ["Music flutter"]),
+  var flutter = h("div", { class: "pgroup", role: "group", "aria-label": "Music flutter" }, [h("span", { class: "label" }, [glossName("Music flutter", "Music flutter")]),
     h("div", { class: "row left" }, [[false, "Off"], [true, "On"]].map(function (o) {
       var b = h("button", { class: "opt", type: "button", "data-flutter": String(o[0]), "aria-pressed": String(musicFlutter === o[0]) }, [o[1]]);
       b.addEventListener("click", function () { mixFlutter(o[0]); });
@@ -3372,7 +3349,6 @@ function watchView() {
 function showWelcome(full) {
   if (document.getElementById("welcome")) return;
   var rows = [
-    [TAB_ICONS.home, "Home", "The Watch, and eight common snags with practices for each."],
     ['<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + EMB.watch + "</svg>", "The Watch", "For ordinary hours. Leave it running in the background: slow breathing with soft sound, and a little about the old image behind each pattern."],
     [TAB_ICONS.practices, "Practices", "All 24, with a place to start in each group, plus routines and a quiet timer."],
     [TAB_ICONS.read, "Read", "A field guide to the traditions the practices take their images from."]
@@ -3567,6 +3543,27 @@ function glossButton(i, word) {
   if (!paneOn()) b.setAttribute("aria-haspopup", "dialog");
   return b;
 }
+// a control's name that opens a glossary entry, found by its term (a link, so it can sit inside a slider's label);
+// the sound sheet it sits in closes first, as tapping a glossary word does
+function glossName(term, word) {
+  var i = -1;
+  BOOK.glossary.some(function (g, k) { if (g.term === term) { i = k; return true; } return false; });
+  if (i < 0) return word;
+  var a = h("a", { class: "gw", href: "#/read/glossary", "aria-label": word + ", see the definition",
+    onclick: function (e) {
+      e.preventDefault(); e.stopPropagation(); if (sheet) closeSheet();
+      // already on the glossary: go to the entry itself, centered and marked as a glossary word's "Open in glossary" does
+      if (location.hash === "#/read/glossary") {
+        var el = document.getElementById("gl-" + i), old = document.querySelector(".gloss p.hit");
+        if (el) { if (old) old.classList.remove("hit"); el.scrollIntoView({ block: "center" }); el.classList.add("hit"); }
+        return;
+      }
+      openGloss(i);
+    } }, [word]);
+  // as with glossary words: on narrow windows the definition opens in a sheet (the wideMQ handler keeps this current)
+  if (!paneOn()) a.setAttribute("aria-haspopup", "dialog");
+  return a;
+}
 var glossTitle = "";
 function glossify(roots, title) {
   var used = {};
@@ -3675,7 +3672,7 @@ function glossaryBody() {
   var wrap = h("div", { class: "prose" });
   if (glossFrom) {
     var from = glossFrom;
-    wrap.appendChild(h("button", { class: "opt glossback", type: "button", onclick: function () { location.hash = from.hash; } }, [icon("back"), "Back to " + from.title]));
+    wrap.appendChild(h("button", { class: "opt glossback", type: "button", onclick: function () { location.hash = from.hash; } }, [icon("back"), from.title ? "Back to " + from.title : "Back"]));
   }
   var q = h("input", { class: "search", type: "search", placeholder: "Find a word", "aria-label": "Find a word", autocomplete: "off" });
   var list = h("div", { class: "gloss" });
@@ -3790,7 +3787,7 @@ function methodText(id) { var d = document.createElement("div"); d.innerHTML = B
 /* ---------- router ---------- */
 function render() {
   stopActive(); watchDetach(); closeLights(); closeSheet(); closeSizePop(); onDone = null;
-  savePos(); curRead = null;
+  savePos(); curRead = null; glossTitle = "";   // pages that underline glossary words set it again (glossify)
   document.documentElement.setAttribute("data-size", store.get("size", "m")); applyFont(store.get("font", "device")); applyPalette(store.get("palette", "slate"));
   app.innerHTML = ""; topEl.innerHTML = ""; document.title = "Trestleboard";
   var hsh = location.hash.replace(/^#\/?/, ""), m;
@@ -3803,7 +3800,9 @@ function render() {
   else if (hsh === "watch") watchView();
   else if (hsh === "read") readHome();
   else if ((m = /^read\/([\w-]+)$/.exec(hsh)) && READ_BY[m[1]]) readerView(m[1]);
-  else homeView();
+  // the front page (#/, an empty or unknown address) is the Watch: the address becomes #/watch, so everything
+  // that checks for the Watch page sees it
+  else { history.replaceState(null, "", "#/watch"); document.body.classList.add("on-watch"); watchView(); }
   wMiniDraw(false); sideTocDraw();
   window.scrollTo(0, 0); placePage(); onScroll();
 }
