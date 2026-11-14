@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-palette="linen">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Trestleboard</title>
 <meta name="description" content="Twenty-four practices built on images from Western esoteric traditions, a breathing companion to leave running, and a field guide to those traditions.">
-<meta name="theme-color" content="#2b3541" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1f2832" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#3a2f27" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#2b231d" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,10 +20,14 @@
    Text sizes: six steps (--t-*). Spacing: 4 / 8 / 12 / 16 / 24 / 32.
    Fonts: the device's own sans-serif by default (San Francisco on iPhone
    and Mac, Segoe UI on Windows). The Aa menu can switch to Atkinson
-   Hyperlegible Next or Hanken Grotesk (each for the whole app); both
+   Hyperlegible Next or Hanken Grotesk (each for everything but titles); both
    are in fonts/, trimmed to the characters the app uses, so they work offline.
-   Colors: Slate is the default; Linen and Moss are below, each in light and dark,
-   and each theme has a third color (--accent3) kept to a few small markers.
+   Titles and section heads use Cormorant Garamond (--serif), at 22 px and up (at the default text size),
+   in three sizes of their own (--d-*); it's in fonts/ too, trimmed the same way.
+   Colors: Linen is the default (Slate has no attribute, so it's the block below
+   :root; Linen and Moss follow it), each in light and dark. Slate and Moss have a
+   third color (--accent3) kept to a few small markers; in Linen those markers
+   take the main accent (--steel), so Linen has one accent.
    Every text color is checked against its background two ways: the usual
    contrast ratio (7:1 for main text, 4.5:1 for small and accent text) and
    APCA, which judges dark backgrounds more strictly (Lc 90 and 60).
@@ -32,6 +36,8 @@
 @font-face { font-family: "Atkinson Hyperlegible Next"; src: url("fonts/atkinson-hyperlegible-next-italic.woff2") format("woff2"); font-weight: 300 700; font-style: italic; font-display: swap; }
 @font-face { font-family: "Hanken Grotesk"; src: url("fonts/hanken-grotesk.woff2") format("woff2"); font-weight: 300 700; font-style: normal; font-display: swap; }
 @font-face { font-family: "Hanken Grotesk"; src: url("fonts/hanken-grotesk-italic.woff2") format("woff2"); font-weight: 300 700; font-style: italic; font-display: swap; }
+@font-face { font-family: "Cormorant Garamond"; src: url("fonts/cormorant-garamond-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Cormorant Garamond"; src: url("fonts/cormorant-garamond-500-italic.woff2") format("woff2"); font-weight: 500; font-style: italic; font-display: swap; }
 :root {
   --paper: #e7ebef;
   --surface: #f4f6f8;
@@ -50,6 +56,7 @@
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
   --display: var(--sans);
   --body: var(--sans);
+  --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;   /* titles and section heads only, 22 px and up at the default text size */
   --read: var(--body);    /* long reading text: book pages, practice wording, glossary */
 
   /* six text sizes */
@@ -59,6 +66,10 @@
   --t-body: 1.0625rem;    /* 17: reading text */
   --t-small: 0.9375rem;   /* 15: hints, second lines */
   --t-tiny: 0.8125rem;    /* 13: small labels */
+  /* three sizes for Cormorant, which reads small for its size, so each sits a step above the sans it stands in for */
+  --d-title: 2.625rem;    /* 42: page titles */
+  --d-head: 1.625rem;     /* 26: section heads */
+  --d-small: 1.375rem;    /* 22: the wordmark, mix names, the "Picture it" line (the floor) */
 
   /* spacing */
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
@@ -87,13 +98,13 @@
 }
 /* the other color themes from the Aa menu (saved as palette). Each sets every color, light and dark;
    dark follows the device unless Light or Dark is picked, the same as Slate */
-:root[data-palette="linen"] { --paper: #f2ebe0; --surface: #faf6ef; --ink: #2a221b; --muted: #5e5246; --rule: #dacfbf; --steel: #8a4724; --steel-soft: #efdccb; --on-steel: #ffffff; --slate: #3a2f27; --on-slate: #f3ebe1; --on-slate-muted: #cdbfae; --slate-mark: #e3b384; --accent3: #2c625b; --accent3-slate: #9fd0c6; }
-@media (prefers-color-scheme: dark) { :root[data-palette="linen"]:not([data-theme="light"]) { --paper: #1a1511; --surface: #231d18; --ink: #efe7dc; --muted: #c2b6a8; --rule: #3b3229; --steel: #e8b183; --steel-soft: #35281e; --on-steel: #1a1511; --slate: #2b231d; --on-slate: #f3ebe1; --on-slate-muted: #cdbfae; --slate-mark: #e3b384; --accent3: #8fc6bd; --accent3-slate: #8fc6bd; } }
-:root[data-palette="linen"][data-theme="dark"] { --paper: #1a1511; --surface: #231d18; --ink: #efe7dc; --muted: #c2b6a8; --rule: #3b3229; --steel: #e8b183; --steel-soft: #35281e; --on-steel: #1a1511; --slate: #2b231d; --on-slate: #f3ebe1; --on-slate-muted: #cdbfae; --slate-mark: #e3b384; --accent3: #8fc6bd; --accent3-slate: #8fc6bd; }
+:root[data-palette="linen"] { --paper: #f2ebe0; --surface: #faf6ef; --ink: #2a221b; --muted: #5e5246; --rule: #dacfbf; --steel: #8a4724; --steel-soft: #efdccb; --on-steel: #ffffff; --slate: #3a2f27; --on-slate: #f3ebe1; --on-slate-muted: #cdbfae; --slate-mark: #e3b384; --accent3: #8a4724; --accent3-slate: #e3b384; }
+@media (prefers-color-scheme: dark) { :root[data-palette="linen"]:not([data-theme="light"]) { --paper: #1a1511; --surface: #231d18; --ink: #efe7dc; --muted: #c2b6a8; --rule: #3b3229; --steel: #e8b183; --steel-soft: #35281e; --on-steel: #1a1511; --slate: #2b231d; --on-slate: #f3ebe1; --on-slate-muted: #cdbfae; --slate-mark: #e3b384; --accent3: #e8b183; --accent3-slate: #e3b384; } }
+:root[data-palette="linen"][data-theme="dark"] { --paper: #1a1511; --surface: #231d18; --ink: #efe7dc; --muted: #c2b6a8; --rule: #3b3229; --steel: #e8b183; --steel-soft: #35281e; --on-steel: #1a1511; --slate: #2b231d; --on-slate: #f3ebe1; --on-slate-muted: #cdbfae; --slate-mark: #e3b384; --accent3: #e8b183; --accent3-slate: #e3b384; }
 :root[data-palette="moss"] { --paper: #e8ebe4; --surface: #f4f6f1; --ink: #1c231c; --muted: #525d4d; --rule: #c6cebf; --steel: #3c6646; --steel-soft: #d8e4d6; --on-steel: #ffffff; --slate: #2c382f; --on-slate: #eef3ec; --on-slate-muted: #b9c4b4; --slate-mark: #a8cca3; --accent3: #94472c; --accent3-slate: #ecb096; }
 @media (prefers-color-scheme: dark) { :root[data-palette="moss"]:not([data-theme="light"]) { --paper: #121712; --surface: #192019; --ink: #e3eae0; --muted: #afbbab; --rule: #2a352a; --steel: #9cc79e; --steel-soft: #1c2b1e; --on-steel: #121712; --slate: #1e2a20; --on-slate: #e9efe7; --on-slate-muted: #b9c4b4; --slate-mark: #a8cca3; --accent3: #edad90; --accent3-slate: #edad90; } }
 :root[data-palette="moss"][data-theme="dark"] { --paper: #121712; --surface: #192019; --ink: #e3eae0; --muted: #afbbab; --rule: #2a352a; --steel: #9cc79e; --steel-soft: #1c2b1e; --on-steel: #121712; --slate: #1e2a20; --on-slate: #e9efe7; --on-slate-muted: #b9c4b4; --slate-mark: #a8cca3; --accent3: #edad90; --accent3-slate: #edad90; }
-/* fonts from the Aa menu (saved as font): Atkinson or Hanken Grotesk, each for the whole app */
+/* fonts from the Aa menu (saved as font): Atkinson or Hanken Grotesk, each for everything but titles and section heads */
 html[data-font="atkinson"] { --sans: "Atkinson Hyperlegible Next", -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, Arial, sans-serif; }
 html[data-font="hanken"] { --sans: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, Arial, sans-serif; }
 .prose, .mtext, .fields dd, .glossdef { font-family: var(--read); }
@@ -121,6 +132,13 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.25; m
 h1 { font-size: var(--t-title); font-weight: 700; letter-spacing: -0.02em; }
 h2 { font-size: var(--t-head); }
 h3 { font-size: var(--t-card); }
+/* Cormorant Garamond for titles and section heads. It has one upright weight (600) and one italic (500), so nothing
+   may ask the browser to fake a bolder or slanted copy */
+h1, .group > h2, .toc-group > h2, .ending h2, .mhead h2, .fields > div:not(.img) > dt, .subhead, .prose h2, .sheet-head h2, .wside-h, .top .brand span, .wpat .mname {
+  font-family: var(--serif); font-weight: 600; font-synthesis: none; letter-spacing: 0;
+}
+h1 { font-size: var(--d-title); line-height: 1.08; letter-spacing: -0.01em; }
+.group > h2, .toc-group > h2, .ending h2, .mhead h2, .fields > div:not(.img) > dt, .subhead, .sheet-head h2, .wside-h { font-size: var(--d-head); line-height: 1.15; }
 p { margin: 0; }
 .label { font-family: var(--body); font-size: var(--t-tiny); font-weight: 600; color: var(--muted); }
 .ev { font-family: var(--body); font-size: var(--t-tiny); font-weight: 600; color: var(--steel); white-space: nowrap; }
@@ -138,7 +156,7 @@ p { margin: 0; }
 .top-in { max-width: 40rem; margin: 0 auto; display: flex; align-items: center; gap: var(--s1); min-height: 52px; }
 .top .brand { display: flex; align-items: center; gap: var(--s2); color: var(--on-slate); text-decoration: none; min-width: 0; min-height: var(--tap); padding: 0 var(--s1); }
 .top .brand svg { width: 1.4rem; height: 1.4rem; color: var(--slate-mark); flex: none; }
-.top .brand span { font-family: var(--display); font-size: var(--t-body); font-weight: 600; }
+.top .brand span { font-size: var(--d-small); line-height: 1; }
 .top .spacer { flex: 1; }
 .tb {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--s1);
@@ -191,7 +209,7 @@ p { margin: 0; }
 .group > h2 .gicon { width: 1.5rem; height: 1.5rem; }
 .group > .gdesc { margin-top: calc(var(--s1) * -1); margin-bottom: var(--s1); }
 .group > .label { margin-bottom: calc(var(--s1) * -1); }
-.hello h1 { font-size: var(--t-title); }
+
 .hello p { color: var(--muted); font-size: var(--t-small); margin-top: var(--s1); }
 
 /* ---------- buttons: one filled main button, everything else outlined ---------- */
@@ -229,6 +247,17 @@ p { margin: 0; }
 .pick .pin { width: 0.95rem; height: 0.95rem; color: var(--accent3); }
 .pick .tag { display: block; margin-bottom: 2px; font-size: var(--t-tiny); font-weight: 600; color: var(--accent3); }
 .links, .rows { display: grid; gap: var(--s2); }
+/* joined rows (a group's practices, Pinned, Routines and timer): one card, the rows divided by a hairline. Pressing a
+   row darkens it in place instead of shrinking it, since it's part of one surface */
+.joined { gap: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); overflow: hidden; }
+.joined > .pick, .joined > .jrow { border: 0; border-radius: 0; background: transparent; }
+.joined > * + * { border-top: 1px solid var(--rule) !important; }
+.joined > .pick:active, .joined > .jrow:active { transform: none; background: color-mix(in srgb, var(--steel-soft) 15%, var(--surface)); box-shadow: inset 3px 0 0 var(--steel); }
+.joined > :focus-visible { outline-offset: -3px; }
+.jrow { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--s3); min-height: 60px; padding: var(--s2) var(--s4); color: var(--ink); text-decoration: none; }
+.jrow .emb, .jrow .emb svg { width: 1.4rem; height: 1.4rem; color: var(--steel); }
+.jrow .t1 { display: block; font-weight: 600; }
+.jrow small { display: block; font-size: var(--t-small); color: var(--muted); }
 
 /* fold-outs styled as rows */
 .more { display: grid; }
@@ -251,8 +280,6 @@ p { margin: 0; }
 .linecard .quote { margin: 0; border: 0; padding: 0; font-style: italic; font-size: var(--t-card); line-height: 1.45; }
 .linecard cite { font-style: normal; font-size: var(--t-tiny); color: var(--muted); margin-top: calc(var(--s2) * -1); }
 .linecard .linkrow { background: var(--paper); }
-.minis .gtile { background: transparent; }
-.minis .emb svg { width: 1.35rem; height: 1.35rem; }
 
 /* when something snags: eight even tiles, four across once the main column has room for them beside the side
    pane (about 600 px of column from 64rem wide; between 52.5 and 64rem the pane leaves too little). Four across,
@@ -281,9 +308,9 @@ p { margin: 0; }
 
 /* closing */
 .ending { text-align: center; display: grid; gap: var(--s2); justify-items: center; padding-top: var(--s2); }
-.ending .ico { width: 1.6rem; height: 1.6rem; color: var(--steel); }
-.ending .ico svg { width: 100%; height: 100%; }
-.ending h2 { font-size: var(--t-card); }
+.ending .orn { display: flex; align-items: center; gap: var(--s3); width: 100%; color: var(--steel); }
+.ending .orn::before, .ending .orn::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+.ending .orn svg { width: 1.75rem; height: 1.75rem; flex: none; }
 .ending p { color: var(--muted); max-width: 30rem; font-size: var(--t-small); }
 
 /* ---------- one group ---------- */
@@ -299,7 +326,7 @@ p { margin: 0; }
 .p-meta .dotsep { opacity: 0.6; }
 .when { font-size: var(--t-body); }
 .methodbox { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s3) var(--s4) var(--s4); display: grid; gap: var(--s2); }
-.mhead h2, .fields dt, .subhead { font-family: var(--body); font-size: var(--t-body); font-weight: 600; line-height: 1.3; }
+.fields .img dt { font-family: var(--body); font-size: var(--t-tiny); font-weight: 600; line-height: 1.3; color: var(--muted); }
 .methodbox .mtext { display: grid; gap: var(--s2); }
 .apptip { font-size: var(--t-small); color: var(--muted); border-top: 1px solid var(--rule); padding-top: var(--s2); }
 .tool { background: var(--surface); border: 1px solid var(--rule); border-top: 3px solid var(--steel); border-radius: var(--r); padding: var(--s4); display: grid; gap: var(--s4); justify-items: center; text-align: center; }
@@ -310,7 +337,11 @@ p { margin: 0; }
 .fields dd { margin: 0; display: block; }
 .fields dd > * + * { margin-top: var(--s2); }
 .fields dd blockquote { margin-top: var(--s2); margin-bottom: var(--s2); }
-.fields .img dd { font-style: italic; }
+/* "Picture it": a small label between two rules, the image in Cormorant italic under it, and a closing rule */
+.fields .img { justify-items: center; text-align: center; gap: var(--s2); padding-bottom: var(--s4); border-bottom: 1px solid var(--rule); }
+.fields .img dt { display: flex; align-items: center; gap: var(--s3); width: 100%; }
+.fields .img dt::before, .fields .img dt::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+.fields .img dd, .wpic .pic { font-family: var(--serif); font-style: italic; font-weight: 500; font-synthesis: none; font-size: var(--d-small); line-height: 1.35; max-width: 22em; }
 .fields .hole { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s3) var(--s4); }
 .fields .src dd { color: var(--muted); font-size: var(--t-small); }
 blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--steel); font-style: italic; }
@@ -334,6 +365,12 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 .big.clock { font-size: 4rem; }
 .bar { width: min(16rem, 100%); height: 4px; background: var(--rule); border-radius: 2px; overflow: hidden; }
 .bar i { display: block; height: 100%; width: 0; background: var(--steel); }
+/* the tick ruler under a timer: ticks behind you lit, the current one glowing, a taller tick every quarter */
+.ruler { width: min(17.5rem, 100%); height: 1rem; display: flex; justify-content: space-between; align-items: flex-end; }
+.ruler i { width: 2px; height: 0.5625rem; border-radius: 1px; background: color-mix(in srgb, var(--steel) 28%, transparent); }
+.ruler i.long { height: 1rem; }
+.ruler i.lit { background: var(--steel); }
+.ruler i.now { background: var(--steel); box-shadow: 0 0 6px 1px color-mix(in srgb, var(--steel) 60%, transparent); }
 .note { width: 100%; display: grid; gap: var(--s3); text-align: left; }
 .note label { display: grid; gap: var(--s1); }
 .note input { font: inherit; font-size: var(--t-body); color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: var(--r-s); padding: var(--s2) var(--s3); min-height: var(--tap); width: 100%; min-width: 0; }
@@ -369,7 +406,6 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 }
 .sheet-in { max-width: 40rem; margin: 0 auto; display: grid; gap: var(--s4); }
 .sheet-head { position: sticky; top: calc(var(--s2) * -1); z-index: 1; display: flex; align-items: center; justify-content: space-between; background: var(--paper); padding-top: var(--s2); }
-.sheet-head h2 { font-size: var(--t-head); }
 .sheet-head::before { content: ""; position: absolute; top: 0; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: var(--rule); }
 .sheet-head .go { min-width: 0; padding: 0 var(--s4); }
 .panel { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s4); display: grid; gap: var(--s4); }
@@ -420,13 +456,13 @@ blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--st
 /* ---------- Read: one page ---------- */
 .prose { font-size: var(--fs); line-height: 1.6; display: grid; gap: var(--s4); }
 .prose .ch-label { display: block; font-family: var(--body); font-size: var(--t-tiny); font-weight: 600; color: var(--steel); }
-.prose > h1 { font-size: var(--t-title); padding-bottom: var(--s4); border-bottom: 1px solid var(--rule); }
+.prose > h1 { font-size: var(--d-title); padding-bottom: var(--s4); border-bottom: 1px solid var(--rule); }
 .prose > h1 .opener { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s2); }
 .prose > h1 .opener .emb.tile { width: 2.6rem; height: 2.6rem; border-color: var(--steel); }
 .prose > h1 .opener .emb.tile svg { width: 1.5rem; height: 1.5rem; }
 .prose .dateline { color: var(--muted); font-style: italic; margin-top: calc(var(--s1) * -1); }
 .prose section { display: grid; gap: var(--s4); }
-.prose h2 { font-size: 1.3em; margin-top: var(--s5); }
+.prose h2 { font-size: 1.55em; line-height: 1.15; margin-top: var(--s5); }
 .prose h2::before { content: ""; display: inline-block; width: 0.42rem; height: 0.42rem; border: 1px solid var(--steel); transform: rotate(45deg); margin: 0 0.65rem 0 0.1rem; vertical-align: 0.18em; }
 .prose .group > h2::before, .prose h2.plain::before { display: none; }
 .prose h3 { font-size: 1.12em; margin-top: var(--s3); }
@@ -546,7 +582,6 @@ html.locked, html.locked body { overflow: hidden; }
 .w-in { width: 100%; max-width: 25rem; display: grid; gap: var(--s5); justify-items: center; text-align: center; }
 .w-mark { width: 4rem; height: 4rem; color: var(--steel); }
 .w-mark svg { width: 100%; height: 100%; }
-.welcome h1 { font-size: var(--t-title); }
 .w-lede { color: var(--muted); font-size: var(--t-body); max-width: 22rem; }
 .w-list { list-style: none; margin: 0; padding: var(--s4); display: grid; gap: var(--s4); text-align: left; width: 100%;
   background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); }
@@ -595,6 +630,10 @@ html.locked, html.locked body { overflow: hidden; }
 /* the reading for the pattern on now: what it is, where it comes from, why it might help */
 .wread { display: grid; gap: var(--s2); padding-top: var(--s4); border-top: 1px solid color-mix(in srgb, var(--on-slate-muted) 25%, transparent); }
 .wname { font-size: var(--t-card); line-height: 1.3; }
+.wpic { display: grid; gap: var(--s2); justify-items: center; text-align: center; margin: var(--s1) 0; padding-bottom: var(--s3); border-bottom: 1px solid color-mix(in srgb, var(--on-slate-muted) 25%, transparent); }
+.wpic .label { display: flex; align-items: center; gap: var(--s3); width: 100%; }
+.wpic .label::before, .wpic .label::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--on-slate-muted) 25%, transparent); }
+.wpic .pic { color: var(--on-slate); }
 .wline { display: grid; gap: 2px; font-size: var(--t-small); line-height: 1.5; color: color-mix(in srgb, var(--on-slate) 82%, var(--slate)); }
 .wstage .opt { background: transparent; color: var(--on-slate); border-color: color-mix(in srgb, var(--on-slate-muted) 45%, transparent); }
 .wstage .opt[aria-pressed="true"] { background: color-mix(in srgb, var(--slate-mark) 25%, transparent); border-color: var(--slate-mark); color: var(--on-slate); }
@@ -603,8 +642,10 @@ html.locked, html.locked body { overflow: hidden; }
 .wstage blockquote { border-left-color: var(--slate-mark); }
 .wstage .wwhy .foldbody { color: var(--on-slate-muted); }
 .wfoot { display: grid; gap: var(--s2); }
-.wbar { height: 3px; background: color-mix(in srgb, var(--on-slate-muted) 25%, transparent); border-radius: 2px; overflow: hidden; }
-.wbar i { display: block; height: 100%; width: 0; background: var(--slate-mark); }
+.wstage .ruler { width: 100%; }
+.wstage .ruler i { background: color-mix(in srgb, var(--slate-mark) 28%, transparent); }
+.wstage .ruler i.lit { background: var(--slate-mark); }
+.wstage .ruler i.now { background: color-mix(in srgb, var(--slate-mark) 45%, #fff); box-shadow: 0 0 8px 1px color-mix(in srgb, var(--slate-mark) 85%, transparent); }
 .wnext { font-size: var(--t-tiny); color: var(--on-slate-muted); }
 .wbtns { justify-content: center; align-items: center; }
 .wstage .go { background: var(--slate-mark); color: var(--slate); border-color: var(--slate-mark); }
@@ -625,6 +666,7 @@ html.locked, html.locked body { overflow: hidden; }
 .wpat .ck .ico { width: 0.85rem; height: 0.85rem; opacity: 0; color: var(--slate); }
 .wpat .vname { display: grid; min-width: 0; }
 .wpat .vname small { color: var(--on-slate-muted); font-size: var(--t-tiny); }
+.wpat .mname { font-size: var(--d-small); line-height: 1.15; }
 .wpat[aria-pressed="true"] { border-color: var(--slate-mark); background: color-mix(in srgb, var(--slate-mark) 18%, transparent); }
 .wpat[aria-pressed="true"] .ck { border-color: var(--slate-mark); background: var(--slate-mark); }
 .wpat[aria-pressed="true"] .ck .ico { opacity: 1; }
@@ -639,7 +681,6 @@ html.locked, html.locked body { overflow: hidden; }
 .wgrid { display: grid; gap: var(--s6); }
 .wgrid > * { min-width: 0; }
 .wside { display: none; }
-.wside-h { font-size: var(--t-card); }
 /* the Dim slider's dark layer over the Watch page, under the sheets so it never darkens them; taps go through it */
 /* read by a screen reader, not shown */
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -738,7 +779,7 @@ body.wmini-on .app { padding-bottom: calc(var(--tabs-h) + env(safe-area-inset-bo
 .side-toc { display: grid; }
 .side-toc button { display: flex; align-items: center; min-height: var(--tap); text-align: left; background: none; border: 0; border-left: 2px solid var(--rule); padding: 4px var(--s3); font-size: var(--t-small); line-height: 1.35; color: var(--muted); }
 .side-toc button[aria-current] { color: var(--steel); border-left-color: var(--steel); font-weight: 600; }
-@media (hover: hover) and (pointer: fine) { .side-toc button:hover { color: var(--ink); } }
+@media (hover: hover) and (pointer: fine) { .side-toc button:hover { color: var(--ink); } .joined > .pick:hover, .joined > .jrow:hover { background: color-mix(in srgb, var(--steel-soft) 15%, var(--surface)); } }
 /* the device's Reduce Transparency setting (Chrome and Edge only for now): solid bars instead of frosted ones */
 @media (prefers-reduced-transparency: reduce) { .tabs { background: var(--paper); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 
@@ -763,7 +804,8 @@ body.wmini-on .app { padding-bottom: calc(var(--tabs-h) + env(safe-area-inset-bo
   .w-in > *:nth-child(n+5) { animation-delay: 0.7s; }
   .welcome.leaving { opacity: 0; transition: opacity 0.35s ease; }
   .wstage.turn .wmid > * { animation: wfade 0.8s ease-out; }
-  .wbar i { transition: width 0.25s linear; }
+  .ruler i { transition: background-color 0.6s ease, box-shadow 0.6s ease; }
+  .joined > .pick, .joined > .jrow { transition: background 0.2s; }
   .wmini { animation: wfade 0.3s ease-out; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1493,12 +1535,33 @@ function breath(cfg) {
   return wrap;
 }
 
+/* ---------- the tick ruler under a timer ---------- */
+// a tick for each stretch of the time, a taller one at each quarter; set(frac) lights the ticks behind and makes the
+// current one glow; set(-1) clears it. Timers under 24 seconds get one tick a second, so it never moves faster than that
+function ruler() {
+  var el = h("div", { class: "ruler", "aria-hidden": "true" }), n = 0, cur = -2, ticks = [];
+  el.size = function (sec) {
+    var m = sec >= 24 ? 24 : Math.max(1, Math.floor(sec));
+    if (m === n) return; n = m; el.innerHTML = ""; ticks = []; cur = -2;
+    for (var i = 0; i <= n; i++) { var t = h("i", { class: i === 0 || i === n || (n % 4 === 0 && i % (n / 4) === 0) ? "long" : "" }); ticks.push(t); el.appendChild(t); }
+  };
+  el.set = function (frac) {
+    var at = frac < 0 ? -1 : Math.min(n, Math.floor(frac * n));
+    if (at === cur) return; cur = at;
+    ticks.forEach(function (t, i) { t.classList.toggle("lit", i < at); t.classList.toggle("now", i === at); });
+  };
+  return el;
+}
+
 /* ---------- tool: timed steps (timers, countdowns, guided sequences) ---------- */
 function steps(cfg) {
   var wrap = h("div", { class: "chips", style: "justify-items:center" });
   var label = h("div", { class: "phase", "aria-live": "polite" }, [cfg.ready || "Ready"]);
   var big = h("div", { class: "big" }, [cfg.showFirst === false ? "" : String(cfg.steps[0].s)]);
-  var bar = h("div", { class: "bar" }, [h("i")]);
+  var long = cfg.steps.every(function (st) { return st.s >= 20; });
+  var bar = long ? ruler() : h("div", { class: "bar" }, [h("i")]);
+  function fill(f) { if (long) bar.set(f); else bar.firstChild.style.width = f < 0 ? "0" : (f * 100).toFixed(1) + "%"; }
+  if (long) { bar.size(cfg.steps[0].s); bar.set(-1); }
   var sub = h("div", { class: "sub" }, [cfg.hint || ""]);
   var btn = h("button", { class: "go", type: "button" }, [cfg.start || "Start"]);
   var after = h("div", { class: "chips" });
@@ -1512,12 +1575,14 @@ function steps(cfg) {
     }
     var left = Math.ceil(st.s - el);
     big.textContent = String(left);
-    bar.firstChild.style.width = ((el / st.s) * 100).toFixed(1) + "%";
+    fill(el / st.s);
     mirror(st.label, String(left));
   }
   function show() {
     var st = cfg.steps[idx];
     label.textContent = st.label; big.textContent = String(st.s);
+    if (long) bar.size(st.s);
+    fill(0);
     sub.textContent = cfg.steps.length > 1 ? ("Step " + (idx + 1) + " of " + cfg.steps.length) : (cfg.hint || "");
     chime(st.hz || 528, 0.4);
     mirror(st.label, String(st.s));
@@ -1525,7 +1590,7 @@ function steps(cfg) {
   function done() {
     clearInterval(timer); timer = null; letSleep(); quit(stop);
     label.textContent = cfg.doneLabel || "Done"; big.textContent = cfg.doneBig || "✓";
-    bar.firstChild.style.width = "100%"; sub.textContent = cfg.doneText || "";
+    fill(1); sub.textContent = cfg.doneText || "";
     btn.textContent = "Again"; btn.classList.remove("ghost");
     chime(396, 1.2);
     mirror(cfg.doneLabel || "Done", cfg.doneText || ""); lightsDone(); toolDone();
@@ -1535,7 +1600,8 @@ function steps(cfg) {
   function stop() {
     clearInterval(timer); timer = null; letSleep(); idx = 0; quit(stop);
     label.textContent = cfg.ready || "Ready"; big.textContent = cfg.showFirst === false ? "" : String(cfg.steps[0].s);
-    bar.firstChild.style.width = "0"; sub.textContent = cfg.hint || "";
+    if (long) bar.size(cfg.steps[0].s);
+    fill(-1); sub.textContent = cfg.hint || "";
     btn.textContent = cfg.start || "Start"; btn.classList.remove("ghost");
   }
   btn.addEventListener("click", function () {
@@ -1687,16 +1753,17 @@ function switcher() {
   var wrap = h("div", { class: "chips", style: "justify-items:center" });
   var big = h("div", { class: "big", style: "font-size:3.4rem;min-height:3.4rem" }, ["—"]);
   var sub = h("div", { class: "sub", "aria-live": "polite" }, ["Set a warning for a switch you know is coming"]);
-  var timer = null, end = 0, mark2 = false;
+  var rule = ruler(); rule.size(24); rule.set(-1);
+  var timer = null, end = 0, mark2 = false, total = 0;
   function fmt(sec) { var m = Math.floor(sec / 60), x = sec % 60; return m + ":" + (x < 10 ? "0" : "") + x; }
-  function stop() { clearInterval(timer); timer = null; quit(stop); big.textContent = "—"; sub.textContent = "Set a warning for a switch you know is coming"; }
+  function stop() { clearInterval(timer); timer = null; quit(stop); big.textContent = "—"; rule.set(-1); sub.textContent = "Set a warning for a switch you know is coming"; }
   function start(min) {
-    stopActive(); active = { stop: stop, quiet: true }; end = Date.now() + min * 60000; mark2 = min <= 2;
+    stopActive(); active = { stop: stop, quiet: true }; end = Date.now() + min * 60000; mark2 = min <= 2; total = min * 60000; rule.set(0);
     sub.textContent = min + "-minute warning running. Write your parking note below.";
     clearInterval(timer);
     timer = setInterval(function () {
       var left = Math.max(0, Math.round((end - Date.now()) / 1000));
-      big.textContent = fmt(left);
+      big.textContent = fmt(left); rule.set(1 - Math.max(0, end - Date.now()) / total);
       if (!mark2 && left <= 120) { mark2 = true; sub.textContent = "Two minutes. Finish your sentence, write the note."; chime(528, 0.8); }
       if (left === 0) { clearInterval(timer); timer = null; quit(stop); sub.textContent = "Time to switch. Palms on the doorframe, breathe out, step through."; chime(396, 1.4); }
     }, 250);
@@ -1705,7 +1772,7 @@ function switcher() {
   var b2 = h("button", { class: "go ghost", type: "button" }, ["2 min"]);
   b10.addEventListener("click", function () { start(10); });
   b2.addEventListener("click", function () { start(2); });
-  [big, sub, h("div", { class: "row" }, [b10, b2]), h("div", { class: "row" }, [tonesButton()])].forEach(function (x) { wrap.appendChild(x); });
+  [big, rule, sub, h("div", { class: "row" }, [b10, b2]), h("div", { class: "row" }, [tonesButton()])].forEach(function (x) { wrap.appendChild(x); });
   wrap.appendChild(note("e22", [{ label: "Parking note: where I stopped, what's next", ph: "Stopped at… next is…" }]));
   return wrap;
 }
@@ -2063,18 +2130,19 @@ function timerView() {
     return h("div", { class: "pgroup" }, [h("span", { class: "label" }, [title]), row]);
   }
   var big = h("div", { class: "big clock" }, ["10:00"]);
+  var rule = ruler(); rule.size(24); rule.set(-1);
   var label = h("div", { class: "phase", "aria-live": "polite" }, ["Ready"]);
   var btn = h("button", { class: "go", type: "button" }, ["Begin"]);
   var timer = null, end = 0, warmEnd = 0, lastBell = 0, started = 0;
   function fmt(sec) { var m = Math.floor(sec / 60), x = sec % 60; return m + ":" + (x < 10 ? "0" : "") + x; }
-  function reset() { if (timer) return; big.textContent = fmt(cfg.min * 60); label.textContent = "Ready"; }
+  function reset() { if (timer) return; big.textContent = fmt(cfg.min * 60); label.textContent = "Ready"; rule.set(-1); }
   function stop() { clearInterval(timer); timer = null; letSleep(); quit(stop); btn.textContent = "Begin"; btn.classList.remove("ghost"); reset(); }
   function tick() {
     var now = Date.now();
     if (now < warmEnd) { var w = Math.ceil((warmEnd - now) / 1000); big.textContent = String(w); label.textContent = "Settle in"; mirror("Settle in", String(w)); return; }
     if (!started) { started = now; end = now + cfg.min * 60000; lastBell = now; bell(1); label.textContent = "Sitting"; }
     var left = Math.max(0, Math.round((end - now) / 1000));
-    big.textContent = fmt(left); mirror("", fmt(left));
+    big.textContent = fmt(left); mirror("", fmt(left)); rule.set(1 - Math.max(0, end - now) / (cfg.min * 60000));
     if (cfg.every && now - lastBell >= cfg.every * 60000 && left > 5) { lastBell += cfg.every * 60000; bell(1); }
     if (left === 0) {
       clearInterval(timer); timer = null; letSleep(); quit(stop); bell(3); markDay();
@@ -2090,7 +2158,7 @@ function timerView() {
   });
   var lightsB = lightsButton(function () { if (!timer) btn.click(); }, stop);
   app.appendChild(h("section", { class: "tool" }, [
-    h("div", { class: "chips", style: "justify-items:center" }, [label, big, h("div", { class: "row" }, [btn]), h("div", { class: "row" }, [lightsB])])
+    h("div", { class: "chips", style: "justify-items:center" }, [label, big, rule, h("div", { class: "row" }, [btn]), h("div", { class: "row" }, [lightsB])])
   ]));
   app.appendChild(h("section", { class: "card" }, [
     chooser("Length", [3, 5, 10, 15, 20, 30], "min", function (v) { return v + " min"; }),
@@ -2154,12 +2222,11 @@ function niceTitle(t) { return String(t).replace(/\bThe Kybalion\b/, "<em>The Ky
 function two(n) { return (n < 10 ? "0" : "") + n; }
 
 /* ---------- icons ---------- */
-function stoneMark() {
-  var v = s("svg", { viewBox: "0 0 64 64", "aria-hidden": "true" });
-  var g = s("g", { fill: "none", stroke: "currentColor", "stroke-width": "3.2", "stroke-linejoin": "round" });
-  g.appendChild(s("rect", { x: 16, y: 18, width: 32, height: 32 }));
-  g.appendChild(s("path", { d: "M16 18 L32 9 L48 18" }));
-  v.appendChild(g); return v;
+// the cube (a finished ashlar), the app's mark: the top bar, the welcome, and the ornament over The Perfect Ashlar
+function stoneMark(w) {
+  var v = s("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", fill: "none", stroke: "currentColor", "stroke-width": String(w || 1.6), "stroke-linecap": "round", "stroke-linejoin": "round" });
+  v.appendChild(s("path", { d: "M12 3l8 4.5v9L12 21l-8-4.5v-9Z M4 7.5l8 4.5 8-4.5 M12 12v9" }));
+  return v;
 }
 var TAB_ICONS = {
   read: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 6.5 C9.5 5 6.5 4.6 3.5 5 V18.5 C6.5 18.1 9.5 18.5 12 20 C14.5 18.5 17.5 18.1 20.5 18.5 V5 C17.5 4.6 14.5 5 12 6.5 Z"/><path d="M12 6.5 V20"/></svg>',
@@ -2274,7 +2341,7 @@ function topbar(opts) {
 }
 function pinButton(id) {
   var b = h("button", { class: "tb", type: "button" });
-  function draw() { var on = isFav(id); b.innerHTML = ""; b.appendChild(icon(on ? "starFill" : "star")); b.setAttribute("aria-pressed", String(on)); b.setAttribute("aria-label", on ? "Pinned to the Practices home. Tap to unpin" : "Pin to the Practices home"); }
+  function draw() { var on = isFav(id); b.innerHTML = ""; b.appendChild(icon(on ? "starFill" : "star")); b.setAttribute("aria-pressed", String(on)); b.setAttribute("aria-label", on ? "Pinned on the Practices page. Tap to unpin" : "Pin to the Practices page"); }
   b.addEventListener("click", function () { var on = toggleFav(id); draw(); b.classList.remove("pop"); void b.offsetWidth; if (on && !reduce) b.classList.add("pop"); });
   draw();
   return b;
@@ -2290,17 +2357,19 @@ function closeSizePop(back) {
 document.addEventListener("keydown", function (e) { if (e.key !== "Escape") return; if (sizePop) closeSizePop(true); else if (document.getElementById("welcome")) return; else if (lights) closeLights(); else if (sheet) closeSheet(); });
 // light or dark: "auto" follows the device; the phone's status bar takes the top bar's color in each color theme
 var THEME_BAR = { slate: { light: "#2b3541", dark: "#1f2832" }, linen: { light: "#3a2f27", dark: "#2b231d" }, moss: { light: "#2c382f", dark: "#1e2a20" } };
+// the color theme in use: the saved one, or Linen (the default) when none is saved or the saved one was retired
+function paletteNow() { var v = store.get("palette", "linen"); return v === "slate" || v === "moss" ? v : "linen"; }
 function applyTheme(v) {
-  var root = document.documentElement, bar = THEME_BAR[store.get("palette", "slate")] || THEME_BAR.slate;
+  var root = document.documentElement, bar = THEME_BAR[paletteNow()];
   if (v === "light" || v === "dark") root.setAttribute("data-theme", v); else root.removeAttribute("data-theme");
   [].forEach.call(document.querySelectorAll('meta[name="theme-color"]'), function (m) {
     var own = /dark/.test(m.getAttribute("media") || "") ? bar.dark : bar.light;
     m.setAttribute("content", v === "light" || v === "dark" ? bar[v] : own);
   });
 }
-// the color theme (Slate, the default, has no attribute) and the font (Device, the default, has none)
+// the color theme (Linen, the default, and Moss have an attribute; Slate has none) and the font (Device, the default, has none)
 function applyPalette(v) {
-  if (v === "linen" || v === "moss") document.documentElement.setAttribute("data-palette", v); else document.documentElement.removeAttribute("data-palette");
+  if (v === "slate") document.documentElement.removeAttribute("data-palette"); else document.documentElement.setAttribute("data-palette", v === "moss" ? "moss" : "linen");
   applyTheme(store.get("theme", "auto"));
 }
 function applyFont(v) {
@@ -2338,10 +2407,10 @@ function displayControl() {
       function (v) { document.documentElement.setAttribute("data-size", v); }));
     pop.appendChild(choices("Look", "look", "theme", [["auto", "Match the device", "Device"], ["light", "Light", "Light"], ["dark", "Dark", "Dark"]], "auto", applyTheme));
     pop.appendChild(choices("Color", "look", "palette", [["slate", "Slate colors", h("span", null, [swatch("slate"), "Slate"])],
-      ["linen", "Linen colors, warm", h("span", null, [swatch("linen"), "Linen"])], ["moss", "Moss colors, green", h("span", null, [swatch("moss"), "Moss"])]], "slate", applyPalette));
+      ["linen", "Linen colors, warm", h("span", null, [swatch("linen"), "Linen"])], ["moss", "Moss colors, green", h("span", null, [swatch("moss"), "Moss"])]], "linen", applyPalette));
     pop.appendChild(choices("Font", "look", "font", [["device", "The device's own font", "Device"],
-      ["atkinson", "Atkinson Hyperlegible Next, for the whole app", "Atkinson", null, "font-family:'Atkinson Hyperlegible Next',sans-serif"],
-      ["hanken", "Hanken Grotesk, for the whole app", "Hanken", null, "font-family:'Hanken Grotesk',sans-serif"]], "device", applyFont));
+      ["atkinson", "Atkinson Hyperlegible Next, for everything but titles", "Atkinson", null, "font-family:'Atkinson Hyperlegible Next',sans-serif"],
+      ["hanken", "Hanken Grotesk, for everything but titles", "Hanken", null, "font-family:'Hanken Grotesk',sans-serif"]], "device", applyFont));
     topEl.appendChild(pop); sizePop = pop; aa.setAttribute("aria-expanded", "true");
     // opened from the keyboard: start on the text size picked now
     if (ev.detail === 0) { var on = pop.querySelector('[aria-pressed="true"]'); if (on) on.focus(); }
@@ -2369,7 +2438,7 @@ function groupView(key) {
   var g = GROUP_BY_KEY[key];
   topbar({ back: ["Practices", "#/practices"], sound: true }); tabs("practices");
   app.appendChild(h("header", { class: "g-head" }, [groupIcon(g), h("h1", null, [g.name]), h("p", null, [g.desc])]));
-  app.appendChild(h("div", { class: "rows" }, g.ids.map(function (id) { return pick(id); })));
+  app.appendChild(h("div", { class: "rows joined" }, g.ids.map(function (id) { return pick(id); })));
   var others = h("div", { class: "row left" });
   BOOK.sections.forEach(function (o) {
     if (o.key !== key) others.appendChild(h("a", { class: "opt chip", href: "#/g/" + o.key }, [o.name]));
@@ -2394,21 +2463,22 @@ function practicesView() {
   ]));
 
   var f = favs();
-  if (f.length) app.appendChild(h("section", { class: "group" }, [h("h2", null, ["Pinned"]), h("div", { class: "rows" }, f.map(function (id) { return pick(id, true); }))]));
+  if (f.length) app.appendChild(h("section", { class: "group" }, [h("h2", null, ["Pinned"]), h("div", { class: "rows joined" }, f.map(function (id) { return pick(id, true); }))]));
 
-  // routines + quiet timer, as four small tiles
+  // routines + quiet timer, as joined rows
   var RICON = { morning: "sun", reset: "noon", evening: "moon" };
-  var rs = h("div", { class: "tiles minis" });
+  var rs = h("div", { class: "rows joined" });
+  function jrow(href, emb, name, hint) { return h("a", { class: "jrow", href: href }, [emb, h("span", null, [h("span", { class: "t1" }, [name]), h("small", null, [hint])]), icon("chev", "chev")]); }
   Object.keys(ROUTINES).forEach(function (k) {
     var r = ROUTINES[k];
-    rs.appendChild(h("a", { class: "gtile", href: "#/r/" + k }, [emblem(RICON[k]), h("span", { class: "tname" }, [r.name]), h("span", { class: "thint" }, [r.ids.length + " practices · about " + r.min + " min"])]));
+    rs.appendChild(jrow("#/r/" + k, emblem(RICON[k]), r.name, r.ids.length + " practices · about " + r.min + " min"));
   });
-  rs.appendChild(h("a", { class: "gtile", href: "#/timer" }, [emblem("bell"), h("span", { class: "tname" }, ["Quiet Timer"]), h("span", { class: "thint" }, ["Bells only · for prayer, reading, or sitting still"])]));
+  rs.appendChild(jrow("#/timer", emblem("bell"), "Quiet Timer", "Bells only · for prayer, reading, or sitting still"));
   app.appendChild(h("section", { class: "group" }, [h("h2", null, ["Routines and timer"]), h("p", { class: "gdesc" }, ["A few practices back to back, or a quiet timer with bells."]), rs]));
 
   // the closing: The Perfect Ashlar
   app.appendChild(h("footer", { class: "ending" }, [
-    h("span", { class: "ico", html: BOOK.final.svg }), h("h2", null, [BOOK.final.title]), h("p", { html: BOOK.final.text })
+    h("div", { class: "orn", "aria-hidden": "true" }, [stoneMark(1.5)]), h("h2", null, [BOOK.final.title]), h("p", { html: BOOK.final.text })
   ]));
 }
 
@@ -3122,7 +3192,7 @@ function watchView() {
   // the label at the top is the one thing a screen reader announces as it changes: the pattern, Rest, Paused
   var stLabel = h("span", { class: "label", "aria-live": "polite" }), stClock = h("span", { class: "label wclock" });
   var mid = h("div", { class: "wmid" }), readBox = h("div", { class: "wmid" });
-  var barI = h("i"), bar = h("div", { class: "wbar" }, [barI]), foot = h("p", { class: "wnext" });
+  var bar = ruler(), barLen = 0, foot = h("p", { class: "wnext" });
   var mainB = h("button", { class: "go wbig", type: "button" }, ["Start"]);
   var stopB = h("button", { class: "opt", type: "button" }, ["Stop"]);
   var lightsB = h("button", { class: "opt", type: "button" }, ["Lights out"]);
@@ -3155,7 +3225,7 @@ function watchView() {
     buttons(); setup(); readBox.innerHTML = ""; bar.hidden = true; W.raf && cancelAnimationFrame(W.raf); W.raf = null;
     stLabel.textContent = "Ready"; stClock.textContent = clock12(nowClock());
     foot.textContent = "Runs until you pause or stop it, even on other pages. On a phone, the screen has to stay on.";
-    barI.style.width = "0";
+    bar.set(-1);
   }
   // the front screen: one tap on a mix starts it. Custom, folded under the mixes, holds the patterns to pick, their
   // order, and how long each set runs, with its own Start; opening it sets the mix aside
@@ -3163,7 +3233,7 @@ function watchView() {
   // the tapped button goes away as the page redraws, so the keyboard moves to Pause
   function begin() { watchStart(); draw(true); mainB.focus(); }
   function mixCard(m) {
-    var b = h("button", { class: "wpat", type: "button" }, [h("span", { class: "vname" }, [W_MIXES[m].name, h("small", null, [W_MIXES[m].plain])])]);
+    var b = h("button", { class: "wpat", type: "button" }, [h("span", { class: "vname" }, [h("span", { class: "mname" }, [W_MIXES[m].name]), h("small", null, [W_MIXES[m].plain])])]);
     b.setAttribute("aria-label", "Start " + W_MIXES[m].name + ": " + W_MIXES[m].plain);
     b.addEventListener("click", function () {
       set.mix = m; begin();
@@ -3238,7 +3308,7 @@ function watchView() {
       h("span", { class: "label" }, [next ? "Up next" : b.trad]),
       h("h3", { class: "wname" }, [b.name]),
       h("p", { class: "wtext" }, [WB[k].cue]),
-      line("Picture it", b.image),
+      h("div", { class: "wpic" }, [h("span", { class: "label" }, ["Picture it"]), h("p", { class: "pic", html: b.image.replace(/<a\b[^>]*>|<\/a>/g, "") })]),
       line("Where the image comes from", b.source),
       line("Why it might help", WB[k].why),
       h("p", { class: "wline" }, ["If you feel lightheaded, tingly, or more anxious, stop and breathe normally."]),
@@ -3294,7 +3364,8 @@ function watchView() {
     stClock.textContent = clock12(nowClock());
     var st = wStatus(), top = st.top + (st.hid || "");
     if (stLabel.textContent !== top) { stLabel.innerHTML = ""; stLabel.appendChild(document.createTextNode(st.top)); if (st.hid) stLabel.appendChild(h("span", { class: "vh" }, [st.hid])); }
-    barI.style.width = Math.min(100, (now - sg.start) / (sg.end - sg.start) * 100).toFixed(1) + "%";
+    if (sg.end - sg.start !== barLen) { barLen = sg.end - sg.start; bar.size(barLen / 1000); }
+    bar.set(Math.min(1, (now - sg.start) / barLen));
     if (wDrive()) { foot.textContent = "Drive: about 2 minutes of breathing, then 4 of quiet. Keep it low enough to hear the road."; return; }
     foot.textContent = sg.kind === "set" ? "Then a short rest" + (nx && nx.k !== sg.k ? ", and " + wName(nx.k) + " after it: " + WB[nx.k].plain.charAt(0).toLowerCase() + WB[nx.k].plain.slice(1) + "." : ".")
       : sg.kind === "rest" ? "A rest between sets." : "Starting with " + wName(sg.k) + ".";
@@ -3356,7 +3427,7 @@ function showWelcome(full) {
   var begin = h("button", { class: "go", type: "button" }, ["Begin"]);
   var el = h("div", { class: "welcome", id: "welcome", role: "dialog", "aria-modal": "true", "aria-label": "Welcome" }, [
     h("div", { class: "w-in" }, [
-      h("div", { class: "w-mark" }, [stoneMark()]),
+      h("div", { class: "w-mark" }, [stoneMark(1.3)]),
       h("h1", null, ["Trestleboard"]),
       h("p", { class: "w-lede" }, ["Small practices built on images from Freemasonry, Kabbalah, alchemy, and other Western traditions, for keeping a steady baseline and finding it again."]),
       full ? h("ul", { class: "w-list" }, rows.map(function (r) {
@@ -3788,7 +3859,7 @@ function methodText(id) { var d = document.createElement("div"); d.innerHTML = B
 function render() {
   stopActive(); watchDetach(); closeLights(); closeSheet(); closeSizePop(); onDone = null;
   savePos(); curRead = null; glossTitle = "";   // pages that underline glossary words set it again (glossify)
-  document.documentElement.setAttribute("data-size", store.get("size", "m")); applyFont(store.get("font", "device")); applyPalette(store.get("palette", "slate"));
+  document.documentElement.setAttribute("data-size", store.get("size", "m")); applyFont(store.get("font", "device")); applyPalette(paletteNow());
   app.innerHTML = ""; topEl.innerHTML = ""; document.title = "Trestleboard";
   var hsh = location.hash.replace(/^#\/?/, ""), m;
   document.body.classList.toggle("on-watch", hsh === "watch");
