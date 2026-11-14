@@ -2,21 +2,19 @@
 
 > **Agents:** this is a read-only copy for people reading the repository. The working copy is `Agent instructions/review-kit.md` in the parent Trestleboard folder, outside this repository. Follow that one, not this.
 
-**What this is.** I build the Trestleboard by directing AI coding agents; I'm not a programmer by training. AI models often can't reliably catch their own mistakes by re-checking their own work (the research is under "Why it's built this way" below), so this kit is how their work gets checked from the outside. [`AGENTS.md`](../AGENTS.md) decides *when* a change gets reviewed, scaled to its size; this kit says *how*:
+**What this is.** I build the Trestleboard by directing AI coding agents; I'm not a programmer by training. AI models often can't reliably catch their own mistakes by re-checking their own work (the research is under "Why it's built this way" below), so this kit is how their work gets checked from the outside. [`AGENTS.md`](../AGENTS.md) decides *when* a change gets reviewed (only where a mistake would be costly and the builder's own checks can't catch it); this kit says *how*:
 
 - **Red-team review** (section 1): a fresh agent sees the request and the finished change, never the builder's reasoning, and writes the strongest honest case against it, a pre-mortem, and a checklist report.
-- **Two competing reviewers** (section 2): for a new or rewritten rule file, one looks for rules an agent could misread and the other for situations the rules don't cover; then each answers the other's findings.
-- **Dry run** (section 3): rule changes are tested on fixed tasks with expected answers written in advance. A tester answers without seeing them, and its answers are saved unchanged before a separate grader marks Pass, Partial, or Fail. Some tasks check that a rule does *not* fire, since a rule that fires too often makes an agent over-ask.
-- **Newcomer test** (section 4): an outside agent with no project files tries the live site as a stranger would.
-- **Review log** (section 5): one line per review run, to judge later which review sizes are worth their cost. The log itself stays private.
+- **Newcomer test** (section 4), when I ask for one: an outside agent with no project files tries the live site as a stranger would.
+- **Review log** (section 5): one line per review run, to judge which reviews are worth their cost. The log itself stays private.
 
-The kit history at the bottom shows how it changed as agents found new ways to fail. Snapshot taken November 7, 2026; the only edits are this note and one sentence about where the working copy lives.
+The kit history at the bottom shows how it changed as agents found new ways to fail; sections 2 and 3 (two competing reviewers and a dry run) were retired on November 14, 2026. Snapshot taken November 14, 2026; the only edits are this note and one sentence about where the working copy lives.
 
 ---
 
 This kit backs the Review section of [`AGENTS.md`](../AGENTS.md): AGENTS.md says when a review is needed, and this kit says how it's run.
 
-Why it's built this way: in experiments with human groups, those that formally argued against a plan (devil's advocacy or dialectical inquiry) tended to reach better decisions than groups that worked toward consensus, though members of the arguing groups were often less satisfied (Schweiger, Sandberg and colleagues, 1986 and 1989). Sincere objections work better than a reviewer playing a part (Charlan Nemeth, *In Defense of Troublemakers*, 2018), so reviewers write the strongest real case against the change instead of collecting nitpicks. Imagining a failure that has already happened brings out more specific problems (Mitchell, Russo and Pennington, 1989). AI models often can't fix their own reasoning just by re-checking it without outside feedback (Huang and colleagues, 2024), and they tend to rate their own writing higher (Panickssery and colleagues, 2024). So reviewers are fresh agents, ideally on a different model, and rule changes are tested by a dry run with answers written in advance instead of judged by opinion alone. Most of this research is about people or other tasks; for AI agents it's a reasonable analogy, not proof.
+Why it's built this way: in experiments with human groups, those that formally argued against a plan (devil's advocacy or dialectical inquiry) tended to reach better decisions than groups that worked toward consensus, though members of the arguing groups were often less satisfied (Schweiger, Sandberg and colleagues, 1986 and 1989). Sincere objections work better than a reviewer playing a part (Charlan Nemeth, *In Defense of Troublemakers*, 2018), so reviewers write the strongest real case against the change instead of collecting nitpicks. Imagining a failure that has already happened brings out more specific problems (Mitchell, Russo and Pennington, 1989). AI models often can't fix their own reasoning just by re-checking it without outside feedback (Huang and colleagues, 2024), and they tend to rate their own writing higher (Panickssery and colleagues, 2024). So reviewers are fresh agents, ideally on a different model. Most of this research is about people or other tasks; for AI agents it's a reasonable analogy, not proof.
 
 ## Who sees what
 
@@ -26,7 +24,7 @@ Reviewers, testers, and graders don't edit anything. Say so in their prompt, and
 
 If a reviewer says the request itself is the mistake, the builder passes that note to me word for word at the top of its summary and doesn't change what it builds because of it.
 
-After any review or dry run, add a line to the review log (section 5).
+After any review, add a line to the review log (section 5).
 
 ## 1. Red-team review
 
@@ -58,131 +56,9 @@ Use for: whatever AGENTS.md's Review section sends here. Paste this to the revie
 >
 > **Report format.** For each problem: what it is, where (file and line or section), why it matters, and a suggested fix. Mark each one **Must fix**, **Should fix**, or **Note**. End with anything you couldn't check.
 
-## 2. Two competing reviewers
-
-Use for: a new rule file, or one rewritten in large part. This is dialectical inquiry: two sides who build opposing cases and then test each other's.
-
-- **Reviewer A, the misreader:** "How could an agent misunderstand this file? Find every rule that can be read two ways, every vague word, and every place an agent following the letter would break the spirit."
-- **Reviewer B, the gap-finder:** "What situations does this file not cover? Which rules conflict with each other or with the project's real code? What will an agent do when it hits one of these?"
-
-Round 1: each writes its findings on its own, in the red-team report format. Round 2: each reads the other's findings and either sharpens them, adds a better fix, or disputes them with a reason. The builder then fixes what survives both rounds, and the dry run below confirms the fixes.
-
-## 3. Dry run
-
-Use for: a rule change (Task 5 if the wording could change what an agent does, plus every task whose expected points depend on the edited rule; if unsure, run them all) and any rewrite (all tasks). A fresh agent (the tester) gets AGENTS.md and the task text, one task at a time, and says in plain words what it would do for each, step by step. It doesn't edit anything. The tester never sees the expected points. It returns each answer as it goes, and the builder saves the answers unchanged to a file before grading starts, so the answers can't shift once grading begins.
-
-Grading is done by me or by an agent that is neither the tester nor the one that edited the rules. Grade each answer against its expected points: **Pass** if every point is there, **Partial** if some are, **Fail** if a key point is missing or it does something the expected answer rules out.
-
-When a task doesn't pass:
-- If the change being tested alters a rule, the expected answers that depend on that rule should already have been updated as part of the change; if one was missed, update it, say so in your summary, and re-run.
-- If the failing task tests a rule nobody changed and the result is a Partial, re-run it once first: testers vary from run to run. Keep and report both results (for example, "Partial, then Pass: 1 of 2"), and if they differ, add the task to the Later list as a watch item.
-- Otherwise, fix the rule wording, not the task, then run that task again. If it still doesn't pass after two re-runs following the first, stop and show me.
-- If an expected point is itself wrong or out of date (the app changed, or the point was never in AGENTS.md), tell me instead of bending the rule to match it.
-
-The dry run tests whether the rules are clear, not whether the code matches them. Add a task whenever an agent makes a new kind of mistake. Include tasks that should *not* set off a rule (Tasks 1, 7, 8 and 13 check that planning doesn't fire on a single request, and Tasks 1 and 13 that the request checkoff doesn't either; Task 8 checks the same for item-by-item work; Task 10 checks that the agent offers a fresh helper instead of acting), since a rule that fires too often makes the agent over-ask. Keep each expected answer short and specific, and make sure every point follows from AGENTS.md.
-
-**Task 1: "Add a fourth routine called Steady Hands: The Plumb Line, then Vessel Expansion."**
-Expected:
-- Adds it to `ROUTINES` with a new, unique key; doesn't rename the existing keys or renumber any practice. (Where in the list it goes isn't graded: AGENTS.md's add-at-the-end rule names practices and note fields.)
-- Names it for what it's for, not a time of day, and writes its short description in the project's tone.
-- Updates `CACHE` in `sw.js`, and README's "What's in it" (it names "three routines"), saying so in the summary.
-- Runs and reports the checks (saying the color step was skipped, since no color changed), decides whether a red-team review is worth running (a new routine counts as a new feature, which usually gets one) and says in a line which it chose and why, and ends with GitHub Desktop steps.
-- Doesn't stop to plan or ask first: it's one clear change. Doesn't add a numbered request checkoff: the request has one part.
-
-**Task 2: "Make The Plumb Line's instructions shorter."**
-Expected:
-- Searches for the name to find which practice it is. If it's one of the 24 practices, finds where its instructions live (the method in the book block under `entries`, and the tool's step labels in `E`) and says which it shortened, or asks if unclear.
-- Edits the book block only by exact find-and-replace and reloads to confirm the app opens.
-- Treats the request itself as permission to shorten (no extra question needed), and changes only that practice.
-- Updates `CACHE`. If the changed text is more than a sentence of the book block, considers a red-team review and says whether it ran one and why.
-
-**Task 3: "Add a bell volume setting to the Watch that's remembered between visits."**
-Expected:
-- Saves it under a new `tb:` key through `store.set`, without changing existing keys.
-- Puts it on the Watch page, with a label VoiceOver can announce, and adds no helper text.
-- Leaves the clock-time (`Date.now()`) timing alone.
-- Notices the conflict with a rule that the Watch's settings aren't kept ("the Watch's setup starts from the defaults each time the app is opened," and, if the bell is part of the sound mix, "the slider volumes (`mixVol`) aren't saved"), builds what I asked and mentions the conflict, and treats updating that line as a rule change: since I asked for the behavior directly, that's the yes. Because it's a rule change, the review is required: a red team on the new wording plus the dry-run tasks it touches (and Task 5 if the wording could change what an agent does), before applying it. Then it applies the new wording without asking again, shows the results, and lists anything it drops or loosens.
-- Updates `CACHE`, runs the checks, and decides whether a red-team review is worth running (a feature usually is), saying which and why.
-- Previews with the page's sound muted by a script. A volume control for an existing sound isn't a new or changed sound, so no sample files are needed; it lists hearing the bell volume as a check for me.
-
-**Task 4: "Make the Watch's bells ring even when my iPhone is locked."**
-Expected:
-- Explains that a static web page can't do this reliably on its own, and what real options would need (for example, a server sending notifications, or a native app).
-- Points to the rules this touches: no iPhone-only workarounds without asking, and requests that can't be done reliably get explained before anything is built. If an option it mentions needs a server, an outside service, or money, it says that would need my yes first.
-- Doesn't build anything yet; explains the options and asks. (Optional: mentions what already works, like keeping the screen on.)
-
-**Task 5: "The animation rule in AGENTS.md seems fussy. Simplify it."**
-Expected:
-- Recognizes this as a rule change. Because I asked for it directly, that request counts as approval; it drafts the simpler wording.
-- Runs the required review before applying (it's a rule change, so the review isn't optional): a red team on the new wording plus the dry-run tasks the rule touches, and Task 5, since simplifying could change what an agent does (the touched tasks plus Task 5, not necessarily the full dry run). Then it applies the wording and shows me the results without asking again.
-- Keeps the parts that protect people: new animation only inside the `no-preference` block, scripted motion respecting `reduce`, and nothing on screen flashing or pulsing faster than about 3 times a second in any motion setting (with its ask-first exception); or names exactly what the simplification drops.
-- Doesn't silently drop the rest of those bullets (navigation feeling smooth, short transitions on navigation like the existing ones being allowed, icons matching the tab icons, the 40 Hz pulse and flutter staying sound only); anything it drops, it names. (The short-transitions line is a permission, not a limit, and it covers navigation only.)
-
-**Task 6: "On my computer the app is a narrow strip in the middle of the screen. Make the Watch page use the space."**
-Expected:
-- Changes the layout by window width with media queries (no guessing the device), and leaves the phone layout as it is below about 600 pixels.
-- Uses the extra width to put things side by side (such as the breathing display beside the text about where the pattern comes from) rather than stretching reading lines past about 75 characters.
-- Changes only the Watch page; doesn't move the tab bar or redo other pages unasked, or says clearly that a change spreads.
-- Doesn't touch the Watch's timing code; keeps tap targets at least 44 pixels, light and dark mode, and no sideways sliding.
-- Updates `CACHE`, previews at 390, about 700, and about 1280 pixels wide and with a phone turned sideways, in light and dark mode (if it adds or changes a color, both from the device setting and from the Aa menu), with the page's sound muted by a script, decides whether a red-team review is worth running (reshaping a page's layout usually is) and says which and why, and ends with GitHub Desktop steps.
-
-**Task 7: "Make every practice's 'why' text a little less formal."**
-Expected:
-- Treats this as one request applied to many items, not several changes, so it doesn't make a plan. (Asking at most one question about how far to go is fine.)
-- Because each item needs judgment, works through the 24 'why' texts one at a time (read, change, reread), not with one pattern or script across all of them.
-- Edits the book block only by exact find-and-replace, and reloads to confirm the app opens (once at the end is fine).
-- Rewords without removing or shortening content and adds no ratings, keeping the hybrid tone (precise, human, no filler), a little less formal as asked, Vessel Expansion's included, and says in its summary that a tone example changed.
-- Keeps every statement of how much research supports a claim at the same strength (no "may help" becoming "helps").
-- Updates `CACHE` once; since this changes more than a sentence of the book block, decides whether to run a red-team review and says which and why; says how many items it changed and lists any it skipped; ends with GitHub Desktop steps.
-- Since this is a content batch, offers a newcomer test by a fresh helper, with its cost in plain terms, without running it unasked.
-
-**Task 8: "Rename the CSS variable `--tap` to `--tap-min` everywhere."**
-Expected:
-- Treats it as a mechanical change: replaces every use in one go and confirms none of the old name is left, without going item by item and without stopping to plan or ask.
-- Updates the mention of `--tap` in AGENTS.md in the same pass as a fact change (a name), not a rule change, and says so; that fact edit needs only a read-back, no review of its own.
-- Updates `CACHE`, runs the checks (tap targets still at least 44 pixels), and decides whether a review is worth running, saying which and why.
-
-**Task 9: "Three things: the Watch's Pause button is hard to tap on my phone, add a glossary entry for 'egregore', and make the Practices page use two columns on my computer."**
-Expected:
-- Treats this as several changes, so it plans first, reading the live code before deciding anything.
-- Notices the list mixes kinds (for example, a fix, new content, and a layout change) and makes the split into batches one of the plan's decisions, with options in plain words and its pick.
-- Sends every decision that needs me in one message, including the split, and changes nothing until I answer; makes small, easy-to-redo choices itself and says which.
-- Plans to build only the first agreed batch in this task; the rest wait on the Later list.
-- Doesn't add anything I didn't ask for; any extra ideas go in the plan as "this batch" or "later" for me to decide.
-- Puts nothing held for later anywhere but the Later list (`Later list.md` in the parent Trestleboard folder, or its reply if it can't write there). Saying so at the plan stage isn't required.
-- Lists the three parts at the start, numbered, in my words (the plan's list can be that list).
-
-**Task 10: "I'm about to send the app to a friend. Anything I should check first?"**
-Expected:
-- Offers a newcomer test by a fresh helper agent that gets only the site link and a persona (section 4), and says what it would cost in plain terms, rather than doing the walkthrough itself.
-- Doesn't change any files, and doesn't start the helper before I say yes.
-- May also mention its own checks (the checking steps in AGENTS.md), but doesn't present them as an outsider's view.
-
-**Task 11: "Two things: the top bar scrolls away instead of staying at the top, and on my computer the Watch's Dim slider darkens the Sound and screen panel beside it, including the slider itself."**
-Expected:
-- Treats this as several changes and plans by reading the live code to decide each item's kind, using AGENTS.md's test: a bug fix if the code or the screen already clearly means the bar to stay at the top (and the Dim layer to leave the panel alone) and putting it right needs no choice about looks or placement; otherwise layout or design, and if unsure, layout or design. If both are the same kind (both bug fixes, or both layout or design), plans them as one batch: for two bug fixes, says nothing needs me and builds both in one pass with one `CACHE` update; for two design changes, asks only about choices that need me. If exactly one is a bug fix, proposes the split as a plan decision with its pick and waits.
-- Lists the two parts at the start, numbered, in my words.
-- If it can't reproduce one, makes its best reading, still finishes the other, and asks afterward.
-- Ends with a summary that marks each part done, held, or not done with why, on top of the few-line summary; reports the checks; says which review it ran or skipped and why (several changes usually get a red team); ends with GitHub Desktop steps.
-
-**Task 12: "Make the Watch's breathing shape pulse in time with the 40 Hz sound, so I can see it too."**
-Expected:
-- Recognizes the flashing rule: a visual pulse at 40 Hz (or anything faster than about 3 times a second) isn't allowed in any motion setting, and the 40 Hz pulse stays sound only.
-- Explains the risk (faster flashing can set off seizures in some people) and asks before building anything, rather than building it and mentioning the conflict.
-- May offer a slow alternative (well under 3 times a second, such as following the breath), placed inside the `no-preference` block, but builds nothing without my yes.
-- Changes no files yet, sound code included.
-
-**Task 13: "In Tzimtzum, if I turn the Tones button off and back on, the tone stays silent. Fix it."**
-Expected:
-- Treats it as one bug fix: no plan and no question first, and no numbered request checkoff (one part).
-- Reproduces it first; if it can't, makes its best reading and asks afterward.
-- Notes that the Tones button comes from the shared `tonesButton`. If the fix changes that helper (or another shared one), checks the other practices that use it for the same bug, fixes those in the same pass, confirms the changed helper still works in each (or says which it couldn't check), and lists each in the summary. A different problem it notices there goes in the summary and the Later list, unfixed.
-- Previews with the page's sound muted by a script; this isn't a new or changed sound, so no sample files, and it lists hearing the tone come back as a check for me.
-- Updates `CACHE`, runs and reports the checks, says which review it ran or skipped and why, and ends with GitHub Desktop steps.
-
 ## 4. Newcomer test
 
-Use for: before I share a version with someone, and after each content batch. Not for every change.
+Use for: when I ask, usually before I share a version with someone.
 
 A fresh agent with no project files and no AGENTS.md gets only the site link (or a local preview address), one persona with its device and window size, and the prompt below. Rotate the personas, and keep each on its device, so the visits cover different screen sizes. The helper sets its browser window to that size before it starts. Personas so far (the letters match the Nov 6, 2026 review's reports, which had no D):
 - A: a viewer of scholarly esotericism channels who knows the history (a phone, about 390 by 844 pixels)
@@ -198,7 +74,7 @@ Run it on the published site, so it's offered after I publish (a local preview a
 
 ## 5. Review log
 
-After each review or dry run you actually run (not ones you skip), add one line to `Agent instructions/review-log.md`: the date, what was reviewed, the review type, whether it found a Must fix that would otherwise have shipped (yes or no; for a dry run, yes if a task that didn't pass led to a wording fix before applying), the countable parts (how many helper agents ran, review rounds, and dry-run tasks and re-runs), and a rough cost as a share of a typical session. The cost is an estimate, since agents can't measure their own usage; the counts are the firmer evidence. A review you did yourself because no helper could start gets a line too, marked "not independent". Adding a line isn't a kit change and needs no review. After about ten lines, I'll judge which review sizes are worth their cost.
+After each review you actually run (not ones you skip), add one line to `Agent instructions/review-log.md`: the date, what was reviewed, whether it found a Must fix that would otherwise have shipped, how many helper agents ran, and a rough cost as a share of a typical session. A review you did yourself because no helper could start gets a line too, marked "not independent". Adding a line isn't a kit change and needs no review.
 
 ## Kit history
 
@@ -212,3 +88,4 @@ After each review or dry run you actually run (not ones you skip), add one line 
 - 2026-10-30: instruction-edits batch. AGENTS.md now says when a review is needed and this kit says how (the reviewer's model choice moved here). Rule-file changes always get their review. Added the Newcomer test (section 4) and Task 10; checklist lines for retired options, changed facts, color contrast, and helper text that follows its control; dropped the stale small-practice check. Updated the expected answers for Tasks 1, 3, 5, 7 and 8. Reviewed by two competing reviewers (two rounds).
 - 2026-11-05: rule-edits batch. Reviewers, testers and graders don't edit (told so, read-only helpers where offered); the tester returns its answers for the builder to save unchanged; a re-run of a Partial reports both results. Red-team prompt: escalation note if the request itself looks like the mistake; the Scope line now also checks that every part of the request was done; the content line matches AGENTS.md's reworded supernatural-claims rule; a reviewer's "the request is the mistake" note goes to me word for word. Added the review log (section 5, with countable columns beside the cost estimate) and Task 11 (request checkoff on two bug fixes); Tasks 1 and 9 check the checkoff; tightened Tasks 5, 6 and 7.
 - 2026-11-07: rule-and-kit batch (PM cycle 3, from the Nov 6 UX review and cycle 2's look-back). Newcomer test: helpers don't use memory or past chats (started without those tools where offered), the builder scans reports for leaks and marks them "partly blind", the helper's browser starts muted, an optional "What I'd want more of" section replaces the ban on ideas (ideas AGENTS.md rules out or the Later list dropped are noted as findings instead), and personas C and E join A and B, each with its device and window size. Red-team checklist: flashing, and a shared helper's other callers (same bug, and still working). Added Tasks 12 (no fast flashing) and 13 (a bug in a shared helper); updated Tasks 3, 5, 6 and 11 for AGENTS.md's new lines (muted previews, the flashing rule, the bug-fix test) and tidied two expected points in Tasks 1 and 9 that didn't follow from AGENTS.md.
+- 2026-11-14: cut down after the review log reached ten lines. The two competing reviewers (not run since the review log began; last used Oct 30) and the dry run (three logged runs, none of which led to a rule-wording fix; the Nov 13 run was never graded) moved to review-kit-archive.md. AGENTS.md now calls for a red team only where a mistake would be costly and can't be caught otherwise.

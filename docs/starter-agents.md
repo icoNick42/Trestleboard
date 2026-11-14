@@ -2,12 +2,12 @@
 
 > **Agents:** this is a template for other projects, not rules for this repository. This repository's rules are in [`AGENTS.md`](../AGENTS.md).
 
-A general-purpose version of the Trestleboard's [`AGENTS.md`](../AGENTS.md), for any project built with AI coding agents: planning before several changes, staying in scope, checking work before claiming it's done, and basic safety. Copy everything below the line into a new project's `AGENTS.md`, then fill in or delete every [bracketed] line. Snapshot taken November 5, 2026.
+A general-purpose version of the Trestleboard's [`AGENTS.md`](../AGENTS.md), for any project built with AI coding agents: planning before several changes, staying in scope, checking work before claiming it's done, and basic safety. Copy everything below the line into a new project's `AGENTS.md`, then fill in or delete every [bracketed] line. Snapshot taken November 14, 2026.
 
 ---
 <!--
 For you, the human (some tools show this comment to the agent too):
-- Claude Code reads CLAUDE.md; many other tools read AGENTS.md. Keep the real rules in AGENTS.md and make CLAUDE.md contain only the line `@AGENTS.md` (Claude Code's way to pull in another file), so the two can't drift apart.
+- Claude Code reads CLAUDE.md, and since version 2.1.277 (Sept 2026) it also reads AGENTS.md when a folder has no CLAUDE.md; many other tools read AGENTS.md. Keep the real rules in AGENTS.md and make CLAUDE.md contain only the line `@AGENTS.md` (Claude Code's way to pull in another file), so the two can't drift apart.
 - Fill in or delete every [bracketed] line, including its example text. Anything left in will be read as a real instruction (an agent will obey a leftover "never npm").
 - Delete the "Interface and design" section if the project has no screens.
 - This file is read on every task, so short beats complete. When the agent repeats a mistake, add a line for it. Remove lines that never seem to change anything.
@@ -40,8 +40,8 @@ If something I ask conflicts with this file, do what I asked and mention the con
 ## Planning
 - "Several changes" means two or more separate things to do in one request, such as a bug fix plus a new feature. One request applied to many items (every page, every entry) is one change. Routine follow-on edits (version numbers, counts, docs) don't count.
 - For several changes, plan before editing. Read the live code (not notes or earlier summaries) and work out what each change needs. If any decision needs me, send all of them in one message, each with the options in plain words and your pick, and change nothing until I answer; for this, that one message replaces "ask one question first" above. Decisions that are small and easy to redo don't need me: make a sensible choice and say which. If nothing needs me, say so and build; my request is the go.
-- One kind of change per batch. The kinds: bug fixes; new features; content or docs; design; edits to this file. If my request mixes kinds, the split always needs me: propose it in the plan with your pick. Whatever I keep together, build in one pass. Build one batch per task, then stop; the other batches wait, with the decisions I already made for them, until I ask for them.
-- In the plan, sort any ideas I didn't ask for into "this batch" or "later"; I decide, and nothing I didn't ask for gets built without my yes. If Project names a Later list, put everything held for later there (you may edit that file freely; if you can't write to it, list the items in your reply), and before suggesting an idea, check that list and don't suggest anything marked dropped. If there's no Later list, list held items in your summary.
+- Build what I asked in one pass. If one part is risky enough to need its own review, say so and offer to do it separately.
+- Ideas I didn't ask for go at the end of your reply in a line or two; nothing I didn't ask for gets built without my yes. If Project names a Later list, put everything held for later there (you may edit that file freely; if you can't write to it, list the items in your reply), and before suggesting an idea, check that list and don't suggest anything marked dropped. If there's no Later list, list held items in your summary.
 
 ## Scope
 - Change only what the task needs. If a fix would also affect things I didn't name (every table, every page), limit it to what I named, or say clearly that it spreads. Don't fix unrelated problems you notice; list them in your summary and, if Project names a Later list, add them there. Surprise changes are hard to review.
