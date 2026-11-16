@@ -115,9 +115,17 @@ html[data-font="hanken"] { --sans: "Hanken Grotesk", -apple-system, BlinkMacSyst
 
 /* ---------- base ---------- */
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; background: var(--slate); }
+/* the page scrolls inside <body>, and the window itself is held still (no scrolling, no bounce). Added in v40 for
+   the owner's iPhone (iOS 26, home-screen app): scrolling the window left the fixed and sticky bars (top bar, tab
+   bar, the Watch's slim bar) where they were drawn, mid-page. Reports of iOS 26 bars drifting point to the window's
+   scrolling, so holding it still is the expected fix, but it was untested on an iPhone when written, and a phone's
+   keyboard can still push the window (the script puts it back: windowHome). The bars are still fixed and sticky; if
+   they drift anyway, the next step is laying them out as rows of a non-scrolling frame. The script reads and sets
+   the scroll with scrollPos, scrollToY and scrollRoom, and --sbw (the body's scrollbar width) keeps fixed bars off
+   that scrollbar */
+html { -webkit-text-size-adjust: 100%; background: var(--slate); height: 100%; overflow: hidden; overscroll-behavior: none; }
 body {
-  margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink);
+  margin: 0; height: 100%; overflow-y: auto; background: var(--paper); color: var(--ink);
   font-family: var(--body); font-size: var(--t-body); line-height: 1.55;
   -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased;
 }
@@ -188,7 +196,7 @@ p { margin: 0; }
 .app > *, .prose > *, .prose section > * { min-width: 0; }
 
 .tabs {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 7;
+  position: fixed; left: 0; right: var(--sbw, 0px); bottom: 0; z-index: 7;
   display: grid; grid-template-columns: repeat(3, 1fr);
   background: color-mix(in srgb, var(--paper) 94%, transparent);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
@@ -690,7 +698,7 @@ body.wdim-on .worb { position: relative; z-index: 14; opacity: calc(1 - var(--wd
 /* the Watch's slim bar above the tabs, while it runs and another page is open */
 .wmini {
   position: fixed; z-index: 7; max-width: 39rem; margin: 0 auto;
-  left: max(var(--s2), env(safe-area-inset-left, 0px)); right: max(var(--s2), env(safe-area-inset-right, 0px));
+  left: max(var(--s2), env(safe-area-inset-left, 0px)); right: calc(max(var(--s2), env(safe-area-inset-right, 0px)) + var(--sbw, 0px));
   bottom: calc(var(--tabs-h) + env(safe-area-inset-bottom, 0px) + var(--s2));
   display: flex; align-items: center; background: var(--surface); color: var(--ink);
   border: 1px solid var(--rule); border-radius: var(--r); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
@@ -736,7 +744,7 @@ body.wmini-on .app { padding-bottom: calc(var(--tabs-h) + env(safe-area-inset-bo
   .side {
     display: grid; align-content: start; gap: var(--s4); position: fixed; z-index: 4; width: var(--pane);
     top: 0; bottom: 0; overflow-y: auto; overscroll-behavior: contain;
-    right: max(0px, calc((100% - 40rem - var(--rail) - var(--pane)) / 2));
+    right: max(var(--sbw, 0px), calc((100% + var(--sbw, 0px) - 40rem - var(--rail) - var(--pane)) / 2));
     padding: calc(52px + env(safe-area-inset-top, 0px) + var(--s5)) max(var(--s4), env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + var(--s5)) 0;
   }
   /* the Watch page is the Watch itself: no side pane; its own Sound and screen sits in that room instead */
@@ -2083,7 +2091,7 @@ function routineView(key) {
     }
     var id = r.ids[idx], e = E[id], last = idx === r.ids.length - 1;
     var next = h("button", { class: "go" + (last ? "" : " ghost"), type: "button" }, [last ? "Finish" : "Next: " + BOOK.entries[r.ids[idx + 1]].name]);
-    next.addEventListener("click", function () { idx++; show(); window.scrollTo(0, 0); });
+    next.addEventListener("click", function () { idx++; show(); scrollToY(0); });
     body.appendChild(h("div", { class: "p-head" }, [h("span", { class: "num" }, [(idx + 1) + " of " + r.ids.length]), h("h2", { class: "rname" }, [BOOK.entries[id].name]), h("p", { class: "rmethod" }, [methodText(id)])]));
     body.appendChild(h("section", { class: "tool" }, [e.tool()]));
     body.appendChild(h("div", { class: "row between" }, [h("button", { class: "opt", type: "button", onclick: function () { idx++; show(); } }, ["Skip"]), next]));
@@ -3673,7 +3681,7 @@ function openGloss(i) {
   done.addEventListener("click", closeSheet);
   back.addEventListener("click", closeSheet);
   more.addEventListener("click", function () {
-    glossFrom = { hash: location.hash || "#/", y: window.scrollY, title: glossTitle };
+    glossFrom = { hash: location.hash || "#/", y: scrollPos(), title: glossTitle };
     glossTo = i; closeSheet(); location.hash = "#/read/glossary";
   });
   sheetSwipe(el, back);
@@ -3695,7 +3703,7 @@ function sideGloss(i) {
   done.addEventListener("click", close);
   card.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
   more.addEventListener("click", function () {
-    glossFrom = { hash: location.hash || "#/", y: window.scrollY, title: glossTitle };
+    glossFrom = { hash: location.hash || "#/", y: scrollPos(), title: glossTitle };
     glossTo = i; location.hash = "#/read/glossary";
   });
   if (glossCard) glossCard.remove();
@@ -3733,7 +3741,7 @@ function sideTocMark() {
   sideToc.heads.forEach(function (hd, k) { if (hd.getBoundingClientRect().top < 140) at = k; });
   [].forEach.call(sideToc.querySelectorAll("button"), function (b, k) { if (k === at) b.setAttribute("aria-current", "location"); else b.removeAttribute("aria-current"); });
 }
-window.addEventListener("scroll", function () { if (sideToc && !tocRaf) tocRaf = requestAnimationFrame(sideTocMark); }, { passive: true });
+document.body.addEventListener("scroll", function () { if (sideToc && !tocRaf) tocRaf = requestAnimationFrame(sideTocMark); }, { passive: true });
 // the window crossing the wide line (an iPad turned, a window resized): move the Watch card and redo the pane
 wideMQ.addEventListener("change", function () {
   wMiniDraw(); if (wMini && W.running && !W.view) wMiniFoot(); sideTocDraw();
@@ -3818,24 +3826,57 @@ function readerView(id) {
   pager.appendChild(h("a", { class: "home", href: "#/read" }, ["Back to contents"]));
   app.appendChild(pager);
 }
+/* the page scrolls inside <body>, not the window (see the note above the html and body styles): read and set it
+   here, and listen for scrolling on document.body, never on window */
+function scrollPos() { return document.body.scrollTop; }
+function scrollToY(y) { document.body.scrollTop = y; }
+function scrollRoom() { return document.body.scrollHeight - document.body.clientHeight; }
+// the body's scrollbar width (0 for phones' overlay scrollbars), so bars pinned to the right edge stay off it;
+// it comes and goes with the page's length, so it's measured whenever the body's inner width changes
+function markScrollbar() { document.documentElement.style.setProperty("--sbw", Math.max(0, document.body.offsetWidth - document.body.clientWidth) + "px"); }
+if (window.ResizeObserver) new ResizeObserver(markScrollbar).observe(document.body); else window.addEventListener("resize", markScrollbar);
+markScrollbar();
+// the window shouldn't move, but a phone's keyboard can push it up to keep a text box in view. Once focus has left
+// every text box (the keyboard is gone), put it back, so the bars sit where they belong; each page change does too
+function windowHome() { if (window.scrollY || window.scrollX) window.scrollTo(0, 0); }
+document.addEventListener("focusout", function () {
+  setTimeout(function () { var a = document.activeElement; if (!(a && a.matches && a.matches("input, textarea, select, [contenteditable]"))) windowHome(); }, 300);
+});
+// after a click on the tab bar, the rail or the Watch's slim bar, the browser sends the scrolling keys and the mouse
+// wheel to the window, which no longer scrolls; pass them to the page. Text boxes, buttons and sliders keep their keys
+var SCROLL_KEYS = { PageDown: 1, PageUp: -1, " ": 1, ArrowDown: 1, ArrowUp: -1, Home: -1, End: 1 };
+document.addEventListener("keydown", function (e) {
+  if (!SCROLL_KEYS[e.key] || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+  var t = e.target, b = document.body;
+  if (!(t === b || t === document.documentElement || (t.tagName === "A" && t.closest(".tabs, .wmini")))) return;
+  if (sheet || lights || document.getElementById("welcome") || document.documentElement.classList.contains("locked")) return;
+  e.preventDefault();
+  var dir = e.key === " " && e.shiftKey ? -1 : SCROLL_KEYS[e.key], how = reduce ? "auto" : "smooth";
+  if (e.key === "Home" || e.key === "End") b.scrollTo({ top: dir < 0 ? 0 : scrollRoom(), behavior: how });
+  else b.scrollBy({ top: dir * (/Arrow/.test(e.key) ? 40 : Math.round(b.clientHeight * 0.875)), behavior: how });
+});
+document.addEventListener("wheel", function (e) {
+  if (e.ctrlKey || !e.target.closest || !e.target.closest(".tabs, .wmini")) return;
+  document.body.scrollTop += e.deltaY * (e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? document.body.clientHeight : 1);
+}, { passive: true });
 function onScroll() {
   var bar = document.getElementById("progress"); if (!bar) return;
-  var hgt = document.documentElement.scrollHeight - window.innerHeight;
-  bar.style.width = (hgt > 0 ? Math.min(100, (window.scrollY / hgt) * 100) : 0) + "%";
+  var hgt = scrollRoom();
+  bar.style.width = (hgt > 0 ? Math.min(100, (scrollPos() / hgt) * 100) : 0) + "%";
 }
-window.addEventListener("scroll", onScroll, { passive: true });
+document.body.addEventListener("scroll", onScroll, { passive: true });
 var curRead = null, posTimer = null;
 function savePos() {
   clearTimeout(posTimer); posTimer = null;
   if (!curRead) return;
-  var hgt = document.documentElement.scrollHeight - window.innerHeight; if (hgt <= 0) return;
-  var all = store.get("readpos", {}); all[curRead] = Math.round(window.scrollY / hgt * 1000) / 1000; store.set("readpos", all);
+  var hgt = scrollRoom(); if (hgt <= 0) return;
+  var all = store.get("readpos", {}); all[curRead] = Math.round(scrollPos() / hgt * 1000) / 1000; store.set("readpos", all);
 }
-window.addEventListener("scroll", function () { if (curRead && !posTimer) posTimer = setTimeout(savePos, 400); }, { passive: true });
+document.body.addEventListener("scroll", function () { if (curRead && !posTimer) posTimer = setTimeout(savePos, 400); }, { passive: true });
 // after a page is drawn: back to the spot you left for the glossary, the glossary entry you asked for, or your place in the reading
 function placePage() {
   var hgt;
-  if (glossFrom && location.hash === glossFrom.hash) { window.scrollTo(0, glossFrom.y); glossFrom = null; return; }
+  if (glossFrom && location.hash === glossFrom.hash) { scrollToY(glossFrom.y); glossFrom = null; return; }
   if (glossTo !== null && /^#\/read\/glossary$/.test(location.hash)) {
     var el = document.getElementById("gl-" + glossTo); glossTo = null;
     if (el) { el.scrollIntoView({ block: "center" }); el.classList.add("hit"); }
@@ -3844,8 +3885,8 @@ function placePage() {
   if (glossFrom && !/^#\/read\/glossary$/.test(location.hash)) glossFrom = null;
   if (curRead) {
     var at = store.get("readpos", {})[curRead];
-    hgt = document.documentElement.scrollHeight - window.innerHeight;
-    if (at > 0.02 && at < 0.97 && hgt > 0) window.scrollTo(0, Math.round(at * hgt));
+    hgt = scrollRoom();
+    if (at > 0.02 && at < 0.97 && hgt > 0) scrollToY(Math.round(at * hgt));
   }
 }
 
@@ -3875,7 +3916,7 @@ function render() {
   // that checks for the Watch page sees it
   else { history.replaceState(null, "", "#/watch"); document.body.classList.add("on-watch"); watchView(); }
   wMiniDraw(false); sideTocDraw();
-  window.scrollTo(0, 0); placePage(); onScroll();
+  windowHome(); scrollToY(0); placePage(); onScroll();
 }
 // phones only allow sound after a tap: wake the audio on the first tap when practice tones are on
 document.addEventListener("click", function () { if (tonesOn && (!actx || actx.state === "suspended")) { try { ctx(); } catch (e) {} } }, true);
